@@ -10,7 +10,7 @@ batch_size = 2
 # model
 backbone_idx = 1
 channels = 128
-out_idx = 4
+out_idx = 5
 box_depth = 2
 
 # criterion
