@@ -29,7 +29,6 @@ def train(epochs: int) -> None:
     store = ImageStore("/store")
     annotations = store.read()
     train_rows, test_rows = kfold(annotations)
-    print(train_rows)
     train_dataset = FileDataset(
         rows=train_rows,
     )
