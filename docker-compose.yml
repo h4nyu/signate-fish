@@ -7,7 +7,9 @@ services:
       args:
         - http_proxy
         - https_proxy
+    shm_size: '30gb'
     volumes:
       - ./:/srv
       - ./store:/store
+      - ./.cache:/root/.cache
     runtime: nvidia
