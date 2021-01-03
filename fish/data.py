@@ -12,14 +12,23 @@ from object_detection.entities import (
     PredictionSample,
     ImageId,
     Image,
-    YoloBoxes,
+    PascalBoxes,
     Labels,
 )
 import cv2
 import albumentations as albm
 from fish.store import Annotations
 
-bbox_params = {"format": "yolo", "label_fields": ["labels"]}
+
+def imread(
+    filename: str, flags: typing.Any = cv2.IMREAD_COLOR, dtype: typing.Any = np.uint8
+) -> typing.Any:
+    n = np.fromfile(filename, dtype)
+    img = cv2.imdecode(n, flags)
+    return img
+
+
+bbox_params = {"format": "pascal", "label_fields": ["labels"]}
 test_transforms = albm.Compose(
     [
         albm.LongestMaxSize(max_size=config.image_size),
@@ -58,44 +67,27 @@ train_transforms = albm.Compose(
 )
 
 
-# class FileDataset(Dataset):
-#     def __init__(
-#         self,
-#         repo: ImageRepository,
-#         rows: Annotations,
-#         mode: typing.Literal["test", "train"] = "train",
-#     ) -> None:
-#         self.repo = repo
-#         self.rows = rows
-#         self.transforms = train_transforms if mode == "train" else test_transforms
+class FileDataset(Dataset):
+    def __init__(
+        self,
+        rows: Annotations,
+        mode: typing.Literal["test", "train"] = "train",
+    ) -> None:
+        self.rows = list(rows.items())
+        self.transforms = train_transforms if mode == "train" else test_transforms
 
-#     def __getitem__(self, idx: int) -> TrainSample:
-#         id = self.rows[idx]["id"]
-#         res = self.repo.find(id)
-#         image = np.array(
-#             PILImage.open(BytesIO(base64.b64decode(res["data"]))).convert("RGB")
-#         )
-#         boxes = YoloBoxes(
-#             torch.tensor(
-#                 [
-#                     [
-#                         (b["x0"] + b["x1"]) / 2,
-#                         (b["y1"] + b["y0"]) / 2,
-#                         b["x1"] - b["x0"],
-#                         b["y1"] - b["y0"],
-#                     ]
-#                     for b in res["boxes"]
-#                 ]
-#             ).clamp(max=1.0 - 1e-2, min=0.0 + 1e-2)
-#         )
-#         labels = Labels(torch.tensor([0 for b in boxes]))
-#         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
-#         return (
-#             ImageId(id),
-#             Image(transed["image"] / 255),
-#             YoloBoxes(torch.tensor(transed["bboxes"])),
-#             Labels(torch.tensor(transed["labels"])),
-#         )
+    def __getitem__(self, idx: int) -> TrainSample:
+        id, annot = self.rows[idx]
+        image = imread(annot["image_path"])
+        boxes = PascalBoxes(torch.tensor(annot["boxes"]))
+        labels = Labels(torch.tensor(annot["labels"]))
+        transed = self.transforms(image=image, bboxes=boxes, labels=labels)
+        return (
+            ImageId(id),
+            Image(transed["image"] / 255),
+            YoloBoxes(torch.tensor(transed["bboxes"])),
+            Labels(torch.tensor(transed["labels"])),
+        )
 
-#     def __len__(self) -> int:
-#         return len(self.rows)
+    def __len__(self) -> int:
+        return len(self.rows)

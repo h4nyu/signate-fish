@@ -6,11 +6,19 @@ Annotation = typing.TypedDict(
     "Annotation",
     {
         "boxes": typing.List[typing.List[int]],
-        "labels": typing.List[str],
+        "labels": typing.List[int],
         "image_path": str,
     },
 )
 Annotations = typing.Dict[str, Annotation]
+
+
+def parse_label(value: str) -> typing.Optional[int]:
+    if value == "Jumper School":
+        return 0
+    if value == "Breezer School":
+        return 0
+    return None
 
 
 class ImageStore:
@@ -26,12 +34,16 @@ class ImageStore:
             path = Path(p)
             id = path.stem
             boxes: typing.List[typing.List[int]] = []
-            labels: typing.List[str] = []
+            labels: typing.List[int] = []
             with path.open("r") as f:
                 rows = json.load(f)["labels"]
             for k, v in rows.items():
+                label = parse_label(k)
+                if label is None:
+                    continue
+                labels += [label] * len(v)
                 boxes += v
-                labels += [k] * len(v)
+
             image_path = str(image_dir.joinpath(f"{id}.jpg"))
             self.annotations[id] = dict(
                 boxes=boxes, labels=labels, image_path=image_path
