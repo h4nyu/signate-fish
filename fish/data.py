@@ -2,7 +2,7 @@ import torch, typing, numpy as np
 from torch.utils.data import Dataset
 from skimage.io import imread
 from fish import config
-from toolz import map
+from toolz import map, pipe, keyfilter
 from io import BytesIO
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
@@ -18,6 +18,21 @@ from object_detection.entities import (
 )
 import albumentations as albm
 from fish.store import Annotations
+from sklearn.model_selection import StratifiedKFold
+
+
+def kfold(
+    rows: Annotations, n_splits: int = 5, seed: int = 7
+) -> typing.Tuple[Annotations, Annotations]:
+    skf = StratifiedKFold(n_splits)
+    x = list(rows.keys())
+    y = [len(i["boxes"]) for i in rows.values()]
+    train_ids, test_ids = next(skf.split(x, y))
+    train_keys = set([x[i] for i in train_ids])
+    test_keys = set([x[i] for i in test_ids])
+    return keyfilter(lambda k: k in train_keys, rows), keyfilter(
+        lambda k: k in test_keys, rows
+    )
 
 
 bbox_params = {"format": "pascal_voc", "label_fields": ["labels"]}

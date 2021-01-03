@@ -14,3 +14,7 @@ def test_dataset() -> None:
     plot.with_image(image)
     plot.with_pascal_boxes(boxes=boxes, labels=labels)
     plot.save(f"store/test-plot-{id}.png")
+
+
+def test_fold() -> None:
+    ...

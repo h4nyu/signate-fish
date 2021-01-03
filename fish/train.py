@@ -19,7 +19,7 @@ from object_detection.model_loader import (
     ModelLoader,
     BestWatcher,
 )
-from fish.data import FileDataset
+from fish.data import FileDataset, kfold
 from object_detection.metrics import MeanPrecition
 from fish.store import ImageStore
 from fish import config
@@ -28,13 +28,17 @@ from fish import config
 def train(epochs: int) -> None:
     store = ImageStore("/store")
     annotations = store.read()
+    train_rows, test_rows = kfold(annotations)
+    print(train_rows)
     train_dataset = FileDataset(
-        rows=annotations
+        rows=train_rows,
     )
     test_dataset = FileDataset(
-        rows=annotations
+        rows=test_rows,
     )
-    backbone = EfficientNetBackbone(config.backbone_idx, out_channels=config.channels, pretrained=True)
+    backbone = EfficientNetBackbone(
+        config.backbone_idx, out_channels=config.channels, pretrained=True
+    )
     model = CenterNet(
         num_classes=2,
         channels=config.channels,
