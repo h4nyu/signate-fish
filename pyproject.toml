@@ -10,7 +10,7 @@ pandas = "^1.1.4"
 torch = "^1.7.0"
 toolz = "^0.11.1"
 tqdm = "^4.54.1"
-object-detection = {path = "object-detection", develop = true}
+object-detection = {path = "object-detection"}
 torchvision = "^0.8.1"
 requests = "^2.25.0"
 Pillow = "^8.0.1"
