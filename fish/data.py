@@ -1,5 +1,6 @@
 import torch, typing, numpy as np
 from torch.utils.data import Dataset
+from skimage.io import imread
 from fish import config
 from toolz import map
 from io import BytesIO
@@ -15,27 +16,17 @@ from object_detection.entities import (
     PascalBoxes,
     Labels,
 )
-import cv2
 import albumentations as albm
 from fish.store import Annotations
 
 
-def imread(
-    filename: str, flags: typing.Any = cv2.IMREAD_COLOR, dtype: typing.Any = np.uint8
-) -> typing.Any:
-    n = np.fromfile(filename, dtype)
-    img = cv2.imdecode(n, flags)
-    return img
-
-
-bbox_params = {"format": "pascal", "label_fields": ["labels"]}
+bbox_params = {"format": "pascal_voc", "label_fields": ["labels"]}
 test_transforms = albm.Compose(
     [
         albm.LongestMaxSize(max_size=config.image_size),
         albm.PadIfNeeded(
             min_width=config.image_size,
             min_height=config.image_size,
-            border_mode=cv2.BORDER_CONSTANT,
         ),
         ToTensorV2(),
     ],
@@ -48,7 +39,6 @@ train_transforms = albm.Compose(
         albm.PadIfNeeded(
             min_width=config.image_size,
             min_height=config.image_size,
-            border_mode=cv2.BORDER_CONSTANT,
         ),
         A.OneOf(
             [
@@ -59,7 +49,6 @@ train_transforms = albm.Compose(
         ),
         A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=15, p=0.2),
         A.Cutout(),
-        A.ColorJitter(p=0.2),
         albm.RandomBrightnessContrast(),
         ToTensorV2(),
     ],
@@ -84,8 +73,8 @@ class FileDataset(Dataset):
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
-            Image(transed["image"] / 255),
-            YoloBoxes(torch.tensor(transed["bboxes"])),
+            Image(transed["image"]),
+            PascalBoxes(torch.tensor(transed["bboxes"])),
             Labels(torch.tensor(transed["labels"])),
         )
 

@@ -17,7 +17,7 @@ def parse_label(value: str) -> typing.Optional[int]:
     if value == "Jumper School":
         return 0
     if value == "Breezer School":
-        return 0
+        return 1
     return None
 
 
