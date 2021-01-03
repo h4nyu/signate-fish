@@ -36,25 +36,17 @@ def kfold(
 
 
 bbox_params = {"format": "pascal_voc", "label_fields": ["labels"]}
-test_transforms = albm.Compose(
+test_transforms = lambda size: albm.Compose(
     [
-        albm.LongestMaxSize(max_size=config.image_size),
-        albm.PadIfNeeded(
-            min_width=config.image_size,
-            min_height=config.image_size,
-        ),
+        albm.LongestMaxSize(max_size=size),
         ToTensorV2(),
     ],
     bbox_params=bbox_params,
 )
 
-train_transforms = albm.Compose(
+train_transforms = lambda size: albm.Compose(
     [
-        albm.LongestMaxSize(max_size=config.image_size),
-        albm.PadIfNeeded(
-            min_width=config.image_size,
-            min_height=config.image_size,
-        ),
+        albm.LongestMaxSize(max_size=size),
         A.OneOf(
             [
                 A.IAAAdditiveGaussianNoise(),
@@ -62,8 +54,9 @@ train_transforms = albm.Compose(
             ],
             p=0.2,
         ),
+        A.HorizontalFlip(p=0.5),
+        A.VerticalFlip(p=0.5),
         A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=15, p=0.2),
-        A.Cutout(),
         albm.RandomBrightnessContrast(),
         ToTensorV2(),
     ],
@@ -75,10 +68,11 @@ class FileDataset(Dataset):
     def __init__(
         self,
         rows: Annotations,
+        transforms: typing.Any,
         mode: typing.Literal["test", "train"] = "train",
     ) -> None:
         self.rows = list(rows.items())
-        self.transforms = train_transforms if mode == "train" else test_transforms
+        self.transforms = transforms
 
     def __getitem__(self, idx: int) -> TrainSample:
         id, annot = self.rows[idx]
@@ -88,9 +82,9 @@ class FileDataset(Dataset):
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
-            Image(transed["image"] / 255),
-            PascalBoxes(torch.tensor(transed["bboxes"])),
-            Labels(torch.tensor(transed["labels"])),
+            Image(transed["image"]),
+            PascalBoxes(transed["bboxes"]),
+            Labels(transed["labels"]),
         )
 
     def __len__(self) -> int:

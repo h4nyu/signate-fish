@@ -49,3 +49,6 @@ class ImageStore:
                 boxes=boxes, labels=labels, image_path=image_path
             )
         return self.annotations
+
+
+# class AnnotStore:

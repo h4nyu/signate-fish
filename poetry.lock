@@ -336,7 +336,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "object-detection"
-version = "0.1.2"
+version = "0.1.4"
 description = ""
 category = "main"
 optional = false

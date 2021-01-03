@@ -5,7 +5,7 @@ out_dir = "store/0"
 
 image_size = 1024
 num_classes = 2
-batch_size = 2
+batch_size = 3
 
 # model
 backbone_idx = 1
