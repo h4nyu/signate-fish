@@ -3,7 +3,12 @@ from pathlib import Path
 
 
 Annotation = typing.TypedDict(
-    "Annotation", {"boxes": typing.List[typing.List[int]], "labels": typing.List[str]}
+    "Annotation",
+    {
+        "boxes": typing.List[typing.List[int]],
+        "labels": typing.List[str],
+        "image_path": str,
+    },
 )
 Annotations = typing.Dict[str, Annotation]
 
@@ -16,9 +21,10 @@ class ImageStore:
 
     def read(self) -> Annotations:
         annotation_dir = self.dataset_dir.joinpath("train_annotations")
+        image_dir = self.dataset_dir.joinpath("train_images")
         for p in glob.glob(f"{annotation_dir}/*.json"):
             path = Path(p)
-            id = re.findall("[0-9]+", path.stem)[0]
+            id = path.stem
             boxes: typing.List[typing.List[int]] = []
             labels: typing.List[str] = []
             with path.open("r") as f:
@@ -26,5 +32,8 @@ class ImageStore:
             for k, v in rows.items():
                 boxes += v
                 labels += [k] * len(v)
-            self.annotations[id] = {"boxes": boxes, "labels": labels}
+            image_path = str(image_dir.joinpath(f"{id}.jpg"))
+            self.annotations[id] = dict(
+                boxes=boxes, labels=labels, image_path=image_path
+            )
         return self.annotations

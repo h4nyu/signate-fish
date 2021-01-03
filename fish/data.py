@@ -17,6 +17,7 @@ from object_detection.entities import (
 )
 import cv2
 import albumentations as albm
+from fish.store import Annotations
 
 bbox_params = {"format": "yolo", "label_fields": ["labels"]}
 test_transforms = albm.Compose(
@@ -56,11 +57,12 @@ train_transforms = albm.Compose(
     bbox_params=bbox_params,
 )
 
-# class TrainDataset(Dataset):
+
+# class FileDataset(Dataset):
 #     def __init__(
 #         self,
 #         repo: ImageRepository,
-#         rows: Rows,
+#         rows: Annotations,
 #         mode: typing.Literal["test", "train"] = "train",
 #     ) -> None:
 #         self.repo = repo
