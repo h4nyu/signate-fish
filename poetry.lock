@@ -333,7 +333,7 @@ description = ""
 category = "main"
 optional = false
 python-versions = "^3.8"
-develop = true
+develop = false
 
 [package.dependencies]
 efficientnet_pytorch = "^0.7.0"

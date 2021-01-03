@@ -73,7 +73,7 @@ class FileDataset(Dataset):
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
-            Image(transed["image"]),
+            Image(transed["image"] / 255),
             PascalBoxes(torch.tensor(transed["bboxes"])),
             Labels(torch.tensor(transed["labels"])),
         )
