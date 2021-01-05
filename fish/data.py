@@ -77,14 +77,14 @@ class FileDataset(Dataset):
     def __getitem__(self, idx: int) -> TrainSample:
         id, annot = self.rows[idx]
         image = imread(annot["image_path"])
-        boxes = PascalBoxes(torch.tensor(annot["boxes"]))
-        labels = Labels(torch.tensor(annot["labels"]))
+        boxes = annot["boxes"]
+        labels = annot["labels"]
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
-            Image(transed["image"]),
-            PascalBoxes(transed["bboxes"]),
-            Labels(transed["labels"]),
+            Image(transed["image"].float()),
+            PascalBoxes(torch.tensor(transed["bboxes"])),
+            Labels(torch.tensor(transed["labels"])),
         )
 
     def __len__(self) -> int:

@@ -20,5 +20,5 @@ for i in range(len(dataset)):
     if len(labels) == 0:
         continue
     plot = DetectionPlot(image)
-    plot.draw_boxes(boxes=boxes, labels=labels, line_width=4, color="red")
+    plot.draw_boxes(boxes=boxes, labels=labels, line_width=1, color="red")
     plot.save(vis_dir.joinpath(f"{id}.jpg"))

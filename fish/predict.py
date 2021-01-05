@@ -26,7 +26,7 @@ from fish.store import ImageStore
 from fish import config
 
 
-def train(epochs: int) -> None:
+def predict(epochs: int) -> None:
     store = ImageStore("/store")
     annotations = store.read()
     train_rows, test_rows = kfold(annotations)
@@ -98,3 +98,4 @@ def train(epochs: int) -> None:
 
 if __name__ == "__main__":
     train(1000)
+

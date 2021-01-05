@@ -1,4 +1,17 @@
 [[package]]
+name = "adabelief-pytorch"
+version = "0.2.0"
+description = "PyTorch implementation of AdaBelief Optimizer"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+colorama = ">=0.4.0"
+tabulate = ">=0.7"
+torch = ">=0.4.0"
+
+[[package]]
 name = "albumentations"
 version = "0.5.2"
 description = "Fast image augmentation library and easy to use wrapper around other libraries"
@@ -97,7 +110,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 name = "colorama"
 version = "0.4.4"
 description = "Cross-platform colored terminal text."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -622,6 +635,17 @@ python-versions = "*"
 scikit-learn = "*"
 
 [[package]]
+name = "tabulate"
+version = "0.8.7"
+description = "Pretty-print tabular data"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+widechars = ["wcwidth"]
+
+[[package]]
 name = "threadpoolctl"
 version = "2.1.0"
 description = "threadpoolctl"
@@ -751,9 +775,13 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "4ebcca7bde134619a5be15cc8fc5dfe489b4876d201405cb7f1a2be95a530dd9"
+content-hash = "7e7e8b37e3caa873290f758df7a99c22679a12f6d72942cbc150f6f7d6d565bd"
 
 [metadata.files]
+adabelief-pytorch = [
+    {file = "adabelief_pytorch-0.2.0-py3-none-any.whl", hash = "sha256:c0ad14936ac5adaa5103e5247595ac3956beca522222fae4a5c7d99140f07b11"},
+    {file = "adabelief_pytorch-0.2.0.tar.gz", hash = "sha256:091339824d70bfa74d4744902e85e5e2dc41b0e1110a41570e1d3928e534e51a"},
+]
 albumentations = [
     {file = "albumentations-0.5.2-py3-none-any.whl", hash = "sha256:d7e9b6782aa252477d1d796891c0b01aae90c31b122fcf173d4ced4a574454c6"},
     {file = "albumentations-0.5.2.tar.gz", hash = "sha256:a0aabed8b852fa163d146b24dc8c5e38b936034f1593496c7fd3f853524c1192"},
@@ -1318,6 +1346,10 @@ six = [
 ]
 sklearn = [
     {file = "sklearn-0.0.tar.gz", hash = "sha256:e23001573aa194b834122d2b9562459bf5ae494a2d59ca6b8aa22c85a44c0e31"},
+]
+tabulate = [
+    {file = "tabulate-0.8.7-py3-none-any.whl", hash = "sha256:ac64cb76d53b1231d364babcd72abbb16855adac7de6665122f97b593f1eb2ba"},
+    {file = "tabulate-0.8.7.tar.gz", hash = "sha256:db2723a20d04bcda8522165c73eea7c300eda74e0ce852d9022e0159d7895007"},
 ]
 threadpoolctl = [
     {file = "threadpoolctl-2.1.0-py3-none-any.whl", hash = "sha256:38b74ca20ff3bb42caca8b00055111d74159ee95c4370882bbff2b93d24da725"},
