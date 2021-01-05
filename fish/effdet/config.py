@@ -18,7 +18,7 @@ backbone_id = 1
 channels = 64
 box_depth = 2
 lr = 1e-3
-out_ids: List[int] = [4, 5, 6]
+out_ids: List[int] = [4, 5, 6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
