@@ -1,15 +1,13 @@
-from fish.store import ImageStore
 from pathlib import Path
 from skimage.io import imread
-from fish.data import FileDataset, test_transforms
+from fish.data import FileDataset, test_transforms, read_annotations
 from albumentations.pytorch.transforms import ToTensorV2
 from object_detection.utils import DetectionPlot
 
-store = ImageStore("/store")
 vis_dir = Path("/store/vis")
 vis_dir.mkdir(exist_ok=True)
 
-rows = store.read()
+rows = read_annotations("/store")
 dataset = FileDataset(
     rows=rows,
     transforms=ToTensorV2(),

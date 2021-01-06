@@ -20,15 +20,19 @@ from object_detection.model_loader import (
     ModelLoader,
     BestWatcher,
 )
-from fish.data import FileDataset, kfold, train_transforms, test_transforms
+from fish.data import (
+    FileDataset,
+    kfold,
+    train_transforms,
+    test_transforms,
+    read_annotations,
+)
 from object_detection.metrics import MeanPrecition
-from fish.store import ImageStore
-from fish import config
+from fish.centernet import config
 
 
 def train(epochs: int) -> None:
-    store = ImageStore("/store")
-    annotations = store.read()
+    annotations = read_annotations("/store")
     train_rows, test_rows = kfold(annotations)
     train_dataset = FileDataset(
         rows=train_rows,
@@ -71,7 +75,14 @@ def train(epochs: int) -> None:
         num_workers=config.batch_size,
         shuffle=True,
     )
-    optimizer = AdaBelief(model.parameters(), lr=config.lr, eps=1e-8, betas=(0.9,0.999), weight_decouple = False, rectify = True)
+    optimizer = AdaBelief(
+        model.parameters(),
+        lr=config.lr,
+        eps=1e-8,
+        betas=(0.9, 0.999),
+        weight_decouple=False,
+        rectify=True,
+    )
     visualize = Visualize(config.out_dir, "test", limit=config.batch_size)
 
     model_loader = ModelLoader(

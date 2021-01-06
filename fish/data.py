@@ -1,7 +1,7 @@
 import torch, typing, numpy as np
+from typing import *
 from torch.utils.data import Dataset
 from skimage.io import imread
-from fish import config
 from toolz import map, pipe, keyfilter
 from io import BytesIO
 import albumentations as A
@@ -17,8 +17,90 @@ from object_detection.entities import (
     Labels,
 )
 import albumentations as albm
-from fish.store import Annotations
 from sklearn.model_selection import StratifiedKFold
+import glob, typing, json, re
+from pathlib import Path
+
+
+Annotation = typing.TypedDict(
+    "Annotation",
+    {
+        "boxes": typing.List[typing.List[int]],
+        "labels": typing.List[int],
+        "image_path": str,
+    },
+)
+Annotations = typing.Dict[str, Annotation]
+
+SumbissionSample = typing.TypedDict(
+    "SumbissionSample",
+    {
+        "image_path": str,
+    },
+)
+SumbissionSamples = typing.Dict[str, SumbissionSample]
+
+
+def parse_label(value: str) -> typing.Optional[int]:
+    if value == "Jumper School":
+        return 0
+    if value == "Breezer School":
+        return 1
+    return None
+
+
+def read_annotations(dataset_dir: str) -> Annotations:
+    annotations: Annotations = {}
+    _dataset_dir = Path(dataset_dir)
+    annotation_dir = _dataset_dir.joinpath("train_annotations")
+    image_dir = _dataset_dir.joinpath("train_images")
+    for p in glob.glob(f"{annotation_dir}/*.json"):
+        path = Path(p)
+        id = path.stem
+        boxes: typing.List[typing.List[int]] = []
+        labels: typing.List[int] = []
+        with path.open("r") as f:
+            rows = json.load(f)["labels"]
+        for k, v in rows.items():
+            label = parse_label(k)
+            if label is None:
+                continue
+            labels += [label] * len(v)
+            boxes += v
+
+        image_path = str(image_dir.joinpath(f"{id}.jpg"))
+        annotations[id] = dict(boxes=boxes, labels=labels, image_path=image_path)
+    return annotations
+
+
+class SubmissionSampleStore:
+    def __init__(self, dataset_dir: str) -> None:
+        self.dataset_dir = Path(dataset_dir)
+        self.annotation_files: typing.List[Path] = []
+        self.annotations: Annotations = {}
+
+    def __call__(self) -> Annotations:
+        annotation_dir = self.dataset_dir.joinpath("train_annotations")
+        image_dir = self.dataset_dir.joinpath("train_images")
+        for p in glob.glob(f"{annotation_dir}/*.json"):
+            path = Path(p)
+            id = path.stem
+            boxes: typing.List[typing.List[int]] = []
+            labels: typing.List[int] = []
+            with path.open("r") as f:
+                rows = json.load(f)["labels"]
+            for k, v in rows.items():
+                label = parse_label(k)
+                if label is None:
+                    continue
+                labels += [label] * len(v)
+                boxes += v
+
+            image_path = str(image_dir.joinpath(f"{id}.jpg"))
+            self.annotations[id] = dict(
+                boxes=boxes, labels=labels, image_path=image_path
+            )
+        return self.annotations
 
 
 def kfold(
@@ -69,7 +151,6 @@ class FileDataset(Dataset):
         self,
         rows: Annotations,
         transforms: typing.Any,
-        mode: typing.Literal["test", "train"] = "train",
     ) -> None:
         self.rows = list(rows.items())
         self.transforms = transforms
@@ -85,6 +166,28 @@ class FileDataset(Dataset):
             Image(transed["image"].float()),
             PascalBoxes(torch.tensor(transed["bboxes"])),
             Labels(torch.tensor(transed["labels"])),
+        )
+
+    def __len__(self) -> int:
+        return len(self.rows)
+
+
+class SumbitDataset(Dataset):
+    def __init__(
+        self,
+        rows: SumbissionSamples,
+        transforms: typing.Any,
+    ) -> None:
+        self.rows = list(rows.items())
+        self.transforms = transforms
+
+    def __getitem__(self, idx: int) -> Tuple[ImageId, Image]:
+        id, row = self.rows[idx]
+        image = imread(row["image_path"])
+        transed = self.transforms(image=image)
+        return (
+            ImageId(id),
+            Image(transed["image"].float()),
         )
 
     def __len__(self) -> int:

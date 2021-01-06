@@ -14,7 +14,7 @@ out_idx = 5
 box_depth = 2
 
 # criterion
-lr = 1e-3
+lr = 1e-4
 box_weight = 1.0
 heatmap_weight = 1.0
 sigma = 20
