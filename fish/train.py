@@ -71,7 +71,7 @@ def train(epochs: int) -> None:
         num_workers=config.batch_size,
         shuffle=True,
     )
-    optimizer = AdaBelief(model.parameters(), lr=config.lr, eps=1e-16, betas=(0.9,0.999), weight_decouple = True, rectify = False)
+    optimizer = AdaBelief(model.parameters(), lr=config.lr, eps=1e-8, betas=(0.9,0.999), weight_decouple = False, rectify = True)
     visualize = Visualize(config.out_dir, "test", limit=config.batch_size)
 
     model_loader = ModelLoader(

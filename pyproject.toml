@@ -21,7 +21,7 @@ scikit-image = "^0.18.1"
 # object-detection = {path = "object-detection"}
 
 sklearn = "^0.0"
-object-detection = {path = "object-detection"}
+object-detection = {path = "object-detection", develop = true}
 adabelief-pytorch = "^0.2.0"
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

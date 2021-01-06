@@ -63,7 +63,7 @@ def train(epochs: int) -> None:
         box_weight=config.box_weight,
         cls_weight=config.cls_weight,
     )
-    optimizer = AdaBelief(model.parameters(), lr=config.lr, eps=1e-16, betas=(0.9,0.999), weight_decouple = True, rectify = False)
+    optimizer = AdaBelief(model.parameters(), lr=config.lr, eps=1e-8, betas=(0.9,0.999), weight_decouple = False, rectify = True)
 
     visualize = Visualize("/store/efficientdet", "test", limit=config.batch_size)
     get_score = MeanPrecition(iou_thresholds=[0.3])
