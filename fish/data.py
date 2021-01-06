@@ -32,13 +32,13 @@ Annotation = typing.TypedDict(
 )
 Annotations = typing.Dict[str, Annotation]
 
-SumbissionSample = typing.TypedDict(
-    "SumbissionSample",
+TestRow = typing.TypedDict(
+    "TestRow",
     {
         "image_path": str,
     },
 )
-SumbissionSamples = typing.Dict[str, SumbissionSample]
+TestRows = typing.Dict[str, TestRow]
 
 
 def parse_label(value: str) -> typing.Optional[int]:
@@ -73,34 +73,16 @@ def read_annotations(dataset_dir: str) -> Annotations:
     return annotations
 
 
-class SubmissionSampleStore:
-    def __init__(self, dataset_dir: str) -> None:
-        self.dataset_dir = Path(dataset_dir)
-        self.annotation_files: typing.List[Path] = []
-        self.annotations: Annotations = {}
-
-    def __call__(self) -> Annotations:
-        annotation_dir = self.dataset_dir.joinpath("train_annotations")
-        image_dir = self.dataset_dir.joinpath("train_images")
-        for p in glob.glob(f"{annotation_dir}/*.json"):
-            path = Path(p)
-            id = path.stem
-            boxes: typing.List[typing.List[int]] = []
-            labels: typing.List[int] = []
-            with path.open("r") as f:
-                rows = json.load(f)["labels"]
-            for k, v in rows.items():
-                label = parse_label(k)
-                if label is None:
-                    continue
-                labels += [label] * len(v)
-                boxes += v
-
-            image_path = str(image_dir.joinpath(f"{id}.jpg"))
-            self.annotations[id] = dict(
-                boxes=boxes, labels=labels, image_path=image_path
-            )
-        return self.annotations
+def read_test_rows(dataset_dir: str) -> TestRows:
+    rows: TestRows = {}
+    _dataset_dir = Path(dataset_dir)
+    image_dir = _dataset_dir.joinpath("test_images")
+    for p in glob.glob(f"{image_dir}/*.jpg"):
+        path = Path(p)
+        id = path.stem
+        image_path = str(image_dir.joinpath(f"{id}.jpg"))
+        rows[id] = dict(image_path=image_path)
+    return rows
 
 
 def kfold(
@@ -124,6 +106,13 @@ test_transforms = lambda size: albm.Compose(
         ToTensorV2(),
     ],
     bbox_params=bbox_params,
+)
+
+prediction_transforms = lambda size: albm.Compose(
+    [
+        albm.LongestMaxSize(max_size=size),
+        ToTensorV2(),
+    ],
 )
 
 train_transforms = lambda size: albm.Compose(
@@ -172,10 +161,10 @@ class FileDataset(Dataset):
         return len(self.rows)
 
 
-class SumbitDataset(Dataset):
+class TestDataset(Dataset):
     def __init__(
         self,
-        rows: SumbissionSamples,
+        rows: TestRows,
         transforms: typing.Any,
     ) -> None:
         self.rows = list(rows.items())

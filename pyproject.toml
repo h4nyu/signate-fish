@@ -23,6 +23,7 @@ scikit-image = "^0.18.1"
 sklearn = "^0.0"
 adabelief-pytorch = "^0.2.0"
 object-detection = {path = "object-detection"}
+ensemble-boxes = "^1.0.4"
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 mypy = "^0.790"

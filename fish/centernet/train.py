@@ -13,6 +13,7 @@ from object_detection.models.mkmaps import (
     MkGaussianMaps,
     MkCenterBoxMaps,
 )
+from object_detection.utils import DetectionPlot
 from object_detection.models.backbones.effnet import (
     EfficientNetBackbone,
 )
@@ -31,6 +32,24 @@ from object_detection.metrics import MeanPrecition
 from fish.centernet import config
 
 
+backbone = EfficientNetBackbone(
+    config.backbone_idx, out_channels=config.channels, pretrained=True
+)
+model = CenterNet(
+    num_classes=2,
+    channels=config.channels,
+    backbone=backbone,
+    out_idx=config.out_idx,
+    depth=config.box_depth,
+)
+to_boxes = ToBoxes(threshold=config.to_boxes_threshold)
+model_loader = ModelLoader(
+    out_dir=config.out_dir,
+    key=config.metric[0],
+    best_watcher=BestWatcher(mode=config.metric[1]),
+)
+
+
 def train(epochs: int) -> None:
     annotations = read_annotations("/store")
     train_rows, test_rows = kfold(annotations)
@@ -41,16 +60,6 @@ def train(epochs: int) -> None:
     test_dataset = FileDataset(
         rows=test_rows,
         transforms=test_transforms(config.image_size),
-    )
-    backbone = EfficientNetBackbone(
-        config.backbone_idx, out_channels=config.channels, pretrained=True
-    )
-    model = CenterNet(
-        num_classes=2,
-        channels=config.channels,
-        backbone=backbone,
-        out_idx=config.out_idx,
-        depth=config.box_depth,
     )
     criterion = Criterion(
         box_weight=config.box_weight,
@@ -85,12 +94,6 @@ def train(epochs: int) -> None:
     )
     visualize = Visualize(config.out_dir, "test", limit=config.batch_size)
 
-    model_loader = ModelLoader(
-        out_dir=config.out_dir,
-        key=config.metric[0],
-        best_watcher=BestWatcher(mode=config.metric[1]),
-    )
-    to_boxes = ToBoxes(threshold=config.to_boxes_threshold)
     get_score = MeanPrecition(iou_thresholds=[0.3])
     trainer = Trainer(
         model=model,
