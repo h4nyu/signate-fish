@@ -40,7 +40,7 @@ model = CenterNet(
     channels=config.channels,
     backbone=backbone,
     out_idx=config.out_idx,
-    depth=config.box_depth,
+    cls_depth=config.cls_depth,
 )
 to_boxes = ToBoxes(threshold=config.to_boxes_threshold)
 model_loader = ModelLoader(
@@ -106,6 +106,7 @@ def train(epochs: int) -> None:
         device="cuda",
         get_score=get_score,
         to_boxes=to_boxes,
+        use_amp=config.use_amp,
     )
     trainer(epochs)
 

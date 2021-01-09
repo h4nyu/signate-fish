@@ -70,13 +70,13 @@ def train(epochs: int) -> None:
     optimizer = AdaBelief(
         model.parameters(),
         lr=config.lr,
-        eps=1e-8,
+        eps=1e-3,
         betas=(0.9, 0.999),
         weight_decouple=False,
         rectify=True,
     )
 
-    visualize = Visualize("/store/efficientdet", "test", limit=config.batch_size)
+    visualize = Visualize(config.out_dir, "test", limit=config.batch_size)
     get_score = MeanPrecition(iou_thresholds=[0.3])
     to_boxes = ToBoxes(
         confidence_threshold=config.confidence_threshold,
