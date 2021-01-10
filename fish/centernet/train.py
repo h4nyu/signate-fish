@@ -1,11 +1,12 @@
 from adabelief_pytorch import AdaBelief
 import torch
+from tqdm import tqdm
 from torch.utils.data import DataLoader
+from torch.cuda.amp import GradScaler, autocast
 from object_detection.models.centernet import (
     collate_fn,
     CenterNet,
     Visualize,
-    Trainer,
     Criterion,
     ToBoxes,
 )
@@ -32,6 +33,7 @@ from object_detection.metrics import MeanPrecition
 from fish.centernet import config
 
 
+device = torch.device("cuda")
 backbone = EfficientNetBackbone(
     config.backbone_idx, out_channels=config.channels, pretrained=True
 )
@@ -41,7 +43,7 @@ model = CenterNet(
     backbone=backbone,
     out_idx=config.out_idx,
     cls_depth=config.cls_depth,
-)
+).to(device)
 to_boxes = ToBoxes(threshold=config.to_boxes_threshold)
 model_loader = ModelLoader(
     out_dir=config.out_dir,
@@ -95,20 +97,71 @@ def train(epochs: int) -> None:
     visualize = Visualize(config.out_dir, "test", limit=config.batch_size)
 
     get_score = MeanPrecition(iou_thresholds=[0.3])
-    trainer = Trainer(
-        model=model,
-        train_loader=train_loader,
-        test_loader=test_loader,
-        model_loader=model_loader,
-        optimizer=optimizer,
-        visualize=visualize,
-        criterion=criterion,
-        device="cuda",
-        get_score=get_score,
-        to_boxes=to_boxes,
-        use_amp=config.use_amp,
-    )
-    trainer(epochs)
+    scaler = GradScaler()
+
+    def train_step() -> None:
+        model.train()
+        for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(train_loader):
+            gt_box_batch = [x.to(device) for x in gt_box_batch]
+            gt_label_batch = [x.to(device) for x in gt_label_batch]
+            image_batch = image_batch.to(device)
+            optimizer.zero_grad()
+            with autocast(enabled=config.use_amp):
+                netout = model(image_batch)
+                loss, hm_loss, bm_loss, _ = criterion(
+                    image_batch, netout, gt_box_batch, gt_label_batch
+                )
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+
+    @torch.no_grad()
+    def eval_step() -> None:
+        model.eval()
+        for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(test_loader):
+            image_batch = image_batch.to(device)
+            gt_box_batch = [x.to(device) for x in gt_box_batch]
+            gt_label_batch = [x.to(device) for x in gt_label_batch]
+            _, _, h, w = image_batch.shape
+            netout = model(image_batch)
+            loss, hm_loss, bm_loss, gt_hms = criterion(
+                image_batch, netout, gt_box_batch, gt_label_batch
+            )
+            box_batch, confidence_batch, label_batch = to_boxes(netout)
+            for boxes, gt_boxes, labels, gt_labels, confidences in zip(
+                box_batch, gt_box_batch, label_batch, gt_label_batch, confidence_batch
+            ):
+                metrics.add(
+                    boxes=yolo_to_pascal(boxes, (w, h)),
+                    confidences=confidences,
+                    labels=labels,
+                    gt_boxes=yolo_to_pascal(gt_boxes, (w, h)),
+                    gt_labels=gt_labels,
+                )
+
+        visualize(
+            netout,
+            box_batch,
+            confidence_batch,
+            label_batch,
+            gt_box_batch,
+            gt_label_batch,
+            image_batch,
+            gt_hms,
+        )
+        score, scores = metrics()
+        print(f"{score=}, {scores=}")
+        metrics.reset()
+
+        model_loader.save_if_needed(
+            model,
+            score,
+        )
+
+    model_loader.load_if_needed(model)
+    for _ in range(epochs):
+        train_step()
+        eval_step()
 
 
 if __name__ == "__main__":

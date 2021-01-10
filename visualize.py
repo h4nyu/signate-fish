@@ -1,4 +1,5 @@
 from pathlib import Path
+from tqdm import tqdm
 from skimage.io import imread
 from fish.data import FileDataset, test_transforms, read_annotations
 from albumentations.pytorch.transforms import ToTensorV2
@@ -12,11 +13,11 @@ dataset = FileDataset(
     rows=rows,
     transforms=ToTensorV2(),
 )
-for i in range(len(dataset)):
+for i in tqdm(range(len(dataset))):
     id, image, boxes, labels = dataset[i]
     _, h, w = image.shape
     if len(labels) == 0:
         continue
     plot = DetectionPlot(image)
-    plot.draw_boxes(boxes=boxes, labels=labels, line_width=1, color="red")
+    plot.draw_boxes(boxes=boxes, labels=labels, line_width=2, color="red")
     plot.save(vis_dir.joinpath(f"{id}.jpg"))

@@ -1,7 +1,7 @@
 from typing import *
 from object_detection.model_loader import WatchMode
 
-out_dir = "store/centernet-0"
+out_dir = "store/centernet-1"
 
 image_size = 1024 + 512
 num_classes = 2
@@ -9,7 +9,7 @@ batch_size = 6
 
 # model
 backbone_idx = 1
-channels = 64
+channels = 96
 out_idx = 6
 cls_depth = 2
 
