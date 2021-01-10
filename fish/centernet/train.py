@@ -22,6 +22,8 @@ from object_detection.model_loader import (
     ModelLoader,
     BestWatcher,
 )
+from object_detection.metrics import MeanAveragePrecision
+from object_detection.entities.box import yolo_to_pascal
 from fish.data import (
     FileDataset,
     kfold,
@@ -95,6 +97,7 @@ def train(epochs: int) -> None:
         rectify=True,
     )
     visualize = Visualize(config.out_dir, "test", limit=config.batch_size)
+    metrics = MeanAveragePrecision(iou_threshold=0.3, num_classes=config.num_classes)
 
     get_score = MeanPrecition(iou_thresholds=[0.3])
     scaler = GradScaler()
