@@ -3,6 +3,7 @@ import torch
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
+from object_detection.meters import MeanMeter
 from object_detection.models.centernet import (
     collate_fn,
     CenterNet,
@@ -104,6 +105,9 @@ def train(epochs: int) -> None:
 
     def train_step() -> None:
         model.train()
+        loss_meter = MeanMeter()
+        cls_loss_meter = MeanMeter()
+        box_loss_meter = MeanMeter()
         for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(train_loader):
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
@@ -117,10 +121,19 @@ def train(epochs: int) -> None:
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
+            loss_meter.update(loss.item())
+            box_loss_meter.update(bm_loss.item())
+            cls_loss_meter.update(hm_loss.item())
+        print(f"train: {loss_meter.get_value():3f}|{cls_loss_meter.get_value():3f}|{box_loss_meter.get_value():3f}")
+
 
     @torch.no_grad()
     def eval_step() -> None:
         model.eval()
+        loss_meter = MeanMeter()
+        cls_loss_meter = MeanMeter()
+        box_loss_meter = MeanMeter()
+
         for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(test_loader):
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
@@ -130,6 +143,9 @@ def train(epochs: int) -> None:
             loss, hm_loss, bm_loss, gt_hms = criterion(
                 image_batch, netout, gt_box_batch, gt_label_batch
             )
+            loss_meter.update(loss.item())
+            box_loss_meter.update(bm_loss.item())
+            cls_loss_meter.update(hm_loss.item())
             box_batch, confidence_batch, label_batch = to_boxes(netout)
             for boxes, gt_boxes, labels, gt_labels, confidences in zip(
                 box_batch, gt_box_batch, label_batch, gt_label_batch, confidence_batch
@@ -153,9 +169,9 @@ def train(epochs: int) -> None:
             gt_hms,
         )
         score, scores = metrics()
-        print(f"{score=}, {scores=}")
+        print(f"test: {loss_meter.get_value():3f}|{cls_loss_meter.get_value():3f}|{box_loss_meter.get_value():3f}")
+        print(f"test: {score=}, {scores=}")
         metrics.reset()
-
         model_loader.save_if_needed(
             model,
             score,
