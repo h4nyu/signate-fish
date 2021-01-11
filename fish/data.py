@@ -68,7 +68,7 @@ def read_annotations(dataset_dir: str) -> Annotations:
             labels += [label] * len(v)
             boxes += v
 
-        image_path = str(image_dir.joinpath(path))
+        image_path = str(image_dir.joinpath(f"{id}.jpg"))
         annotations[id] = dict(boxes=boxes, labels=labels, image_path=image_path)
     return annotations
 
@@ -126,7 +126,7 @@ train_transforms = lambda size: albm.Compose(
             p=0.2,
         ),
         A.HorizontalFlip(p=0.5),
-        A.VerticalFlip(p=0.5),
+        # A.VerticalFlip(p=0.5),
         A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=15, p=0.2),
         albm.RandomBrightnessContrast(),
         ToTensorV2(),
@@ -172,6 +172,7 @@ class TestDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[ImageId, Image]:
         id, row = self.rows[idx]
+        print(row["image_path"])
         image = imread(row["image_path"])
         transed = self.transforms(image=image)
         return (
