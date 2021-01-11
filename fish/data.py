@@ -68,7 +68,7 @@ def read_annotations(dataset_dir: str) -> Annotations:
             labels += [label] * len(v)
             boxes += v
 
-        image_path = str(image_dir.joinpath(f"{id}.jpg"))
+        image_path = str(image_dir.joinpath(path))
         annotations[id] = dict(boxes=boxes, labels=labels, image_path=image_path)
     return annotations
 
@@ -80,7 +80,7 @@ def read_test_rows(dataset_dir: str) -> TestRows:
     for p in glob.glob(f"{image_dir}/*.jpg"):
         path = Path(p)
         id = path.stem
-        image_path = str(image_dir.joinpath(f"{id}.jpg"))
+        image_path = str(image_dir.joinpath(path))
         rows[id] = dict(image_path=image_path)
     return rows
 

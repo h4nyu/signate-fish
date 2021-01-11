@@ -12,4 +12,5 @@ services:
       - ./:/srv
       - ./store:/store
       - ./.cache:/root/.cache
+      - ./signate.json:/root/.signate/signate.json
     runtime: nvidia

@@ -4,6 +4,8 @@ from object_detection.model_loader import WatchMode
 out_dir = "store/centernet-1"
 
 image_size = 1024 + 512
+original_width = 3840
+original_height = 2160
 num_classes = 2
 batch_size = 6
 
@@ -14,7 +16,7 @@ out_idx = 6
 cls_depth = 2
 
 # criterion
-lr = 1e-3
+lr = 1e-4
 box_weight = 1.0
 heatmap_weight = 1.0
 sigma = 5
@@ -22,7 +24,7 @@ metric: Tuple[str, WatchMode] = ("score", "max")
 
 # to_boxes
 to_boxes_threshold = 0.3
-iou_threshold = 0.4
+iou_threshold = 0.5
 
 # train
 use_amp = True

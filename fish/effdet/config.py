@@ -7,6 +7,8 @@ out_dir = "/store/efficientdet-0"
 # data
 image_size = 1024 + 512
 num_classes = 2
+original_width = 3840
+original_height = 2160
 
 confidence_threshold = 0.3
 iou_threshold = 0.50
