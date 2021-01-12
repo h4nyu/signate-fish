@@ -1,25 +1,28 @@
 from typing import *
 from object_detection.model_loader import WatchMode
+from object_detection.models.mkmaps import GaussianMapMode
 
 out_dir = "store/centernet-1"
 
-image_size = 1024 + 512
+image_size = 1024 + 1024
 original_width = 3840
 original_height = 2160
 num_classes = 2
-batch_size = 6
+batch_size = 4
+mk_map_mode:GaussianMapMode = "aspect"
 
 # model
 backbone_idx = 1
-channels = 96
+channels = 64
 out_idx = 6
-cls_depth = 2
+cls_depth = 1
+box_depth = 2
 
 # criterion
 lr = 1e-4
 box_weight = 1.0
 heatmap_weight = 1.0
-sigma = 5
+sigma = 6
 metric: Tuple[str, WatchMode] = ("score", "max")
 
 # to_boxes

@@ -34,18 +34,21 @@ from fish.data import (
 )
 from object_detection.metrics import MeanPrecition
 from fish.centernet import config
+from logging import getLogger
 
+logger = getLogger(__name__)
 
 device = torch.device("cuda")
 backbone = EfficientNetBackbone(
     config.backbone_idx, out_channels=config.channels, pretrained=True
 )
 model = CenterNet(
-    num_classes=2,
+    num_classes=config.num_classes,
     channels=config.channels,
     backbone=backbone,
     out_idx=config.out_idx,
     cls_depth=config.cls_depth,
+    box_depth=config.box_depth,
 ).to(device)
 to_boxes = ToBoxes(threshold=config.to_boxes_threshold)
 model_loader = ModelLoader(
@@ -72,6 +75,7 @@ def train(epochs: int) -> None:
         mk_hmmaps=MkGaussianMaps(
             num_classes=config.num_classes,
             sigma=config.sigma,
+            mode=config.mk_map_mode,
         ),
         mk_boxmaps=MkCenterBoxMaps(),
     )
@@ -87,7 +91,7 @@ def train(epochs: int) -> None:
         collate_fn=collate_fn,
         batch_size=config.batch_size * 2,
         num_workers=config.batch_size,
-        shuffle=True,
+        shuffle=False,
     )
     optimizer = AdaBelief(
         model.parameters(),
@@ -124,7 +128,7 @@ def train(epochs: int) -> None:
             loss_meter.update(loss.item())
             box_loss_meter.update(bm_loss.item())
             cls_loss_meter.update(hm_loss.item())
-        print(f"train: {loss_meter.get_value():3f}|{cls_loss_meter.get_value():3f}|{box_loss_meter.get_value():3f}")
+        logger.info(f"train: {loss_meter.get_value():3f}|{cls_loss_meter.get_value():3f}|{box_loss_meter.get_value():3f}")
 
 
     @torch.no_grad()
@@ -169,8 +173,8 @@ def train(epochs: int) -> None:
             gt_hms,
         )
         score, scores = metrics()
-        print(f"test: {loss_meter.get_value():3f}|{cls_loss_meter.get_value():3f}|{box_loss_meter.get_value():3f}")
-        print(f"test: {score=}, {scores=}")
+        logger.info(f"test: {loss_meter.get_value():3f}|{cls_loss_meter.get_value():3f}|{box_loss_meter.get_value():3f}")
+        logger.info(f"test: {score=}, {scores=}")
         metrics.reset()
         model_loader.save_if_needed(
             model,

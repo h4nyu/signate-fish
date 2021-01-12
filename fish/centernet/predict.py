@@ -43,15 +43,15 @@ def predict(device: str) -> None:
             boxes, confidences, labels = weighted_boxes_fusion(
                 [
                     yolo_to_pascal(original[0][i], (1, 1)),
-                    yolo_to_pascal(yolo_vflip(vfliped[0][i]), (1, 1)),
+                    # yolo_to_pascal(yolo_vflip(vfliped[0][i]), (1, 1)),
                 ],
                 [
                     original[1][i],
-                    vfliped[1][i],
+                    # vfliped[1][i],
                 ],
                 [
                     original[2][i],
-                    vfliped[2][i],
+                    # vfliped[2][i],
                 ],
                 iou_thr=config.iou_threshold,
                 weights=weights,

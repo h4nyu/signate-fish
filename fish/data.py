@@ -1,4 +1,4 @@
-import torch, typing, numpy as np
+import torch, typing, numpy as np, cv2
 from typing import *
 from torch.utils.data import Dataset
 from skimage.io import imread
@@ -117,7 +117,17 @@ prediction_transforms = lambda size: albm.Compose(
 
 train_transforms = lambda size: albm.Compose(
     [
+        A.HorizontalFlip(p=0.5),
+        A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.2, rotate_limit=20, p=1.0, border_mode=cv2.BORDER_CONSTANT,),
         albm.LongestMaxSize(max_size=size),
+        A.OneOf([
+            A.HueSaturationValue(hue_shift_limit=0.2, sat_shift_limit= 0.2, val_shift_limit=0.2, p=0.9),
+            A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.9),
+        ],p=0.9),
+        A.OneOf([
+            A.Blur(blur_limit=3, p=1.0),
+            A.MedianBlur(blur_limit=3, p=1.0)
+        ],p=0.2),
         A.OneOf(
             [
                 A.IAAAdditiveGaussianNoise(),
@@ -125,10 +135,6 @@ train_transforms = lambda size: albm.Compose(
             ],
             p=0.2,
         ),
-        A.HorizontalFlip(p=0.5),
-        # A.VerticalFlip(p=0.5),
-        A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=15, p=0.2),
-        albm.RandomBrightnessContrast(),
         ToTensorV2(),
     ],
     bbox_params=bbox_params,
@@ -172,7 +178,6 @@ class TestDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[ImageId, Image]:
         id, row = self.rows[idx]
-        print(row["image_path"])
         image = imread(row["image_path"])
         transed = self.transforms(image=image)
         return (
