@@ -7,7 +7,7 @@ image_size = 1024 + 512
 original_width = 3840
 original_height = 2160
 num_classes = 2
-batch_size = 4
+batch_size = 5
 
 # model
 backbone_idx = 1
