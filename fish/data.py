@@ -145,7 +145,7 @@ train_transforms = lambda size: albm.Compose(
         A.HorizontalFlip(p=0.5),
         A.ShiftScaleRotate(
             shift_limit=0.1,
-            scale_limit=0.2,
+            scale_limit=(-0.3, 1.0),
             rotate_limit=20,
             p=1.0,
             border_mode=cv2.BORDER_CONSTANT,
@@ -190,16 +190,14 @@ class FileDataset(Dataset):
     def __getitem__(self, idx: int) -> TrainSample:
         id, annot = self.rows[idx]
         image = imread(annot["image_path"])
-        boxes, indices = filter_size(
-            PascalBoxes(torch.tensor(annot["boxes"])), lambda area: area > 36
-        )
-        labels = Labels(torch.tensor(annot["labels"])[indices])
+        boxes = annot["boxes"]
+        labels = annot["labels"]
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
             Image(transed["image"].float()),
-            PascalBoxes(transed["bboxes"]),
-            Labels(transed["labels"]),
+            PascalBoxes(torch.tensor(transed["bboxes"])),
+            Labels(torch.tensor(transed["labels"])),
         )
 
     def __len__(self) -> int:
