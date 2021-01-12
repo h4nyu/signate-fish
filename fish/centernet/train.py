@@ -1,5 +1,6 @@
 from adabelief_pytorch import AdaBelief
 import torch
+from typing import Dict
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
@@ -34,7 +35,9 @@ from fish.data import (
 )
 from object_detection.metrics import MeanPrecition
 from fish.centernet import config
-from logging import getLogger
+from logging import (
+    getLogger,
+)
 
 logger = getLogger(__name__)
 
@@ -102,15 +105,15 @@ def train(epochs: int) -> None:
         rectify=True,
     )
     visualize = Visualize(config.out_dir, "test", limit=config.batch_size)
-    metrics = MeanAveragePrecision(iou_threshold=0.3, num_classes=config.num_classes)
 
     get_score = MeanPrecition(iou_thresholds=[0.3])
+    logs: Dict[str, float] = {}
     scaler = GradScaler()
 
     def train_step() -> None:
         model.train()
         loss_meter = MeanMeter()
-        cls_loss_meter = MeanMeter()
+        label_loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
         for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(train_loader):
             gt_box_batch = [x.to(device) for x in gt_box_batch]
@@ -119,24 +122,28 @@ def train(epochs: int) -> None:
             optimizer.zero_grad()
             with autocast(enabled=config.use_amp):
                 netout = model(image_batch)
-                loss, hm_loss, bm_loss, _ = criterion(
+                loss, label_loss, box_loss, _ = criterion(
                     image_batch, netout, gt_box_batch, gt_label_batch
                 )
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
             loss_meter.update(loss.item())
-            box_loss_meter.update(bm_loss.item())
-            cls_loss_meter.update(hm_loss.item())
-        logger.info(f"train: {loss_meter.get_value():3f}|{cls_loss_meter.get_value():3f}|{box_loss_meter.get_value():3f}")
-
+            box_loss_meter.update(box_loss.item())
+            label_loss_meter.update(label_loss.item())
+        logs["train_loss"] = loss_meter.get_value()
+        logs["train_box"] = box_loss_meter.get_value()
+        logs["train_label"] = label_loss_meter.get_value()
 
     @torch.no_grad()
     def eval_step() -> None:
         model.eval()
         loss_meter = MeanMeter()
-        cls_loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
+        label_loss_meter = MeanMeter()
+        metrics = MeanAveragePrecision(
+            iou_threshold=0.3, num_classes=config.num_classes
+        )
 
         for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(test_loader):
             image_batch = image_batch.to(device)
@@ -144,12 +151,12 @@ def train(epochs: int) -> None:
             gt_label_batch = [x.to(device) for x in gt_label_batch]
             _, _, h, w = image_batch.shape
             netout = model(image_batch)
-            loss, hm_loss, bm_loss, gt_hms = criterion(
+            loss, label_loss, box_loss, gt_hms = criterion(
                 image_batch, netout, gt_box_batch, gt_label_batch
             )
             loss_meter.update(loss.item())
-            box_loss_meter.update(bm_loss.item())
-            cls_loss_meter.update(hm_loss.item())
+            box_loss_meter.update(box_loss.item())
+            label_loss_meter.update(label_loss.item())
             box_batch, confidence_batch, label_batch = to_boxes(netout)
             for boxes, gt_boxes, labels, gt_labels, confidences in zip(
                 box_batch, gt_box_batch, label_batch, gt_label_batch, confidence_batch
@@ -173,18 +180,25 @@ def train(epochs: int) -> None:
             gt_hms,
         )
         score, scores = metrics()
-        logger.info(f"test: {loss_meter.get_value():3f}|{cls_loss_meter.get_value():3f}|{box_loss_meter.get_value():3f}")
-        logger.info(f"test: {score=}, {scores=}")
-        metrics.reset()
+        logs["test_loss"] = loss_meter.get_value()
+        logs["test_box"] = box_loss_meter.get_value()
+        logs["test_label"] = label_loss_meter.get_value()
+        logs["score"] = score
+        for k, v in scores.items():
+            logs[f"score-{k}"] = v
         model_loader.save_if_needed(
             model,
             score,
         )
 
+    def log() -> None:
+        logger.info(",".join([f"{k}={v:.3f}" for k, v in logs.items()]))
+
     model_loader.load_if_needed(model)
     for _ in range(epochs):
         train_step()
         eval_step()
+        log()
 
 
 if __name__ == "__main__":

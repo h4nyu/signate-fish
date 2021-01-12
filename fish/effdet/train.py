@@ -7,7 +7,6 @@ from object_detection.models.backbones.effnet import (
 from object_detection.models.effidet import (
     collate_fn,
     EfficientDet,
-    Trainer,
     Criterion,
     Visualize,
     ToBoxes,
@@ -82,31 +81,6 @@ def train(epochs: int) -> None:
         confidence_threshold=config.confidence_threshold,
         iou_threshold=config.iou_threshold,
     )
-    trainer = Trainer(
-        model,
-        DataLoader(
-            train_dataset,
-            collate_fn=collate_fn,
-            batch_size=config.batch_size,
-            num_workers=config.batch_size,
-            shuffle=True,
-        ),
-        DataLoader(
-            test_dataset,
-            collate_fn=collate_fn,
-            batch_size=config.batch_size * 2,
-            num_workers=config.batch_size,
-            shuffle=True,
-        ),
-        model_loader=model_loader,
-        optimizer=optimizer,
-        visualize=visualize,
-        criterion=criterion,
-        get_score=get_score,
-        device="cuda",
-        to_boxes=to_boxes,
-    )
-    trainer(epochs)
 
 
 if __name__ == "__main__":

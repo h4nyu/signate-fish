@@ -1,5 +1,6 @@
 import torch, typing, numpy as np, cv2
 from typing import *
+from torch import Tensor
 from torch.utils.data import Dataset
 from skimage.io import imread
 from toolz import map, pipe, keyfilter
@@ -16,6 +17,7 @@ from object_detection.entities import (
     PascalBoxes,
     Labels,
 )
+from object_detection.entities.box import filter_size
 import albumentations as albm
 from sklearn.model_selection import StratifiedKFold
 import glob, typing, json, re
@@ -121,7 +123,7 @@ train_transforms = lambda size: albm.Compose(
         A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.2, rotate_limit=20, p=1.0, border_mode=cv2.BORDER_CONSTANT,),
         albm.LongestMaxSize(max_size=size),
         A.OneOf([
-            A.HueSaturationValue(hue_shift_limit=0.2, sat_shift_limit= 0.2, val_shift_limit=0.2, p=0.9),
+            A.HueSaturationValue(hue_shift_limit=10, sat_shift_limit= 20, val_shift_limit=20, p=0.9),
             A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.9),
         ],p=0.9),
         A.OneOf([
@@ -153,8 +155,8 @@ class FileDataset(Dataset):
     def __getitem__(self, idx: int) -> TrainSample:
         id, annot = self.rows[idx]
         image = imread(annot["image_path"])
-        boxes = annot["boxes"]
-        labels = annot["labels"]
+        boxes, indices = filter_size(PascalBoxes(torch.tensor(annot["boxes"])), lambda area: area > 36)
+        labels = Labels(torch.tensor(annot["labels"])[indices])
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
