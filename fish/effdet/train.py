@@ -22,13 +22,13 @@ from fish.data import (
     kfold,
     train_transforms,
     test_transforms,
-    read_annotations,
+    read_train_rows,
 )
 from fish.effdet import config
 
 
 def train(epochs: int) -> None:
-    annotations = read_annotations("/store")
+    annotations = read_train_rows("/store")
     train_rows, test_rows = kfold(annotations)
     train_dataset = FileDataset(
         rows=train_rows,

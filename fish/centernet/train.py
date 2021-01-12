@@ -31,7 +31,7 @@ from fish.data import (
     kfold,
     train_transforms,
     test_transforms,
-    read_annotations,
+    read_train_rows,
 )
 from object_detection.metrics import MeanPrecition
 from fish.centernet import config
@@ -62,7 +62,7 @@ model_loader = ModelLoader(
 
 
 def train(epochs: int) -> None:
-    annotations = read_annotations("/store")
+    annotations = read_train_rows("/store")
     train_rows, test_rows = kfold(annotations)
     train_dataset = FileDataset(
         rows=train_rows,

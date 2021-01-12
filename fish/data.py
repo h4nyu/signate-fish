@@ -19,7 +19,7 @@ from object_detection.entities import (
 )
 from object_detection.entities.box import filter_size
 import albumentations as albm
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GroupKFold
 import glob, typing, json, re
 from pathlib import Path
 
@@ -30,6 +30,8 @@ Annotation = typing.TypedDict(
         "boxes": typing.List[typing.List[int]],
         "labels": typing.List[int],
         "image_path": str,
+        "sequence_id": int,
+        "frame_id": int,
     },
 )
 Annotations = typing.Dict[str, Annotation]
@@ -38,6 +40,8 @@ TestRow = typing.TypedDict(
     "TestRow",
     {
         "image_path": str,
+        "sequence_id": int,
+        "frame_id": int,
     },
 )
 TestRows = typing.Dict[str, TestRow]
@@ -51,7 +55,7 @@ def parse_label(value: str) -> typing.Optional[int]:
     return None
 
 
-def read_annotations(dataset_dir: str) -> Annotations:
+def read_train_rows(dataset_dir: str) -> Annotations:
     annotations: Annotations = {}
     _dataset_dir = Path(dataset_dir)
     annotation_dir = _dataset_dir.joinpath("train_annotations")
@@ -62,8 +66,10 @@ def read_annotations(dataset_dir: str) -> Annotations:
         boxes: typing.List[typing.List[int]] = []
         labels: typing.List[int] = []
         with path.open("r") as f:
-            rows = json.load(f)["labels"]
-        for k, v in rows.items():
+            row = json.load(f)
+        sequence_id = row["attributes"]["sequence_id"]
+        frame_id = row["attributes"]["frame_id"]
+        for k, v in row["labels"].items():
             label = parse_label(k)
             if label is None:
                 continue
@@ -71,29 +77,46 @@ def read_annotations(dataset_dir: str) -> Annotations:
             boxes += v
 
         image_path = str(image_dir.joinpath(f"{id}.jpg"))
-        annotations[id] = dict(boxes=boxes, labels=labels, image_path=image_path)
+        annotations[id] = dict(
+            boxes=boxes,
+            labels=labels,
+            image_path=image_path,
+            sequence_id=sequence_id,
+            frame_id=frame_id,
+        )
     return annotations
 
 
 def read_test_rows(dataset_dir: str) -> TestRows:
     rows: TestRows = {}
     _dataset_dir = Path(dataset_dir)
+    annotation_dir = _dataset_dir.joinpath("test_annotations")
     image_dir = _dataset_dir.joinpath("test_images")
-    for p in glob.glob(f"{image_dir}/*.jpg"):
+    for p in glob.glob(f"{annotation_dir}/*.json"):
         path = Path(p)
         id = path.stem
-        image_path = str(image_dir.joinpath(path))
-        rows[id] = dict(image_path=image_path)
+        with path.open("r") as f:
+            row = json.load(f)
+        sequence_id = row["attributes"]["sequence_id"]
+        frame_id = row["attributes"]["frame_id"]
+        image_path = str(image_dir.joinpath(f"{id}.jpg"))
+        rows[id] = dict(
+            image_path=image_path,
+            sequence_id=sequence_id,
+            frame_id=frame_id,
+        )
     return rows
 
 
 def kfold(
     rows: Annotations, n_splits: int = 5, seed: int = 7
 ) -> typing.Tuple[Annotations, Annotations]:
-    skf = StratifiedKFold(n_splits)
+    kf = GroupKFold(n_splits)
     x = list(rows.keys())
     y = [len(i["boxes"]) for i in rows.values()]
-    train_ids, test_ids = next(skf.split(x, y))
+    groups = [i["sequence_id"] for i in rows.values()]
+
+    train_ids, test_ids = next(kf.split(x, y, groups))
     train_keys = set([x[i] for i in train_ids])
     test_keys = set([x[i] for i in test_ids])
     return keyfilter(lambda k: k in train_keys, rows), keyfilter(
@@ -120,16 +143,28 @@ prediction_transforms = lambda size: albm.Compose(
 train_transforms = lambda size: albm.Compose(
     [
         A.HorizontalFlip(p=0.5),
-        A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.2, rotate_limit=20, p=1.0, border_mode=cv2.BORDER_CONSTANT,),
+        A.ShiftScaleRotate(
+            shift_limit=0.1,
+            scale_limit=0.2,
+            rotate_limit=20,
+            p=1.0,
+            border_mode=cv2.BORDER_CONSTANT,
+        ),
         albm.LongestMaxSize(max_size=size),
-        A.OneOf([
-            A.HueSaturationValue(hue_shift_limit=10, sat_shift_limit= 20, val_shift_limit=20, p=0.9),
-            A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.9),
-        ],p=0.9),
-        A.OneOf([
-            A.Blur(blur_limit=3, p=1.0),
-            A.MedianBlur(blur_limit=3, p=1.0)
-        ],p=0.2),
+        A.OneOf(
+            [
+                A.HueSaturationValue(
+                    hue_shift_limit=10, sat_shift_limit=20, val_shift_limit=20, p=0.9
+                ),
+                A.RandomBrightnessContrast(
+                    brightness_limit=0.2, contrast_limit=0.2, p=0.9
+                ),
+            ],
+            p=0.9,
+        ),
+        A.OneOf(
+            [A.Blur(blur_limit=3, p=1.0), A.MedianBlur(blur_limit=3, p=1.0)], p=0.2
+        ),
         A.OneOf(
             [
                 A.IAAAdditiveGaussianNoise(),
@@ -155,14 +190,16 @@ class FileDataset(Dataset):
     def __getitem__(self, idx: int) -> TrainSample:
         id, annot = self.rows[idx]
         image = imread(annot["image_path"])
-        boxes, indices = filter_size(PascalBoxes(torch.tensor(annot["boxes"])), lambda area: area > 36)
+        boxes, indices = filter_size(
+            PascalBoxes(torch.tensor(annot["boxes"])), lambda area: area > 36
+        )
         labels = Labels(torch.tensor(annot["labels"])[indices])
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
             Image(transed["image"].float()),
-            PascalBoxes(torch.tensor(transed["bboxes"])),
-            Labels(torch.tensor(transed["labels"])),
+            PascalBoxes(transed["bboxes"]),
+            Labels(transed["labels"]),
         )
 
     def __len__(self) -> int:

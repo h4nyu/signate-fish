@@ -51,25 +51,25 @@ def predict(device: str) -> None:
     submission: Submission = {}
     for ids, image_batch in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
-        box_batch, confidence_batch, label_batch  = to_boxes(net(image_batch))
+        box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
 
-        for img, id, boxes, confidences, labels in zip(image_batch, ids, box_batch, confidence_batch, label_batch):
+        for img, id, boxes, confidences, labels in zip(
+            image_batch, ids, box_batch, confidence_batch, label_batch
+        ):
             _, h, w = img.shape
-            _boxes, indices = filter_size(yolo_to_pascal(boxes, (1, 1)), lambda x: x > (9/w)*(9/h))
+            _boxes, indices = filter_size(
+                yolo_to_pascal(boxes, (1, 1)), lambda x: x > (9 / w) * (9 / h)
+            )
             labels = Labels(labels[indices])
             confidences = Confidences(confidences[indices])
             _boxes, confidences, labels = weighted_boxes_fusion(
                 [
                     _boxes,
                 ],
-                [
-                    confidences
-                ],
-                [
-                    labels
-                ],
+                [confidences],
+                [labels],
                 iou_thr=config.iou_threshold,
-                weights= weights,
+                weights=weights,
                 skip_box_thr=config.to_boxes_threshold,
             )
             _boxes = resize(PascalBoxes(torch.from_numpy(_boxes)), (w, h))

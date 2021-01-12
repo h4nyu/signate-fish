@@ -9,7 +9,7 @@ original_width = 3840
 original_height = 2160
 num_classes = 2
 batch_size = 4
-mk_map_mode:GaussianMapMode = "length"
+mk_map_mode: GaussianMapMode = "length"
 
 # model
 backbone_idx = 1
