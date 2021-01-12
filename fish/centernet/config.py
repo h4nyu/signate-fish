@@ -7,16 +7,16 @@ image_size = 1024 + 512
 original_width = 3840
 original_height = 2160
 num_classes = 2
-batch_size = 6
+batch_size = 4
 
 # model
 backbone_idx = 1
-channels = 96
+channels = 128
 out_idx = 6
 cls_depth = 2
 
 # criterion
-lr = 1e-4
+lr = 1e-3
 box_weight = 1.0
 heatmap_weight = 1.0
 sigma = 5

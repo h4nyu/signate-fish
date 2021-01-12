@@ -2,7 +2,13 @@ import glob, tqdm, torch, json
 from typing import Dict, Any
 from torch.utils.data import DataLoader
 from object_detection.utils import DetectionPlot
-from object_detection.entities.box import yolo_to_pascal, yolo_vflip, PascalBoxes, Labels, resize
+from object_detection.entities.box import (
+    yolo_to_pascal,
+    yolo_vflip,
+    PascalBoxes,
+    Labels,
+    resize,
+)
 from fish.data import read_test_rows, TestDataset, prediction_transforms
 from fish.centernet import config
 from fish.centernet.train import model, model_loader, to_boxes
@@ -10,10 +16,14 @@ from ensemble_boxes import weighted_boxes_fusion
 from torchvision.transforms.functional import hflip, vflip
 
 Submission = Dict[str, Any]
-def add_submission(submission:Submission, id:str, boxes:PascalBoxes, labels:Labels) -> None:
+
+
+def add_submission(
+    submission: Submission, id: str, boxes: PascalBoxes, labels: Labels
+) -> None:
     row = {}
-    row['Jumper School'] = boxes[labels == 0].to('cpu').tolist()
-    row['Breezer School'] = boxes[labels == 1].to('cpu').tolist()
+    row["Jumper School"] = boxes[labels == 0].to("cpu").tolist()
+    row["Breezer School"] = boxes[labels == 1].to("cpu").tolist()
     submission[f"{id}.jpg"] = row
 
 
@@ -32,7 +42,7 @@ def predict(device: str) -> None:
         drop_last=False,
     )
     weights = [2, 1]
-    submission:Submission = {}
+    submission: Submission = {}
     for ids, image_batch in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
         original = to_boxes(net(image_batch))
@@ -70,12 +80,13 @@ def predict(device: str) -> None:
             plot = DetectionPlot(img)
             plot.draw_boxes(boxes=boxes, confidences=confidences, labels=labels)
             plot.save(f"/store/pred-{id}.jpg")
-            boxes = resize(boxes, scale=(config.original_width/w, config.original_height/h))
+            boxes = resize(
+                boxes, scale=(config.original_width / w, config.original_height / h)
+            )
             add_submission(submission, id, boxes=boxes, labels=labels)
 
-    with open('/store/submission.json', 'w') as f:
+    with open("/store/submission.json", "w") as f:
         json.dump(submission, f)
-
 
 
 if __name__ == "__main__":

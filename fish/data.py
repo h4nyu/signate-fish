@@ -1,5 +1,6 @@
 import torch, typing, numpy as np
 from typing import *
+from torch import Tensor
 from torch.utils.data import Dataset
 from skimage.io import imread
 from toolz import map, pipe, keyfilter
@@ -117,6 +118,8 @@ prediction_transforms = lambda size: albm.Compose(
 
 train_transforms = lambda size: albm.Compose(
     [
+        A.HorizontalFlip(p=0.5),
+        A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.2, rotate_limit=10, border_mode=0, p=1.0),
         albm.LongestMaxSize(max_size=size),
         A.OneOf(
             [
@@ -125,9 +128,6 @@ train_transforms = lambda size: albm.Compose(
             ],
             p=0.2,
         ),
-        A.HorizontalFlip(p=0.5),
-        # A.VerticalFlip(p=0.5),
-        A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=15, p=0.2),
         albm.RandomBrightnessContrast(),
         ToTensorV2(),
     ],
@@ -147,8 +147,10 @@ class FileDataset(Dataset):
     def __getitem__(self, idx: int) -> TrainSample:
         id, annot = self.rows[idx]
         image = imread(annot["image_path"])
-        boxes = annot["boxes"]
-        labels = annot["labels"]
+        boxes = PascalBoxes(torch.tensor(annot["boxes"]))
+        labels = Labels(torch.tensor(annot["labels"]))
+        boxes, filter_indices = filter_small_boxes(boxes, size=40)
+        labels = Labels(labels[filter_indices])
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
@@ -159,6 +161,14 @@ class FileDataset(Dataset):
 
     def __len__(self) -> int:
         return len(self.rows)
+
+def filter_small_boxes(boxes:PascalBoxes, size:Union[float, int]) -> Tuple[PascalBoxes, Tensor]:
+    if(len(boxes) == 0):
+        return boxes, torch.tensor([], dtype=torch.bool)
+    x0, y0, x1, y1 = boxes.unbind(-1)
+    area = (x1 - x0) * (y1 - y0)
+    indices = area > size
+    return PascalBoxes(boxes[indices]), indices
 
 
 class TestDataset(Dataset):
