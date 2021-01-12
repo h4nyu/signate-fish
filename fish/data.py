@@ -17,6 +17,7 @@ from object_detection.entities import (
     PascalBoxes,
     Labels,
 )
+from object_detection.entities.box import filter_size
 import albumentations as albm
 from sklearn.model_selection import StratifiedKFold
 import glob, typing, json, re
@@ -147,10 +148,8 @@ class FileDataset(Dataset):
     def __getitem__(self, idx: int) -> TrainSample:
         id, annot = self.rows[idx]
         image = imread(annot["image_path"])
-        boxes = PascalBoxes(torch.tensor(annot["boxes"]))
-        labels = Labels(torch.tensor(annot["labels"]))
-        boxes, filter_indices = filter_small_boxes(boxes, size=40)
-        labels = Labels(labels[filter_indices])
+        boxes, indices = filter_size(PascalBoxes(torch.tensor(annot["boxes"])), lambda area: area > 36)
+        labels = Labels(torch.tensor(annot["labels"])[indices])
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
@@ -161,14 +160,6 @@ class FileDataset(Dataset):
 
     def __len__(self) -> int:
         return len(self.rows)
-
-def filter_small_boxes(boxes:PascalBoxes, size:Union[float, int]) -> Tuple[PascalBoxes, Tensor]:
-    if(len(boxes) == 0):
-        return boxes, torch.tensor([], dtype=torch.bool)
-    x0, y0, x1, y1 = boxes.unbind(-1)
-    area = (x1 - x0) * (y1 - y0)
-    indices = area > size
-    return PascalBoxes(boxes[indices]), indices
 
 
 class TestDataset(Dataset):
@@ -182,7 +173,6 @@ class TestDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[ImageId, Image]:
         id, row = self.rows[idx]
-        print(row["image_path"])
         image = imread(row["image_path"])
         transed = self.transforms(image=image)
         return (
