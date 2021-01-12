@@ -46,6 +46,8 @@ TestRow = typing.TypedDict(
 )
 TestRows = typing.Dict[str, TestRow]
 
+def cutmix(rows: Annotations) -> None:
+    ...
 
 def parse_label(value: str) -> typing.Optional[int]:
     if value == "Jumper School":
@@ -109,7 +111,7 @@ def read_test_rows(dataset_dir: str) -> TestRows:
 
 
 def kfold(
-    rows: Annotations, n_splits: int = 5, seed: int = 7
+    rows: Annotations, n_splits: int = 5
 ) -> typing.Tuple[Annotations, Annotations]:
     kf = GroupKFold(n_splits)
     x = list(rows.keys())

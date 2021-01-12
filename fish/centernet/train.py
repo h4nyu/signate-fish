@@ -53,7 +53,7 @@ model = CenterNet(
     cls_depth=config.cls_depth,
     box_depth=config.box_depth,
 ).to(device)
-to_boxes = ToBoxes(threshold=config.to_boxes_threshold)
+to_boxes = ToBoxes(threshold=config.to_boxes_threshold, kernel_size=config.to_boxes_kernel_size)
 model_loader = ModelLoader(
     out_dir=config.out_dir,
     key=config.metric[0],

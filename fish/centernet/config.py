@@ -19,7 +19,7 @@ cls_depth = 1
 box_depth = 2
 
 # criterion
-lr = 1e-3
+lr = 1e-4
 box_weight = 1.0
 heatmap_weight = 1.0
 sigma = 6
@@ -28,6 +28,7 @@ metric: Tuple[str, WatchMode] = ("score", "max")
 # to_boxes
 to_boxes_threshold = 0.3
 iou_threshold = 0.5
+to_boxes_kernel_size = 5
 
 # train
 use_amp = True

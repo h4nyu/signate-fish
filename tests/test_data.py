@@ -4,7 +4,9 @@ from fish.data import (
     read_train_rows,
     read_test_rows,
     kfold,
+    cutmix
 )
+from toolz import valfilter
 from object_detection.utils import DetectionPlot
 
 
@@ -26,3 +28,8 @@ def test_fold() -> None:
     test_seqs = set([r["sequence_id"] for r in test.values()])
 
     assert len(train_seqs.intersection(test_seqs)) == 0
+
+def test_cutmix() -> None:
+    rows = read_train_rows("/store")
+    rows = valfilter(lambda x:x['sequence_id'] == 0, rows)
+    cutmix(rows)
