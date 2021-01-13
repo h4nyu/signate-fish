@@ -180,9 +180,6 @@ train_transforms = lambda size: albm.Compose(
         ToTensorV2(),
     ],
     bbox_params=bbox_params,
-    additional_targets={
-        "image0": "image",
-    },
 )
 
 
@@ -232,7 +229,8 @@ class FrameDataset(Dataset):
     ) -> None:
         self.rows = rows
         self.keys = list(rows.keys())
-        self.transforms = transforms
+        self.transforms = A.Compose([transforms], additional_targets={ "image0": "image",})
+
 
     def __getitem__(
         self, idx: int
