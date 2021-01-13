@@ -3,3 +3,4 @@ store
 .cache
 signate.json
 *.log
+.env

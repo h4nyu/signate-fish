@@ -8,6 +8,8 @@ services:
         - http_proxy
         - https_proxy
     shm_size: '30gb'
+    environment:
+      - STORE_URL
     volumes:
       - ./:/srv
       - ./store:/store
