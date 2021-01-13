@@ -113,7 +113,7 @@ def read_test_rows(dataset_dir: str) -> TestRows:
 
 
 def kfold(
-    rows: Annotations, n_splits: int = 5
+    rows: Annotations, n_splits: int = 6
 ) -> typing.Tuple[Annotations, Annotations]:
     kf = GroupKFold(n_splits)
     x = list(rows.keys())
