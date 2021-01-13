@@ -1,3 +1,4 @@
+import base64
 import requests
 from urllib.parse import urljoin
 import os
@@ -21,16 +22,16 @@ class StoreApi:
         self.url = url
         self.cache: typing.Dict[str, Row] = {}
 
-    def create(self, id:str, data:str) -> str:
+    def create(self, id:str, data:bytes) -> None:
+        encoded = base64.b64encode(data)
         res = requests.post(
             urljoin(self.url, "/api/v1/image/create"),
             json={
                 "id": id,
-                "data": data.decode("ascii"),
+                "data": encoded.decode("ascii"),
             },
         )
         res.raise_for_status()
-        return res.json()
 
     def filter(self) -> Rows:
         return requests.post(

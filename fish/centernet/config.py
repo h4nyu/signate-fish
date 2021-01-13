@@ -13,7 +13,7 @@ mk_map_mode: GaussianMapMode = "aspect"
 
 # model
 channels = 64
-out_idx = 5
+out_idx = 6
 cls_depth = 1
 box_depth = 1
 
