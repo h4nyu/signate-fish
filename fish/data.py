@@ -3,7 +3,7 @@ from typing import *
 from torch import Tensor
 from torch.utils.data import Dataset
 from skimage.io import imread
-from toolz import map, pipe, keyfilter
+from toolz.curried import map, pipe, keyfilter, valfilter, filter, sorted
 from io import BytesIO
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
@@ -46,8 +46,10 @@ TestRow = typing.TypedDict(
 )
 TestRows = typing.Dict[str, TestRow]
 
+
 def cutmix(rows: Annotations) -> None:
     ...
+
 
 def parse_label(value: str) -> typing.Optional[int]:
     if value == "Jumper School":
@@ -178,6 +180,9 @@ train_transforms = lambda size: albm.Compose(
         ToTensorV2(),
     ],
     bbox_params=bbox_params,
+    additional_targets={
+        "image0": "image",
+    },
 )
 
 
@@ -199,6 +204,55 @@ class FileDataset(Dataset):
         return (
             ImageId(id),
             Image(transed["image"].float()),
+            PascalBoxes(torch.tensor(transed["bboxes"])),
+            Labels(torch.tensor(transed["labels"])),
+        )
+
+    def __len__(self) -> int:
+        return len(self.rows)
+
+
+def find_prev_frame(
+    rows: Annotations, sequence_id: int, frame_id: int
+) -> Optional[Annotation]:
+    return pipe(
+        rows.values(),
+        filter(lambda x: x["sequence_id"] == sequence_id and x["frame_id"] < frame_id),
+        sorted(key=lambda x: x["frame_id"], reverse=True),
+        iter,
+        lambda x: next(x, None),
+    )
+
+
+class FrameDataset(Dataset):
+    def __init__(
+        self,
+        rows: Annotations,
+        transforms: typing.Any,
+    ) -> None:
+        self.rows = rows
+        self.keys = list(rows.keys())
+        self.transforms = transforms
+
+    def __getitem__(
+        self, idx: int
+    ) -> Tuple[ImageId, Image, Image, PascalBoxes, Labels]:
+        id = self.keys[idx]
+        annot = self.rows[id]
+        image = imread(annot["image_path"])
+        prev_row = find_prev_frame(
+            self.rows, sequence_id=annot["sequence_id"], frame_id=annot["frame_id"]
+        )
+        image0: Any = imread(prev_row["image_path"]) if prev_row is not None else image
+        boxes = annot["boxes"]
+        labels = annot["labels"]
+        transed = self.transforms(
+            image=image, image0=image0, bboxes=boxes, labels=labels
+        )
+        return (
+            ImageId(id),
+            Image(transed["image"].float()),
+            Image(transed["image0"].float()),
             PascalBoxes(torch.tensor(transed["bboxes"])),
             Labels(torch.tensor(transed["labels"])),
         )

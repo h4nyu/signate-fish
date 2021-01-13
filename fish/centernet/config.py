@@ -2,13 +2,13 @@ from typing import *
 from object_detection.model_loader import WatchMode
 from object_detection.models.mkmaps import GaussianMapMode
 
-out_dir = "store/centernet-2"
+out_dir = "store/frame-centernet-1"
 
-image_size = 1024 + 1024
+image_size = 1024 + 512
 original_width = 3840
 original_height = 2160
 num_classes = 2
-batch_size = 3
+batch_size = 5
 mk_map_mode: GaussianMapMode = "length"
 
 # model

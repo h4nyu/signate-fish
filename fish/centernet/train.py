@@ -1,3 +1,4 @@
+from typing import List, Any, Tuple
 from adabelief_pytorch import AdaBelief
 import torch
 from typing import Dict
@@ -6,12 +7,12 @@ from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from object_detection.meters import MeanMeter
 from object_detection.models.centernet import (
-    collate_fn,
     CenterNet,
     Visualize,
     Criterion,
     ToBoxes,
 )
+from fish.models import FrameCenterNet
 from object_detection.models.mkmaps import (
     MkGaussianMaps,
     MkCenterBoxMaps,
@@ -25,9 +26,11 @@ from object_detection.model_loader import (
     BestWatcher,
 )
 from object_detection.metrics import MeanAveragePrecision
-from object_detection.entities.box import yolo_to_pascal
+from object_detection.entities.box import yolo_to_pascal, pascal_to_yolo, PascalBoxes, Labels, YoloBoxes
+from object_detection.entities import ImageId, ImageBatch
 from fish.data import (
     FileDataset,
+    FrameDataset,
     kfold,
     train_transforms,
     test_transforms,
@@ -41,19 +44,42 @@ from logging import (
 
 logger = getLogger(config.out_dir)
 
+
+def collate_fn(
+    batch: Any,
+) -> Tuple[List[ImageId], ImageBatch, ImageBatch,List[YoloBoxes], List[Labels]]:
+    images: List[Any] = []
+    images0: List[Any] = []
+    id_batch: List[ImageId] = []
+    box_batch: List[YoloBoxes] = []
+    label_batch: List[Labels] = []
+
+    for id, img, img0,boxes, labels in batch:
+        images.append(img)
+        images0.append(img0)
+        _, h, w = img.shape
+        box_batch.append(pascal_to_yolo(boxes, (w, h)))
+        id_batch.append(id)
+        label_batch.append(labels)
+    return (
+        id_batch,
+        ImageBatch(torch.stack(images)),
+        ImageBatch(torch.stack(images0)),
+        box_batch,
+        label_batch,
+    )
+
 device = torch.device("cuda")
-backbone = EfficientNetBackbone(
-    config.backbone_idx, out_channels=config.channels, pretrained=True
-)
-model = CenterNet(
+model = FrameCenterNet(
     num_classes=config.num_classes,
     channels=config.channels,
-    backbone=backbone,
     out_idx=config.out_idx,
     cls_depth=config.cls_depth,
     box_depth=config.box_depth,
 ).to(device)
-to_boxes = ToBoxes(threshold=config.to_boxes_threshold, kernel_size=config.to_boxes_kernel_size)
+to_boxes = ToBoxes(
+    threshold=config.to_boxes_threshold, kernel_size=config.to_boxes_kernel_size
+)
 model_loader = ModelLoader(
     out_dir=config.out_dir,
     key=config.metric[0],
@@ -64,11 +90,11 @@ model_loader = ModelLoader(
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
     train_rows, test_rows = kfold(annotations)
-    train_dataset = FileDataset(
+    train_dataset = FrameDataset(
         rows=train_rows,
         transforms=train_transforms(config.image_size),
     )
-    test_dataset = FileDataset(
+    test_dataset = FrameDataset(
         rows=test_rows,
         transforms=test_transforms(config.image_size),
     )
@@ -115,13 +141,14 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
-        for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(train_loader):
+        for ids, image_batch, image_batch0, gt_box_batch, gt_label_batch in tqdm(train_loader):
+            image_batch = image_batch.to(device)
+            image_batch0 = image_batch0.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
-            image_batch = image_batch.to(device)
             optimizer.zero_grad()
             with autocast(enabled=config.use_amp):
-                netout = model(image_batch)
+                netout = model(image_batch, image_batch0)
                 loss, label_loss, box_loss, _ = criterion(
                     image_batch, netout, gt_box_batch, gt_label_batch
                 )
@@ -145,12 +172,13 @@ def train(epochs: int) -> None:
             iou_threshold=0.3, num_classes=config.num_classes
         )
 
-        for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(test_loader):
+        for ids, image_batch, image_batch0, gt_box_batch, gt_label_batch in tqdm(test_loader):
             image_batch = image_batch.to(device)
+            image_batch0 = image_batch0.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
             _, _, h, w = image_batch.shape
-            netout = model(image_batch)
+            netout = model(image_batch, image_batch0)
             loss, label_loss, box_loss, gt_hms = criterion(
                 image_batch, netout, gt_box_batch, gt_label_batch
             )

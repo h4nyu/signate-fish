@@ -26,6 +26,7 @@ from logging import (
 
 logger = getLogger(__name__)
 
+
 @torch.no_grad()
 def predict(device: str) -> None:
     annotations = read_train_rows("/store")
@@ -44,9 +45,7 @@ def predict(device: str) -> None:
         drop_last=False,
     )
     weights = [1]
-    metrics = MeanAveragePrecision(
-        iou_threshold=0.3, num_classes=config.num_classes
-    )
+    metrics = MeanAveragePrecision(iou_threshold=0.3, num_classes=config.num_classes)
     for ids, image_batch, gt_box_batch, gt_label_batch in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
         _, _, h, w = image_batch.shape
@@ -54,7 +53,13 @@ def predict(device: str) -> None:
         gt_label_batch = [x.to(device) for x in gt_label_batch]
         box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
         for id, img, boxes, gt_boxes, labels, gt_labels, confidences in zip(
-            ids, image_batch, box_batch, gt_box_batch, label_batch, gt_label_batch, confidence_batch
+            ids,
+            image_batch,
+            box_batch,
+            gt_box_batch,
+            label_batch,
+            gt_label_batch,
+            confidence_batch,
         ):
             metrics.add(
                 boxes=yolo_to_pascal(boxes, (w, h)),
@@ -77,14 +82,13 @@ def predict(device: str) -> None:
             _boxes = resize(PascalBoxes(torch.from_numpy(_boxes)), (w, h))
             plot = DetectionPlot(img)
             plot.draw_boxes(boxes=_boxes, labels=labels, confidences=confidences)
-            plot.draw_boxes(boxes=yolo_to_pascal(gt_boxes, (w, h)), labels=gt_labels, color="red")
+            plot.draw_boxes(
+                boxes=yolo_to_pascal(gt_boxes, (w, h)), labels=gt_labels, color="red"
+            )
             plot.save(out_dir.joinpath(f"{id}.jpg"))
     score, scores = metrics()
     logger.info(f"{score=}, {scores=}")
 
 
-
-
 if __name__ == "__main__":
     predict("cuda")
-
