@@ -147,20 +147,20 @@ train_transforms = lambda size: albm.Compose(
         A.VerticalFlip(p=0.5),
         A.HorizontalFlip(p=0.5),
         A.ShiftScaleRotate(
-            shift_limit=0.1,
-            scale_limit=(-0.3, 0.5),
-            rotate_limit=15,
+            shift_limit=0.05,
+            scale_limit=(-0.1, 0.1),
+            rotate_limit=10,
             p=1.0,
             border_mode=cv2.BORDER_CONSTANT,
         ),
-        albm.LongestMaxSize(max_size=size),
+        A.LongestMaxSize(max_size=size),
         A.OneOf(
             [
                 A.HueSaturationValue(
                     hue_shift_limit=10, sat_shift_limit=20, val_shift_limit=20, p=0.9
                 ),
                 A.RandomBrightnessContrast(
-                    brightness_limit=0.2, contrast_limit=0.2, p=0.9
+                    brightness_limit=0.3, contrast_limit=0.3, p=0.9
                 ),
             ],
             p=0.9,
