@@ -13,7 +13,7 @@ from object_detection.utils import DetectionPlot
 def test_dataset() -> None:
     annotations = read_train_rows("/store")
 
-    dataset = FileDataset(rows=annotations, transforms=train_transforms(1080 * 2))
+    dataset = FileDataset(rows=annotations, transforms=train_transforms(1024))
     for i in range(10):
         id, image, boxes, labels = dataset[5]
         plot = DetectionPlot(image)

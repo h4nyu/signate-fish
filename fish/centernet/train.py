@@ -39,7 +39,7 @@ from logging import (
     getLogger,
 )
 
-logger = getLogger(__name__)
+logger = getLogger(config.out_dir)
 
 device = torch.device("cuda")
 backbone = EfficientNetBackbone(

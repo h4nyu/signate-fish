@@ -12,9 +12,12 @@ from object_detection.utils import init_seed
 __version__ = "0.1.0"
 logger = getLogger()
 logger.setLevel(INFO)
-stream_handler = StreamHandler()
 handler_format = Formatter("%(asctime)s,%(name)s,%(message)s")
-stream_handler.setFormatter(handler_format)
-logger.addHandler(stream_handler)
+fh = FileHandler("app.log")
+sh = StreamHandler()
+sh.setFormatter(handler_format)
+fh.setFormatter(handler_format)
+logger.addHandler(sh)
+logger.addHandler(fh)
 
 init_seed(0)

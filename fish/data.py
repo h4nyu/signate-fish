@@ -144,11 +144,12 @@ prediction_transforms = lambda size: albm.Compose(
 
 train_transforms = lambda size: albm.Compose(
     [
+        A.VerticalFlip(p=0.5),
         A.HorizontalFlip(p=0.5),
         A.ShiftScaleRotate(
             shift_limit=0.1,
-            scale_limit=(-0.3, 1.0),
-            rotate_limit=20,
+            scale_limit=(-0.3, 0.5),
+            rotate_limit=15,
             p=1.0,
             border_mode=cv2.BORDER_CONSTANT,
         ),
