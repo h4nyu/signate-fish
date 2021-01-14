@@ -162,13 +162,13 @@ train_transforms = lambda size: albm.Compose(
                     hue_shift_limit=10, sat_shift_limit=20, val_shift_limit=20, p=0.9
                 ),
                 A.RandomBrightnessContrast(
-                    brightness_limit=0.3, contrast_limit=0.3, p=0.9
+                    brightness_limit=0.2, contrast_limit=0.2, p=0.9
                 ),
             ],
             p=0.9,
         ),
         A.OneOf(
-            [A.Blur(blur_limit=3, p=1.0), A.MedianBlur(blur_limit=3, p=1.0)], p=0.2
+            [A.Blur(blur_limit=3, p=1.0), A.MedianBlur(blur_limit=3, p=1.0), A.MotionBlur(blur_limit=3, p=1.0)], p=0.2
         ),
         A.OneOf(
             [

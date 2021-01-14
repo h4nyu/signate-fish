@@ -4,6 +4,10 @@ from object_detection.model_loader import WatchMode
 
 out_dir = "/store/efficientdet-0"
 
+# train
+use_amp = True
+n_split = 6
+
 # data
 image_size = 1024 + 512
 num_classes = 2
@@ -12,7 +16,7 @@ original_height = 2160
 
 confidence_threshold = 0.3
 iou_threshold = 0.50
-batch_size = 3
+batch_size = 5
 
 # model
 backbone_id = 1
