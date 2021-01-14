@@ -104,7 +104,9 @@ def train(epochs: int) -> None:
         eps=1e-8,
         weight_decay=0,
     )
-    visualize = Visualize(config.out_dir, "test", limit=config.batch_size * 2, transforms=inv_normalize)
+    visualize = Visualize(
+        config.out_dir, "test", limit=config.batch_size * 2, transforms=inv_normalize
+    )
     get_score = MeanPrecition(iou_thresholds=[0.3])
     scaler = GradScaler()
     logs: Dict[str, float] = {}
@@ -192,7 +194,7 @@ def train(epochs: int) -> None:
         score, scores = metrics()
         model_loader.save_if_needed(
             model,
-            score,
+            logs[model_loader.key],
         )
 
     def log() -> None:

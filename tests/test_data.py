@@ -19,7 +19,7 @@ def test_dataset() -> None:
     dataset = FileDataset(rows=annotations, transforms=train_transforms)
     for i in range(10):
         id, image, boxes, labels = dataset[5]
-        plot = DetectionPlot(inv_normalize(image) * 255)
+        plot = DetectionPlot(inv_normalize(image))
         plot.draw_boxes(boxes=boxes, labels=labels)
         plot.save(f"store/test-plot-{id}-{i}.png")
 
@@ -30,11 +30,11 @@ def test_frame_dataset() -> None:
     dataset = FrameDataset(rows=annotations, transforms=train_transforms)
     for i in range(10):
         id, image0, image1, boxes, labels = dataset[5]
-        plot = DetectionPlot(image0)
+        plot = DetectionPlot(inv_normalize(image0))
         plot.draw_boxes(boxes=boxes, labels=labels)
         plot.save(f"store/test-plot-{id}-0-{i}.png")
 
-        plot = DetectionPlot(image1)
+        plot = DetectionPlot(inv_normalize(image1))
         plot.draw_boxes(boxes=boxes, labels=labels)
         plot.save(f"store/test-plot-{id}-1-{i}.png")
 

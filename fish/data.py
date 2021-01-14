@@ -172,7 +172,6 @@ train_transforms = albm.Compose(
                 A.RandomBrightnessContrast(
                     brightness_limit=0.2, contrast_limit=0.2, p=0.9
                 ),
-                A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=0.5),
             ],
             p=0.9,
         ),
