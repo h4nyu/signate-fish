@@ -16,7 +16,7 @@ original_height = 2160
 
 confidence_threshold = 0.3
 iou_threshold = 0.50
-batch_size = 5
+batch_size = 6
 
 # model
 backbone_id = 1
