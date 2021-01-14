@@ -7,7 +7,7 @@ rows = read_test_rows("/store")
 api = StoreApi()
 
 for id, row in rows.items():
-    with open(row['image_path'], "rb") as f:
+    with open(row["image_path"], "rb") as f:
         data = f.read()
     try:
         api.create(id, data)

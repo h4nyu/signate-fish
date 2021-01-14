@@ -22,7 +22,7 @@ class StoreApi:
         self.url = url
         self.cache: typing.Dict[str, Row] = {}
 
-    def create(self, id:str, data:bytes) -> None:
+    def create(self, id: str, data: bytes) -> None:
         encoded = base64.b64encode(data)
         res = requests.post(
             urljoin(self.url, "/api/v1/image/create"),

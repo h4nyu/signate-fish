@@ -27,7 +27,13 @@ from object_detection.model_loader import (
     BestWatcher,
 )
 from object_detection.metrics import MeanAveragePrecision
-from object_detection.entities.box import yolo_to_pascal, pascal_to_yolo, PascalBoxes, Labels, YoloBoxes
+from object_detection.entities.box import (
+    yolo_to_pascal,
+    pascal_to_yolo,
+    PascalBoxes,
+    Labels,
+    YoloBoxes,
+)
 from object_detection.entities import ImageId, ImageBatch
 from fish.data import (
     FileDataset,
@@ -120,7 +126,7 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
-        for ids, image_batch,  gt_box_batch, gt_label_batch in tqdm(train_loader):
+        for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(train_loader):
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]

@@ -26,7 +26,13 @@ from object_detection.model_loader import (
     BestWatcher,
 )
 from object_detection.metrics import MeanAveragePrecision
-from object_detection.entities.box import yolo_to_pascal, pascal_to_yolo, PascalBoxes, Labels, YoloBoxes
+from object_detection.entities.box import (
+    yolo_to_pascal,
+    pascal_to_yolo,
+    PascalBoxes,
+    Labels,
+    YoloBoxes,
+)
 from object_detection.entities import ImageId, ImageBatch
 from fish.data import (
     FileDataset,
@@ -47,14 +53,14 @@ logger = getLogger(config.out_dir)
 
 def collate_fn(
     batch: Any,
-) -> Tuple[List[ImageId], ImageBatch, ImageBatch,List[YoloBoxes], List[Labels]]:
+) -> Tuple[List[ImageId], ImageBatch, ImageBatch, List[YoloBoxes], List[Labels]]:
     images: List[Any] = []
     images0: List[Any] = []
     id_batch: List[ImageId] = []
     box_batch: List[YoloBoxes] = []
     label_batch: List[Labels] = []
 
-    for id, img, img0,boxes, labels in batch:
+    for id, img, img0, boxes, labels in batch:
         images.append(img)
         images0.append(img0)
         _, h, w = img.shape
@@ -68,6 +74,7 @@ def collate_fn(
         box_batch,
         label_batch,
     )
+
 
 device = torch.device("cuda")
 model = FrameCenterNet(
@@ -141,7 +148,9 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
-        for ids, image_batch, image_batch0, gt_box_batch, gt_label_batch in tqdm(train_loader):
+        for ids, image_batch, image_batch0, gt_box_batch, gt_label_batch in tqdm(
+            train_loader
+        ):
             image_batch = image_batch.to(device)
             image_batch0 = image_batch0.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
@@ -172,7 +181,9 @@ def train(epochs: int) -> None:
             iou_threshold=0.3, num_classes=config.num_classes
         )
 
-        for ids, image_batch, image_batch0, gt_box_batch, gt_label_batch in tqdm(test_loader):
+        for ids, image_batch, image_batch0, gt_box_batch, gt_label_batch in tqdm(
+            test_loader
+        ):
             image_batch = image_batch.to(device)
             image_batch0 = image_batch0.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]

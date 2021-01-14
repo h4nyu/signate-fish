@@ -38,8 +38,34 @@ from logging import (
 logger = getLogger(config.out_dir)
 
 
+device = torch.device("cuda")
+anchors = Anchors(
+    size=config.anchor_size,
+    ratios=config.anchor_ratios,
+    scales=config.anchor_scales,
+)
+backbone = ResNetBackbone("resnet50", out_channels=config.channels)
+model = EfficientDet(
+    num_classes=config.num_classes,
+    out_ids=config.out_ids,
+    channels=config.channels,
+    backbone=backbone,
+    anchors=anchors,
+    box_depth=config.box_depth,
+).to(device)
+model_loader = ModelLoader(
+    out_dir=config.out_dir,
+    key=config.metric[0],
+    best_watcher=BestWatcher(mode=config.metric[1]),
+)
+
+to_boxes = ToBoxes(
+    confidence_threshold=config.confidence_threshold,
+    iou_threshold=config.iou_threshold,
+)
+
+
 def train(epochs: int) -> None:
-    device = torch.device("cuda")
     annotations = read_train_rows("/store")
     train_rows, test_rows = kfold(annotations, n_splits=config.n_splits)
     train_dataset = FileDataset(
@@ -49,25 +75,6 @@ def train(epochs: int) -> None:
     test_dataset = FileDataset(
         rows=test_rows,
         transforms=test_transforms(config.image_size),
-    )
-    backbone = ResNetBackbone("resnet50", out_channels=config.channels)
-    anchors = Anchors(
-        size=config.anchor_size,
-        ratios=config.anchor_ratios,
-        scales=config.anchor_scales,
-    )
-    model = EfficientDet(
-        num_classes=config.num_classes,
-        out_ids=config.out_ids,
-        channels=config.channels,
-        backbone=backbone,
-        anchors=anchors,
-        box_depth=config.box_depth,
-    ).to(device)
-    model_loader = ModelLoader(
-        out_dir=config.out_dir,
-        key=config.metric[0],
-        best_watcher=BestWatcher(mode=config.metric[1]),
     )
     train_loader = DataLoader(
         train_dataset,
@@ -95,12 +102,8 @@ def train(epochs: int) -> None:
         eps=1e-8,
         weight_decay=0,
     )
-    visualize = Visualize(config.out_dir, "test", limit=config.batch_size)
+    visualize = Visualize(config.out_dir, "test", limit=config.batch_size * 2)
     get_score = MeanPrecition(iou_thresholds=[0.3])
-    to_boxes = ToBoxes(
-        confidence_threshold=config.confidence_threshold,
-        iou_threshold=config.iou_threshold,
-    )
     scaler = GradScaler()
     logs: Dict[str, float] = {}
 

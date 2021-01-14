@@ -168,7 +168,12 @@ train_transforms = lambda size: albm.Compose(
             p=0.9,
         ),
         A.OneOf(
-            [A.Blur(blur_limit=3, p=1.0), A.MedianBlur(blur_limit=3, p=1.0), A.MotionBlur(blur_limit=3, p=1.0)], p=0.2
+            [
+                A.Blur(blur_limit=3, p=1.0),
+                A.MedianBlur(blur_limit=3, p=1.0),
+                A.MotionBlur(blur_limit=3, p=1.0),
+            ],
+            p=0.2,
         ),
         A.OneOf(
             [
@@ -229,8 +234,12 @@ class FrameDataset(Dataset):
     ) -> None:
         self.rows = rows
         self.keys = list(rows.keys())
-        self.transforms = A.Compose([transforms], additional_targets={ "image0": "image",})
-
+        self.transforms = A.Compose(
+            [transforms],
+            additional_targets={
+                "image0": "image",
+            },
+        )
 
     def __getitem__(
         self, idx: int
