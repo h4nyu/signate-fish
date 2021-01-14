@@ -24,12 +24,12 @@ fpn_depth = 1
 lr = 5e-4
 out_ids: List[int] = [6, 7]
 
-metric: Tuple[str, WatchMode] = ("test_label", "min")
+metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
 
 # criterion
-topk = 5
-box_weight = 2
+topk = 9
+box_weight = 1
 cls_weight = 1
 
 anchor_ratios = [1.0]
