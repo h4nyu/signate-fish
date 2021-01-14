@@ -2,14 +2,13 @@ from typing import *
 from object_detection.model_loader import WatchMode
 
 
-out_dir = "/store/efficientdet-0"
+out_dir = "/store/efficientdet1"
 
 # train
 use_amp = True
 n_splits = 6
 
 # data
-image_size = 1024 + 1024
 num_classes = 2
 original_width = 3840
 original_height = 2160

@@ -7,6 +7,7 @@ from toolz.curried import map, pipe, keyfilter, valfilter, filter, sorted
 from io import BytesIO
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
+from torchvision.transforms import Normalize
 from PIL import Image as PILImage
 import os
 from object_detection.entities import (
@@ -130,22 +131,28 @@ def kfold(
 
 
 bbox_params = {"format": "pascal_voc", "label_fields": ["labels"]}
-test_transforms = lambda size: albm.Compose(
+test_transforms = albm.Compose(
     [
-        albm.LongestMaxSize(max_size=size),
+        albm.LongestMaxSize(max_size=config.image_size),
+        A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
     ],
     bbox_params=bbox_params,
 )
 
-prediction_transforms = lambda size: albm.Compose(
+prediction_transforms = albm.Compose(
     [
-        albm.LongestMaxSize(max_size=size),
+        albm.LongestMaxSize(max_size=config.image_size),
+        A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
     ],
 )
+inv_normalize = Normalize(
+    mean=[-m / s for m, s in zip(config.normalize_mean, config.normalize_std)],
+    std=[1 / s for s in config.normalize_std],
+)
 
-train_transforms = lambda size: albm.Compose(
+train_transforms = albm.Compose(
     [
         A.VerticalFlip(p=0.5),
         A.HorizontalFlip(p=0.5),
@@ -156,7 +163,7 @@ train_transforms = lambda size: albm.Compose(
             p=1.0,
             border_mode=cv2.BORDER_CONSTANT,
         ),
-        A.LongestMaxSize(max_size=size),
+        A.LongestMaxSize(max_size=config.image_size),
         A.OneOf(
             [
                 A.HueSaturationValue(
@@ -165,6 +172,7 @@ train_transforms = lambda size: albm.Compose(
                 A.RandomBrightnessContrast(
                     brightness_limit=0.2, contrast_limit=0.2, p=0.9
                 ),
+                A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=0.5),
             ],
             p=0.9,
         ),
@@ -183,6 +191,7 @@ train_transforms = lambda size: albm.Compose(
             ],
             p=0.2,
         ),
+        A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
     ],
     bbox_params=bbox_params,

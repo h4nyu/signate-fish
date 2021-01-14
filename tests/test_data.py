@@ -7,6 +7,7 @@ from fish.data import (
     cutmix,
     find_prev_frame,
     FrameDataset,
+    inv_normalize,
 )
 from toolz import valfilter
 from object_detection.utils import DetectionPlot
@@ -15,10 +16,10 @@ from object_detection.utils import DetectionPlot
 def test_dataset() -> None:
     annotations = read_train_rows("/store")
 
-    dataset = FileDataset(rows=annotations, transforms=train_transforms(1024))
+    dataset = FileDataset(rows=annotations, transforms=train_transforms)
     for i in range(10):
         id, image, boxes, labels = dataset[5]
-        plot = DetectionPlot(image)
+        plot = DetectionPlot(inv_normalize(image) * 255)
         plot.draw_boxes(boxes=boxes, labels=labels)
         plot.save(f"store/test-plot-{id}-{i}.png")
 
@@ -26,7 +27,7 @@ def test_dataset() -> None:
 def test_frame_dataset() -> None:
     annotations = read_train_rows("/store")
 
-    dataset = FrameDataset(rows=annotations, transforms=train_transforms(1024))
+    dataset = FrameDataset(rows=annotations, transforms=train_transforms)
     for i in range(10):
         id, image0, image1, boxes, labels = dataset[5]
         plot = DetectionPlot(image0)

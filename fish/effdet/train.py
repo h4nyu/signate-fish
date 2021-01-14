@@ -29,6 +29,7 @@ from fish.data import (
     train_transforms,
     test_transforms,
     read_train_rows,
+    inv_normalize,
 )
 from fish.effdet import config
 from logging import (
@@ -71,11 +72,11 @@ def train(epochs: int) -> None:
     train_rows, test_rows = kfold(annotations, n_splits=config.n_splits)
     train_dataset = FileDataset(
         rows=train_rows,
-        transforms=train_transforms(config.image_size),
+        transforms=train_transforms,
     )
     test_dataset = FileDataset(
         rows=test_rows,
-        transforms=test_transforms(config.image_size),
+        transforms=test_transforms,
     )
     train_loader = DataLoader(
         train_dataset,
@@ -103,7 +104,7 @@ def train(epochs: int) -> None:
         eps=1e-8,
         weight_decay=0,
     )
-    visualize = Visualize(config.out_dir, "test", limit=config.batch_size * 2)
+    visualize = Visualize(config.out_dir, "test", limit=config.batch_size * 2, transforms=inv_normalize)
     get_score = MeanPrecition(iou_thresholds=[0.3])
     scaler = GradScaler()
     logs: Dict[str, float] = {}
