@@ -33,7 +33,7 @@ def predict(device: str) -> None:
     out_dir = Path("/store/evaluate")
     out_dir.mkdir(exist_ok=True)
     dataset = FileDataset(
-        rows=annotations, transforms=test_transforms(config.image_size)
+        rows=annotations, transforms=test_transforms
     )
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(

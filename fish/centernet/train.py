@@ -78,11 +78,11 @@ def train(epochs: int) -> None:
     train_rows, test_rows = kfold(annotations)
     train_dataset = FileDataset(
         rows=train_rows,
-        transforms=train_transforms(config.image_size),
+        transforms=train_transforms,
     )
     test_dataset = FileDataset(
         rows=test_rows,
-        transforms=test_transforms(config.image_size),
+        transforms=test_transforms,
     )
     criterion = Criterion(
         box_weight=config.box_weight,
@@ -116,7 +116,7 @@ def train(epochs: int) -> None:
         weight_decouple=False,
         rectify=True,
     )
-    visualize = Visualize(config.out_dir, "test", limit=config.batch_size, normalize=inv_normalize)
+    visualize = Visualize(config.out_dir, "test", limit=config.batch_size, transforms=inv_normalize)
 
     get_score = MeanPrecition(iou_thresholds=[0.3])
     logs: Dict[str, float] = {}

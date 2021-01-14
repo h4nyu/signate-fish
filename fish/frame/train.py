@@ -99,11 +99,11 @@ def train(epochs: int) -> None:
     train_rows, test_rows = kfold(annotations)
     train_dataset = FrameDataset(
         rows=train_rows,
-        transforms=train_transforms(config.image_size),
+        transforms=train_transforms,
     )
     test_dataset = FrameDataset(
         rows=test_rows,
-        transforms=test_transforms(config.image_size),
+        transforms=test_transforms,
     )
     criterion = Criterion(
         box_weight=config.box_weight,

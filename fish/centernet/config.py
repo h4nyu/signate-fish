@@ -4,7 +4,6 @@ from object_detection.models.mkmaps import GaussianMapMode
 
 out_dir = "store/centernet-2"
 
-image_size = 1024 + 512
 original_width = 3840
 original_height = 2160
 num_classes = 2
