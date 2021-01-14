@@ -25,6 +25,7 @@ adabelief-pytorch = "^0.2.0"
 ensemble-boxes = "^1.0.4"
 object-detection = {path = "object-detection"}
 signate = "^0.9.7"
+torch-optimizer = "^0.1.0"
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 mypy = "^0.790"

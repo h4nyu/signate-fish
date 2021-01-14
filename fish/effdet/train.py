@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from object_detection.models.backbones.resnet import (
     ResNetBackbone,
 )
+import torch_optimizer as optim
 from torch.cuda.amp import GradScaler, autocast
 from object_detection.meters import MeanMeter
 from object_detection.metrics import MeanAveragePrecision
@@ -40,7 +41,7 @@ logger = getLogger(config.out_dir)
 def train(epochs: int) -> None:
     device = torch.device("cuda")
     annotations = read_train_rows("/store")
-    train_rows, test_rows = kfold(annotations, n_split=config.n_split)
+    train_rows, test_rows = kfold(annotations, n_splits=config.n_splits)
     train_dataset = FileDataset(
         rows=train_rows,
         transforms=train_transforms(config.image_size),
@@ -87,15 +88,13 @@ def train(epochs: int) -> None:
         box_weight=config.box_weight,
         cls_weight=config.cls_weight,
     )
-    optimizer = AdaBelief(
+    optimizer = optim.RAdam(
         model.parameters(),
         lr=config.lr,
-        eps=1e-8,
         betas=(0.9, 0.999),
-        weight_decouple=False,
-        rectify=True,
+        eps=1e-8,
+        weight_decay=0,
     )
-
     visualize = Visualize(config.out_dir, "test", limit=config.batch_size)
     get_score = MeanPrecition(iou_thresholds=[0.3])
     to_boxes = ToBoxes(

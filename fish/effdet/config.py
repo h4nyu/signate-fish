@@ -6,7 +6,7 @@ out_dir = "/store/efficientdet-0"
 
 # train
 use_amp = True
-n_split = 6
+n_splits = 6
 
 # data
 image_size = 1024 + 512
@@ -29,10 +29,10 @@ metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
 
 # criterion
-topk = 39
+topk = 5
 box_weight = 2
 cls_weight = 1
 
-anchor_ratios = [1.0]
+anchor_ratios = [1.0, 3/2, 2/3]
 anchor_scales = [1.0, 1.5]
 anchor_size = 4
