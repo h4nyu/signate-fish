@@ -16,19 +16,19 @@ original_height = 2160
 
 confidence_threshold = 0.3
 iou_threshold = 0.50
-batch_size = 12
+batch_size = 13
 
 # model
 channels = 96
 box_depth = 1
-lr = 1e-4
+lr = 5e-4
 out_ids: List[int] = [6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
 
 # criterion
-topk = 7
+topk = 9
 box_weight = 2
 cls_weight = 1
 
