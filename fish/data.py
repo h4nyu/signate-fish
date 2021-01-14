@@ -193,7 +193,7 @@ def filter_boxes(
     boxes: PascalBoxes, min_width: int, min_height: int, min_area: int
 ) -> Tuple[PascalBoxes, Tensor]:
     if len(boxes) == 0:
-        return boxes, torch.zeros(0)
+        return boxes, torch.zeros(0, dtype=torch.bool)
     x0, y0, x1, y1 = boxes.unbind(-1)
     w = x1 - x0
     h = y1 - y0

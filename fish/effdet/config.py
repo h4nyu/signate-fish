@@ -16,12 +16,12 @@ original_height = 2160
 
 confidence_threshold = 0.1
 iou_threshold = 0.50
-batch_size = 5
+batch_size = 4
 
 # model
 channels = 64
 box_depth = 1
-fpn_depth = 2
+fpn_depth = 1
 lr = 5e-4
 out_ids: List[int] = [6, 7]
 
