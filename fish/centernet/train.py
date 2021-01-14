@@ -42,6 +42,7 @@ from fish.data import (
     train_transforms,
     test_transforms,
     read_train_rows,
+    inv_normalize,
 )
 from object_detection.metrics import MeanPrecition
 from fish.centernet import config
@@ -115,7 +116,7 @@ def train(epochs: int) -> None:
         weight_decouple=False,
         rectify=True,
     )
-    visualize = Visualize(config.out_dir, "test", limit=config.batch_size)
+    visualize = Visualize(config.out_dir, "test", limit=config.batch_size, normalize=inv_normalize)
 
     get_score = MeanPrecition(iou_thresholds=[0.3])
     logs: Dict[str, float] = {}
