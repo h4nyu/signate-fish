@@ -1,4 +1,4 @@
-import glob, tqdm, torch, json
+import glob, tqdm, torch, json, shutil
 from pathlib import Path
 from typing import Dict, Any
 from torch.utils.data import DataLoader
@@ -27,6 +27,7 @@ logger = getLogger(config.out_dir)
 def predict(device: str) -> None:
     annotations = read_train_rows("/store")
     out_dir = Path("/store/evaluate")
+    shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
     dataset = FileDataset(
         rows=annotations, transforms=test_transforms(config.image_size)

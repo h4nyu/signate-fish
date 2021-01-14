@@ -22,6 +22,7 @@ import albumentations as albm
 from sklearn.model_selection import GroupKFold
 import glob, typing, json, re
 from pathlib import Path
+from fish import config
 
 
 Annotation = typing.TypedDict(
@@ -188,6 +189,19 @@ train_transforms = lambda size: albm.Compose(
 )
 
 
+def filter_boxes(
+    boxes: PascalBoxes, min_width: int, min_height: int, min_area: int
+) -> Tuple[PascalBoxes, Tensor]:
+    if len(boxes) == 0:
+        return boxes, torch.zeros(0)
+    x0, y0, x1, y1 = boxes.unbind(-1)
+    w = x1 - x0
+    h = y1 - y0
+    area = w * h
+    filter_indices = (w > min_width) & (h > min_height) & (area > min_area)
+    return PascalBoxes(boxes[filter_indices]), filter_indices
+
+
 class FileDataset(Dataset):
     def __init__(
         self,
@@ -200,8 +214,15 @@ class FileDataset(Dataset):
     def __getitem__(self, idx: int) -> TrainSample:
         id, annot = self.rows[idx]
         image = imread(annot["image_path"])
-        boxes = annot["boxes"]
-        labels = annot["labels"]
+        boxes = PascalBoxes(torch.tensor(annot["boxes"]))
+        labels = Labels(torch.tensor(annot["labels"]))
+        boxes, indices = filter_boxes(
+            boxes,
+            min_height=config.min_box_height,
+            min_width=config.min_box_width,
+            min_area=config.min_box_area,
+        )
+        labels = Labels(labels[indices])
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),

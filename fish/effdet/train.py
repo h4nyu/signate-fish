@@ -52,6 +52,7 @@ model = EfficientDet(
     backbone=backbone,
     anchors=anchors,
     box_depth=config.box_depth,
+    fpn_depth=config.fpn_depth,
 ).to(device)
 model_loader = ModelLoader(
     out_dir=config.out_dir,
