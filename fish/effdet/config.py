@@ -14,7 +14,7 @@ original_width = 3840
 original_height = 2160
 
 confidence_threshold = 0.1
-iou_threshold = 0.50
+iou_threshold = 0.20
 batch_size = 4
 
 # model
