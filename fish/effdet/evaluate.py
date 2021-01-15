@@ -10,7 +10,13 @@ from object_detection.entities.box import (
     Labels,
     resize,
 )
-from fish.data import read_train_rows, FileDataset, test_transforms, kfold
+from fish.data import (
+    read_train_rows,
+    FileDataset,
+    test_transforms,
+    kfold,
+    inv_normalize,
+)
 from fish.effdet import config
 from fish.effdet.train import model, model_loader, to_boxes, collate_fn
 from ensemble_boxes import weighted_boxes_fusion
@@ -62,7 +68,7 @@ def predict(device: str) -> None:
                 gt_boxes=gt_boxes,
                 gt_labels=gt_labels,
             )
-            plot = DetectionPlot(img)
+            plot = DetectionPlot(inv_normalize(img))
             plot.draw_boxes(boxes=boxes, labels=labels, confidences=confidences)
             plot.draw_boxes(boxes=gt_boxes, labels=gt_labels, color="red")
             plot.save(out_dir.joinpath(f"{id}.jpg"))

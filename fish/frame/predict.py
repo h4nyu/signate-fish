@@ -37,7 +37,8 @@ def predict(device: str) -> None:
     out_dir = Path("/store/submission")
     out_dir.mkdir(exist_ok=True)
     dataset = TestDataset(
-        rows=rows, transforms=prediction_transforms,
+        rows=rows,
+        transforms=prediction_transforms,
     )
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(

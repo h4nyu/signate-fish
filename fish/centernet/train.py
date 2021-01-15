@@ -116,7 +116,9 @@ def train(epochs: int) -> None:
         weight_decouple=False,
         rectify=True,
     )
-    visualize = Visualize(config.out_dir, "test", limit=config.batch_size, transforms=inv_normalize)
+    visualize = Visualize(
+        config.out_dir, "test", limit=config.batch_size, transforms=inv_normalize
+    )
 
     get_score = MeanPrecition(iou_thresholds=[0.3])
     logs: Dict[str, float] = {}

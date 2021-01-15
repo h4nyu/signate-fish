@@ -32,9 +32,7 @@ def predict(device: str) -> None:
     annotations = read_train_rows("/store")
     out_dir = Path("/store/evaluate")
     out_dir.mkdir(exist_ok=True)
-    dataset = FileDataset(
-        rows=annotations, transforms=test_transforms
-    )
+    dataset = FileDataset(rows=annotations, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(
         dataset,
