@@ -7,7 +7,7 @@ out_dir = "store/centernet-2"
 original_width = 3840
 original_height = 2160
 num_classes = 2
-batch_size = 8
+batch_size = 3
 mk_map_mode: GaussianMapMode = "aspect"
 
 # model
@@ -19,14 +19,15 @@ box_depth = 1
 # criterion
 lr = 1e-3
 box_weight = 1.0
-heatmap_weight = 1.0
+heatmap_weight = 2.0
 sigma = 15
 metric: Tuple[str, WatchMode] = ("score", "max")
 
 # to_boxes
-to_boxes_threshold = 0.3
-iou_threshold = 0.5
+to_boxes_threshold = 0.35
+iou_threshold = 0.2
 to_boxes_kernel_size = 3
+
 
 # train
 use_amp = True

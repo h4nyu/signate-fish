@@ -11,6 +11,8 @@ from fish.data import (
     inv_normalize,
 )
 from object_detection.models.anchors import Anchors
+from object_detection.entities.box import PascalBoxes
+from object_detection.entities import ImageBatch
 from toolz import valfilter
 from object_detection.utils import DetectionPlot
 
@@ -34,23 +36,25 @@ def test_anchors() -> None:
     fpn_level = 7
     for i in range(1):
         id, image, boxes, labels = dataset[5]
-        dummy = torch.zeros(1, *image.shape)
+        dummy = ImageBatch(torch.zeros(1, *image.shape))
         anchor_box_level0 = anchors(dummy, 2 ** 7)
         anchor_box_level1 = anchors(dummy, 2 ** 6)
-        print(image.shape)
-        print(anchor_box_level0)
         plot = DetectionPlot(inv_normalize(image))
         # plot.draw_boxes(boxes=boxes, labels=labels)
         plot.draw_boxes(
-            boxes=anchor_box_level0[
-                len(anchor_box_level0) // 2 : len(anchor_box_level0) // 2 + 4
-            ],
+            boxes=PascalBoxes(
+                anchor_box_level0[
+                    len(anchor_box_level0) // 2 : len(anchor_box_level0) // 2 + 4
+                ]
+            ),
             color="red",
         )
         plot.draw_boxes(
-            boxes=anchor_box_level1[
-                len(anchor_box_level1) // 2 : len(anchor_box_level1) // 2 + 4
-            ],
+            boxes=PascalBoxes(
+                anchor_box_level1[
+                    len(anchor_box_level1) // 2 : len(anchor_box_level1) // 2 + 4
+                ]
+            ),
             color="blue",
         )
         plot.save(f"store/test-anchors-{id}-{i}.png")

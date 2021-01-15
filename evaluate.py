@@ -1,4 +1,4 @@
-import glob, tqdm, torch, json
+import glob, tqdm, torch, json, shutil
 from pathlib import Path
 from typing import Dict, Any
 from torch.utils.data import DataLoader
@@ -14,7 +14,13 @@ from object_detection.entities.box import (
     filter_size,
     resize,
 )
-from fish.data import read_train_rows, FileDataset, test_transforms, kfold
+from fish.data import (
+    read_train_rows,
+    FileDataset,
+    test_transforms,
+    kfold,
+    inv_normalize,
+)
 from fish.centernet import config
 from fish.centernet.train import model, model_loader, to_boxes, collate_fn
 from ensemble_boxes import weighted_boxes_fusion
@@ -31,6 +37,7 @@ logger = getLogger(__name__)
 def predict(device: str) -> None:
     annotations = read_train_rows("/store")
     out_dir = Path("/store/evaluate")
+    shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
     dataset = FileDataset(rows=annotations, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
@@ -78,7 +85,7 @@ def predict(device: str) -> None:
                 skip_box_thr=config.to_boxes_threshold,
             )
             _boxes = resize(PascalBoxes(torch.from_numpy(_boxes)), (w, h))
-            plot = DetectionPlot(img)
+            plot = DetectionPlot(inv_normalize(img))
             plot.draw_boxes(boxes=_boxes, labels=labels, confidences=confidences)
             plot.draw_boxes(
                 boxes=yolo_to_pascal(gt_boxes, (w, h)), labels=gt_labels, color="red"
