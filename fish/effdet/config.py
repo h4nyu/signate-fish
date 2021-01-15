@@ -2,7 +2,7 @@ from typing import *
 from object_detection.model_loader import WatchMode
 
 
-out_dir = "/store/efficientdet1"
+out_dir = "/store/efficientdet2"
 
 # train
 use_amp = True
@@ -28,10 +28,10 @@ metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
 
 # criterion
-topk = 9
+topk = 13
 box_weight = 1
 cls_weight = 1
 
-anchor_ratios = [1.0]
-anchor_scales = [1.0, 1.33, 1.66]
-anchor_size = 8
+anchor_ratios = [1.3, 1.9, 2.9]
+anchor_scales = [1.0, 1.44]
+anchor_size = 1

@@ -1,3 +1,4 @@
+import torch
 from fish.data import (
     FileDataset,
     train_transforms,
@@ -9,6 +10,7 @@ from fish.data import (
     FrameDataset,
     inv_normalize,
 )
+from object_detection.models.anchors import Anchors
 from toolz import valfilter
 from object_detection.utils import DetectionPlot
 
@@ -22,6 +24,36 @@ def test_dataset() -> None:
         plot = DetectionPlot(inv_normalize(image))
         plot.draw_boxes(boxes=boxes, labels=labels)
         plot.save(f"store/test-plot-{id}-{i}.png")
+
+
+def test_anchors() -> None:
+    annotations = read_train_rows("/store")
+    dataset = FileDataset(rows=annotations, transforms=train_transforms)
+    anchor_size = 2
+    anchors = Anchors(size=anchor_size)
+    fpn_level = 7
+    for i in range(1):
+        id, image, boxes, labels = dataset[5]
+        dummy = torch.zeros(1, *image.shape)
+        anchor_box_level0 = anchors(dummy, 2 ** 7)
+        anchor_box_level1 = anchors(dummy, 2 ** 6)
+        print(image.shape)
+        print(anchor_box_level0)
+        plot = DetectionPlot(inv_normalize(image))
+        # plot.draw_boxes(boxes=boxes, labels=labels)
+        plot.draw_boxes(
+            boxes=anchor_box_level0[
+                len(anchor_box_level0) // 2 : len(anchor_box_level0) // 2 + 4
+            ],
+            color="red",
+        )
+        plot.draw_boxes(
+            boxes=anchor_box_level1[
+                len(anchor_box_level1) // 2 : len(anchor_box_level1) // 2 + 4
+            ],
+            color="blue",
+        )
+        plot.save(f"store/test-anchors-{id}-{i}.png")
 
 
 def test_frame_dataset() -> None:
