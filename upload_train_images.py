@@ -3,13 +3,23 @@ from tqdm import tqdm
 from io import BytesIO
 from fish.store import StoreApi, Box
 from fish.data import read_train_rows
+from toolz.curried import map, pipe
 from fish import config
 from PIL import Image as PILImage
 
 rows = read_train_rows("/store")
 api = StoreApi()
 
-for id, row in tqdm(rows.items()):
+saved_ids = pipe(
+    api.filter(),
+    map(lambda x: x['id']),
+    set
+)
+train_ids = set(rows.keys())
+unsaved_ids = train_ids - saved_ids
+
+for id in tqdm(unsaved_ids):
+    row = rows[id]
     with open(row["image_path"], "rb") as f:
         data = f.read()
     try:
