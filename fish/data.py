@@ -154,7 +154,6 @@ inv_normalize = Normalize(
 
 train_transforms = albm.Compose(
     [
-        A.VerticalFlip(p=0.5),
         A.HorizontalFlip(p=0.5),
         A.ShiftScaleRotate(
             shift_limit=0.05,

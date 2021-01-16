@@ -28,7 +28,7 @@ metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
 
 # criterion
-topk = 13
+topk = 19
 box_weight = 1
 cls_weight = 1
 
