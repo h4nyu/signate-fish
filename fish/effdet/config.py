@@ -1,5 +1,6 @@
 from typing import *
 from object_detection.model_loader import WatchMode
+from fish.config import *
 
 
 out_dir = "/store/efficientdet2"
@@ -8,13 +9,9 @@ out_dir = "/store/efficientdet2"
 use_amp = True
 
 # data
-num_classes = 2
-original_width = 3840
-original_height = 2160
-
 confidence_threshold = 0.2
 iou_threshold = 0.20
-batch_size = 3
+batch_size = 4
 
 # model
 channels = 64
@@ -27,8 +24,8 @@ metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
 
 # criterion
-topk = 19
-box_weight = 1
+topk = 39
+box_weight = 10
 cls_weight = 1
 
 anchor_ratios = [1.3, 1.9, 2.9]

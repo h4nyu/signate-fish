@@ -50,6 +50,18 @@ TestRow = typing.TypedDict(
 TestRows = typing.Dict[str, TestRow]
 
 
+Submission = Dict[str, Any]
+
+
+def add_submission(
+    submission: Submission, id: str, boxes: PascalBoxes, labels: Labels
+) -> None:
+    row = {}
+    row["Jumper School"] = boxes[labels == 0].to("cpu").tolist()
+    row["Breezer School"] = boxes[labels == 1].to("cpu").tolist()
+    submission[f"{id}.jpg"] = row
+
+
 def cutmix(rows: Annotations) -> None:
     ...
 

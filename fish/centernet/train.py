@@ -38,6 +38,7 @@ from object_detection.entities.box import (
 from object_detection.entities import ImageId, ImageBatch
 from fish.data import (
     FileDataset,
+    LabeledDataset,
     FrameDataset,
     LabeledDataset,
     kfold,
@@ -46,6 +47,7 @@ from fish.data import (
     read_train_rows,
     inv_normalize,
 )
+from fish.store import StoreApi
 from object_detection.metrics import MeanPrecition
 from fish.centernet import config
 from logging import (
@@ -77,9 +79,11 @@ model_loader = ModelLoader(
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
+    train_rows, test_rows = kfold(annotations)
     api = StoreApi()
     labeled_rows = api.filter()
-    train_rows, test_rows = kfold(annotations)
+    labeled_keys = set(x['id'] for x in labeled_rows)
+    train_rows = keyfilter(lambda x: x in labeled_keys, train_rows)
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
