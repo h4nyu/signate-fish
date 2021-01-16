@@ -42,7 +42,7 @@ def predict(device: str) -> None:
     loader = DataLoader(
         dataset,
         collate_fn=collate_fn,
-        batch_size=1,
+        batch_size=config.batch_size,
         shuffle=False,
         drop_last=False,
     )

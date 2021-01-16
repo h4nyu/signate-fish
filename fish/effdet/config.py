@@ -11,7 +11,7 @@ use_amp = True
 # data
 confidence_threshold = 0.2
 iou_threshold = 0.20
-batch_size = 3
+batch_size = 4
 
 # model
 channels = 64
@@ -24,7 +24,7 @@ metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
 
 # criterion
-topk = 19
+topk = 39
 box_weight = 10
 cls_weight = 1
 
