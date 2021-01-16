@@ -71,10 +71,8 @@ def predict(device: str) -> None:
             ids,
             box_batch,
             h_box_batch,
-            v_box_batch,
             confidence_batch,
             h_confidence_batch,
-            v_confidence_batch,
             label_batch,
             h_label_batch,
         ):
