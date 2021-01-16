@@ -1,6 +1,8 @@
 import base64
 import requests
 from urllib.parse import urljoin
+from toolz.curried import groupby
+from typing import List
 import os
 import typing
 
@@ -36,23 +38,22 @@ class StoreApi:
         res.raise_for_status()
 
     def filter(self) -> Rows:
-        return requests.post(
+        img_res = requests.post(
             urljoin(self.url, "/api/v1/image/filter"),
             json={},
-        ).json()
+        )
+        img_res.raise_for_status()
+        boxes_res = requests.post(
+            urljoin(self.url, "/api/v1/box/filter"),
+            json={},
+        )
+        boxes_res.raise_for_status()
+        boxes = groupby(lambda x: x['imageId'])(boxes_res.json())
+        rows = img_res.json()
+        for row in rows:
+            row['boxes'] = boxes.get(row['id']) or []
+        return rows
 
-    def find(self, id: str) -> Row:
-        if id not in self.cache:
-            img = requests.post(
-                urljoin(self.url, "/api/v1/image/find"), json={"id": id}
-            ).json()
-            boxes = requests.post(
-                urljoin(self.url, "/api/v1/box/filter"),
-                json={"imageId": id, "isGrandTruth": True},
-            ).json()
-            img["boxes"] = boxes
-            self.cache[id] = img
-        return self.cache[id]
 
     def predict(self, id: str, boxes: typing.List[Box]) -> None:
         res = requests.post(

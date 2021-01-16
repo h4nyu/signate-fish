@@ -9,10 +9,13 @@ from fish.data import (
     find_prev_frame,
     FrameDataset,
     inv_normalize,
+    LabeledDataset,
 )
+from toolz.curried import filter, pipe
 from object_detection.models.anchors import Anchors
 from object_detection.entities.box import PascalBoxes
 from object_detection.entities import ImageBatch
+from fish.store import StoreApi
 from toolz import valfilter
 from object_detection.utils import DetectionPlot
 
@@ -75,6 +78,20 @@ def test_frame_dataset() -> None:
         plot.save(f"store/test-plot-{id}-1-{i}.png")
 
 
+def test_labeled_dataset() -> None:
+    api = StoreApi()
+    rows = api.filter()
+    rows = pipe(rows, filter(lambda x: x["state"] == "Done"), list)
+    dataset = LabeledDataset(rows=rows, transforms=train_transforms)
+    if(len(rows) == 0):
+        return
+    id, image, boxes, labels = dataset[0]
+    print(labels.shape)
+    plot = DetectionPlot(inv_normalize(image))
+    plot.draw_boxes(boxes=boxes, labels=labels)
+    plot.save(f"store/test-labeled-{id}.png")
+
+
 def test_fold() -> None:
     train_rows = read_train_rows("/store")
     train, test = kfold(train_rows)
@@ -82,6 +99,7 @@ def test_fold() -> None:
     test_seqs = set([r["sequence_id"] for r in test.values()])
 
     assert len(train_seqs.intersection(test_seqs)) == 0
+
 
 
 def test_cutmix() -> None:

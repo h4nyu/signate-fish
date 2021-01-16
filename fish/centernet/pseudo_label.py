@@ -28,7 +28,7 @@ store = StoreApi()
 
 
 def annotate(id: str, boxes: PascalBoxes, labels: Labels) -> None:
-    payload_boxes:List[Box] = [
+    payload_boxes: List[Box] = [
         dict(
             x0=float(b[0]),
             y0=float(b[1]),

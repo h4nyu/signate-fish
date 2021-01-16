@@ -27,7 +27,12 @@ for i in tqdm(range(len(dataset))):
     if len(labels) == 0:
         continue
     plot = DetectionPlot(inv_normalize(image))
-    for i, c in zip(range(config.num_classes), ['red', 'blue']):
+    for i, c in zip(range(config.num_classes), ["red", "blue"]):
         indices = labels == i
-        plot.draw_boxes(boxes=PascalBoxes(boxes[indices]), labels=Labels(labels[indices]), line_width=1, color=c)
+        plot.draw_boxes(
+            boxes=PascalBoxes(boxes[indices]),
+            labels=Labels(labels[indices]),
+            line_width=1,
+            color=c,
+        )
     plot.save(vis_dir.joinpath(f"seq-{sequence_id}_frame-{frame_id}_{id}.jpg"))

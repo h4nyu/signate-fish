@@ -18,12 +18,13 @@ from object_detection.entities import (
     PascalBoxes,
     Labels,
 )
-from object_detection.entities.box import filter_size
+from object_detection.entities.box import filter_size, resize
 import albumentations as albm
 from sklearn.model_selection import GroupKFold, StratifiedKFold
 import glob, typing, json, re
 from pathlib import Path
 from fish import config
+from fish.store import StoreApi, Rows
 
 
 Annotation = typing.TypedDict(
@@ -221,6 +222,43 @@ class FileDataset(Dataset):
         image = imread(annot["image_path"])
         boxes = annot["boxes"]
         labels = annot["labels"]
+        transed = self.transforms(image=image, bboxes=boxes, labels=labels)
+        return (
+            ImageId(id),
+            Image(transed["image"]),
+            PascalBoxes(torch.tensor(transed["bboxes"])),
+            Labels(torch.tensor(transed["labels"])),
+        )
+
+    def __len__(self) -> int:
+        return len(self.rows)
+
+
+class LabeledDataset(Dataset):
+    def __init__(
+        self, rows: Rows, transforms: typing.Any, image_dir: str = "/store/images"
+    ) -> None:
+        self.rows = rows
+        self.transforms = transforms
+        self.image_dir = Path(image_dir)
+
+    def __getitem__(self, idx: int) -> TrainSample:
+        row = self.rows[idx]
+        id = row["id"]
+        path = self.image_dir.joinpath(f"{id}.jpg")
+        image = imread(path)
+        h, w, _ = image.shape
+        boxes = PascalBoxes(torch.tensor([
+            [
+                b["x0"],
+                b["y0"],
+                b["x1"],
+                b["y1"],
+            ]
+            for b in row["boxes"]
+        ]))
+        boxes = resize(boxes, (w, h))
+        labels = [int(float(b["label"])) for b in row["boxes"]]
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
