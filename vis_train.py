@@ -4,6 +4,8 @@ from skimage.io import imread
 from fish.data import FileDataset, test_transforms, read_train_rows
 from albumentations.pytorch.transforms import ToTensorV2
 from object_detection.utils import DetectionPlot
+from object_detection.entities.box import PascalBoxes, Labels
+from fish import config
 
 vis_dir = Path("/store/vis-train")
 vis_dir.mkdir(exist_ok=True)
@@ -22,5 +24,7 @@ for i in tqdm(range(len(dataset))):
     if len(labels) == 0:
         continue
     plot = DetectionPlot(image)
-    plot.draw_boxes(boxes=boxes, labels=labels, line_width=2, color="red")
+    for i, c in zip(range(config.num_classes), ['red', 'blue']):
+        indices = labels == i
+        plot.draw_boxes(boxes=PascalBoxes(boxes[indices]), labels=Labels(labels[indices]), line_width=1, color=c)
     plot.save(vis_dir.joinpath(f"seq-{sequence_id}_frame-{frame_id}_{id}.jpg"))

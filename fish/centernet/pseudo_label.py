@@ -44,8 +44,7 @@ def annotate(id: str, boxes: PascalBoxes, labels: Labels) -> None:
 @torch.no_grad()
 def predict(device: str) -> None:
     rows = read_test_rows("/store")
-    out_dir = Path("/store/submission")
-    shutil.rmtree(out_dir)
+    out_dir = Path("/store/pseudo")
     out_dir.mkdir(exist_ok=True)
     dataset = TestDataset(rows=rows, transforms=prediction_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
@@ -98,6 +97,7 @@ def predict(device: str) -> None:
                 weights=weights,
                 skip_box_thr=config.to_boxes_threshold,
             )
+            annotate(id, boxes=_boxes, labels=labels)
             _boxes = resize(PascalBoxes(torch.from_numpy(_boxes)), (w, h))
             filter_indices = confidences > config.to_boxes_threshold
             _boxes = _boxes[filter_indices]
@@ -108,10 +108,6 @@ def predict(device: str) -> None:
             _boxes = resize(
                 _boxes, scale=(config.original_width / w, config.original_height / h)
             )
-            annotate(id, boxes=_boxes, labels=labels)
-
-    with open(out_dir.joinpath("submission.json"), "w") as f:
-        json.dump(submission, f)
 
 
 if __name__ == "__main__":

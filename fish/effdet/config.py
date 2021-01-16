@@ -12,7 +12,7 @@ num_classes = 2
 original_width = 3840
 original_height = 2160
 
-confidence_threshold = 0.1
+confidence_threshold = 0.2
 iou_threshold = 0.20
 batch_size = 3
 
