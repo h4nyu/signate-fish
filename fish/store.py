@@ -4,7 +4,9 @@ from urllib.parse import urljoin
 import os
 import typing
 
-Box = typing.TypedDict("Box", {"x0": float, "y0": float, "x1": float, "y1": float})
+Box = typing.TypedDict(
+    "Box", {"x0": float, "y0": float, "x1": float, "y1": float, "label": str}
+)
 Row = typing.TypedDict(
     "Row",
     {
@@ -55,6 +57,13 @@ class StoreApi:
     def predict(self, id: str, boxes: typing.List[Box]) -> None:
         res = requests.post(
             urljoin(self.url, "/api/v1/box/predict"),
+            json={"imageId": id, "boxes": boxes},
+        )
+        res.raise_for_status()
+
+    def annotate(self, id: str, boxes: typing.List[Box]) -> None:
+        res = requests.post(
+            urljoin(self.url, "/api/v1/box/annotate"),
             json={"imageId": id, "boxes": boxes},
         )
         res.raise_for_status()
