@@ -69,7 +69,7 @@ to_boxes = ToBoxes(
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
-    train_rows, test_rows = kfold(annotations, n_splits=config.n_splits)
+    train_rows, test_rows = kfold(annotations)
     train_dataset = FileDataset(
         rows=train_rows,
         transforms=train_transforms,

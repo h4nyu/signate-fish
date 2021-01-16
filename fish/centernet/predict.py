@@ -55,9 +55,6 @@ def predict(device: str) -> None:
         h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
             net(hflip(image_batch))
         )
-        v_box_batch, v_confidence_batch, v_label_batch = to_boxes(
-            net(vflip(image_batch))
-        )
         box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
 
         for (
@@ -65,13 +62,10 @@ def predict(device: str) -> None:
             id,
             boxes,
             h_boxes,
-            v_boxes,
             confidences,
             h_confidences,
-            v_confidences,
             labels,
             h_labels,
-            v_labels,
         ) in zip(
             image_batch,
             ids,
@@ -83,7 +77,6 @@ def predict(device: str) -> None:
             v_confidence_batch,
             label_batch,
             h_label_batch,
-            v_label_batch,
         ):
             _, h, w = img.shape
 
@@ -91,10 +84,9 @@ def predict(device: str) -> None:
                 [
                     yolo_to_pascal(boxes, (1, 1)),
                     yolo_to_pascal(yolo_hflip(h_boxes), (1, 1)),
-                    yolo_to_pascal(yolo_vflip(v_boxes), (1, 1)),
                 ],
-                [confidences, h_confidences, v_confidences],
-                [labels, h_labels, v_labels],
+                [confidences, h_confidences],
+                [labels, h_labels],
                 iou_thr=config.iou_threshold,
                 weights=weights,
                 skip_box_thr=config.to_boxes_threshold,

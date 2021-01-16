@@ -6,7 +6,6 @@ out_dir = "/store/efficientdet2"
 
 # train
 use_amp = True
-n_splits = 6
 
 # data
 num_classes = 2
@@ -15,7 +14,7 @@ original_height = 2160
 
 confidence_threshold = 0.1
 iou_threshold = 0.20
-batch_size = 4
+batch_size = 3
 
 # model
 channels = 64
