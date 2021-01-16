@@ -2,8 +2,9 @@ from typing import List, Any, Tuple
 from adabelief_pytorch import AdaBelief
 import torch
 from typing import Dict
+from toolz import keyfilter
 from tqdm import tqdm
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 from torch.cuda.amp import GradScaler, autocast
 from object_detection.meters import MeanMeter
 from object_detection.models.centernet import (
@@ -13,7 +14,7 @@ from object_detection.models.centernet import (
     ToBoxes,
     collate_fn,
 )
-from fish.models import FrameCenterNet
+from fish.store import StoreApi
 from object_detection.models.mkmaps import (
     MkGaussianMaps,
     MkCenterBoxMaps,
@@ -38,6 +39,7 @@ from object_detection.entities import ImageId, ImageBatch
 from fish.data import (
     FileDataset,
     FrameDataset,
+    LabeledDataset,
     kfold,
     train_transforms,
     test_transforms,
@@ -75,10 +77,20 @@ model_loader = ModelLoader(
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
+    api = StoreApi()
+    labeled_rows = api.filter()
     train_rows, test_rows = kfold(annotations)
-    train_dataset = FileDataset(
-        rows=train_rows,
-        transforms=train_transforms,
+    train_dataset: Any = ConcatDataset(
+        [
+            FileDataset(
+                rows=train_rows,
+                transforms=train_transforms,
+            ),
+            LabeledDataset(
+                rows=labeled_rows,
+                transforms=train_transforms,
+            ),
+        ]
     )
     test_dataset = FileDataset(
         rows=test_rows,
