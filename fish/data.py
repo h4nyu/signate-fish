@@ -20,7 +20,7 @@ from object_detection.entities import (
 )
 from object_detection.entities.box import filter_size
 import albumentations as albm
-from sklearn.model_selection import GroupKFold
+from sklearn.model_selection import GroupKFold, StratifiedKFold
 import glob, typing, json, re
 from pathlib import Path
 from fish import config
@@ -117,12 +117,10 @@ def read_test_rows(dataset_dir: str) -> TestRows:
 def kfold(
     rows: Annotations, n_splits: int = config.n_splits
 ) -> typing.Tuple[Annotations, Annotations]:
-    kf = GroupKFold(n_splits)
+    kf = StratifiedKFold(n_splits)
     x = list(rows.keys())
     y = [len(i["boxes"]) for i in rows.values()]
-    groups = [i["sequence_id"] for i in rows.values()]
-
-    train_ids, test_ids = next(kf.split(x, y, groups))
+    train_ids, test_ids = next(kf.split(x, y))
     train_keys = set([x[i] for i in train_ids])
     test_keys = set([x[i] for i in test_ids])
     return keyfilter(lambda k: k in train_keys, rows), keyfilter(
