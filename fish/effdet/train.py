@@ -1,8 +1,8 @@
 from adabelief_pytorch import AdaBelief
 from tqdm import tqdm
 import torch
-from typing import Dict
-from torch.utils.data import DataLoader
+from typing import Dict, Any
+from torch.utils.data import DataLoader, ConcatDataset
 from object_detection.models.backbones.resnet import (
     ResNetBackbone,
 )
@@ -25,12 +25,14 @@ from object_detection.model_loader import (
 from object_detection.metrics import MeanPrecition
 from fish.data import (
     FileDataset,
+    LabeledDataset,
     kfold,
     train_transforms,
     test_transforms,
     read_train_rows,
     inv_normalize,
 )
+from fish.store import StoreApi
 from fish.effdet import config
 from logging import (
     getLogger,
@@ -69,10 +71,20 @@ to_boxes = ToBoxes(
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
+    api = StoreApi()
     train_rows, test_rows = kfold(annotations)
-    train_dataset = FileDataset(
-        rows=train_rows,
-        transforms=train_transforms,
+    labeled_rows = api.filter()
+    train_dataset: Any = ConcatDataset(
+        [
+            FileDataset(
+                rows=train_rows,
+                transforms=train_transforms,
+            ),
+            LabeledDataset(
+                rows=labeled_rows,
+                transforms=train_transforms,
+            ),
+        ]
     )
     test_dataset = FileDataset(
         rows=test_rows,

@@ -37,10 +37,10 @@ class StoreApi:
         )
         res.raise_for_status()
 
-    def filter(self) -> Rows:
+    def filter(self, state: str = "Done") -> Rows:
         img_res = requests.post(
             urljoin(self.url, "/api/v1/image/filter"),
-            json={},
+            json=dict(state=state),
         )
         img_res.raise_for_status()
         boxes_res = requests.post(
@@ -48,12 +48,11 @@ class StoreApi:
             json={},
         )
         boxes_res.raise_for_status()
-        boxes = groupby(lambda x: x['imageId'])(boxes_res.json())
+        boxes = groupby(lambda x: x["imageId"])(boxes_res.json())
         rows = img_res.json()
         for row in rows:
-            row['boxes'] = boxes.get(row['id']) or []
+            row["boxes"] = boxes.get(row["id"]) or []
         return rows
-
 
     def predict(self, id: str, boxes: typing.List[Box]) -> None:
         res = requests.post(

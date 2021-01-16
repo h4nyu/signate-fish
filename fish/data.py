@@ -248,15 +248,19 @@ class LabeledDataset(Dataset):
         path = self.image_dir.joinpath(f"{id}.jpg")
         image = imread(path)
         h, w, _ = image.shape
-        boxes = PascalBoxes(torch.tensor([
-            [
-                b["x0"],
-                b["y0"],
-                b["x1"],
-                b["y1"],
-            ]
-            for b in row["boxes"]
-        ]))
+        boxes = PascalBoxes(
+            torch.tensor(
+                [
+                    [
+                        b["x0"],
+                        b["y0"],
+                        b["x1"],
+                        b["y1"],
+                    ]
+                    for b in row["boxes"]
+                ]
+            )
+        )
         boxes = resize(boxes, (w, h))
         labels = [int(float(b["label"])) for b in row["boxes"]]
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)

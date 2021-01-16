@@ -83,7 +83,7 @@ def test_labeled_dataset() -> None:
     rows = api.filter()
     rows = pipe(rows, filter(lambda x: x["state"] == "Done"), list)
     dataset = LabeledDataset(rows=rows, transforms=train_transforms)
-    if(len(rows) == 0):
+    if len(rows) == 0:
         return
     id, image, boxes, labels = dataset[0]
     print(labels.shape)
@@ -99,7 +99,6 @@ def test_fold() -> None:
     test_seqs = set([r["sequence_id"] for r in test.values()])
 
     assert len(train_seqs.intersection(test_seqs)) == 0
-
 
 
 def test_cutmix() -> None:
