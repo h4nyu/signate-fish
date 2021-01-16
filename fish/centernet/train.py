@@ -3,7 +3,7 @@ from adabelief_pytorch import AdaBelief
 import torch
 from typing import Dict
 from tqdm import tqdm
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 from torch.cuda.amp import GradScaler, autocast
 from object_detection.meters import MeanMeter
 from object_detection.models.centernet import (
@@ -37,6 +37,7 @@ from object_detection.entities.box import (
 from object_detection.entities import ImageId, ImageBatch
 from fish.data import (
     FileDataset,
+    LabeledDataset,
     FrameDataset,
     kfold,
     train_transforms,
@@ -44,6 +45,7 @@ from fish.data import (
     read_train_rows,
     inv_normalize,
 )
+from fish.store import StoreApi
 from object_detection.metrics import MeanPrecition
 from fish.centernet import config
 from logging import (
@@ -76,9 +78,19 @@ model_loader = ModelLoader(
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
     train_rows, test_rows = kfold(annotations)
-    train_dataset = FileDataset(
-        rows=train_rows,
-        transforms=train_transforms,
+    api = StoreApi()
+    labeled_rows = api.filter()
+    train_dataset: Any = ConcatDataset(
+        [
+            FileDataset(
+                rows=train_rows,
+                transforms=train_transforms,
+            ),
+            LabeledDataset(
+                rows=labeled_rows,
+                transforms=train_transforms,
+            ),
+        ]
     )
     test_dataset = FileDataset(
         rows=test_rows,

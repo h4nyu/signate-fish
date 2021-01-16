@@ -1,12 +1,10 @@
 from typing import *
+from fish.config import *
 from object_detection.model_loader import WatchMode
 from object_detection.models.mkmaps import GaussianMapMode
 
 out_dir = "store/centernet-2"
 
-original_width = 3840
-original_height = 2160
-num_classes = 2
 batch_size = 3
 mk_map_mode: GaussianMapMode = "aspect"
 
@@ -18,7 +16,7 @@ box_depth = 1
 
 # criterion
 lr = 1e-3
-box_weight = 2.0
+box_weight = 1.0
 heatmap_weight = 1.0
 sigma = 15
 metric: Tuple[str, WatchMode] = ("score", "max")

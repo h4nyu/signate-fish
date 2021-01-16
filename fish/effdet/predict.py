@@ -3,56 +3,60 @@ from pathlib import Path
 from typing import Dict, Any
 from torch.utils.data import DataLoader
 from object_detection.utils import DetectionPlot
+from object_detection.metrics import MeanAveragePrecision
 from object_detection.entities.box import (
-    yolo_to_pascal,
-    yolo_vflip,
-    yolo_hflip,
     PascalBoxes,
     Confidences,
     Labels,
     resize,
-    filter_size,
-    resize,
 )
 from fish.data import (
-    read_test_rows,
-    TestDataset,
-    prediction_transforms,
+    read_train_rows,
+    FileDataset,
+    test_transforms,
+    kfold,
     inv_normalize,
     add_submission,
     Submission,
 )
-from fish.centernet import config
-from fish.centernet.train import model, model_loader, to_boxes
+from fish.effdet import config
+from fish.effdet.train import model, model_loader, to_boxes, collate_fn
 from ensemble_boxes import weighted_boxes_fusion
 from torchvision.transforms.functional import hflip, vflip
+
+from logging import (
+    getLogger,
+)
+
+logger = getLogger(config.out_dir)
 
 
 @torch.no_grad()
 def predict(device: str) -> None:
-    rows = read_test_rows("/store")
-    out_dir = Path("/store/submission")
+    annotations = read_train_rows("/store")
+    out_dir = Path("/store/evaluate")
     shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
-    dataset = TestDataset(rows=rows, transforms=prediction_transforms)
+    dataset = FileDataset(rows=annotations, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(
         dataset,
+        collate_fn=collate_fn,
         batch_size=1,
-        num_workers=1,
         shuffle=False,
         drop_last=False,
     )
-    weights = [1, 1]
+    weights = [1]
     submission: Submission = {}
-    for ids, image_batch in tqdm.tqdm(loader):
+    for image_batch, gt_box_batch, gt_label_batch, ids in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
-
+        _, _, h, w = image_batch.shape
+        gt_box_batch = [x.to(device) for x in gt_box_batch]
+        gt_label_batch = [x.to(device) for x in gt_label_batch]
+        box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
         h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
             net(hflip(image_batch))
         )
-        box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
-
         for (
             img,
             id,
@@ -72,30 +76,15 @@ def predict(device: str) -> None:
             label_batch,
             h_label_batch,
         ):
-            _, h, w = img.shape
-
-            _boxes, confidences, labels = weighted_boxes_fusion(
-                [
-                    yolo_to_pascal(boxes, (1, 1)),
-                    yolo_to_pascal(yolo_hflip(h_boxes), (1, 1)),
-                ],
-                [confidences, h_confidences],
-                [labels, h_labels],
-                iou_thr=config.iou_threshold,
-                weights=weights,
-                skip_box_thr=config.to_boxes_threshold,
-            )
-            _boxes = resize(PascalBoxes(torch.from_numpy(_boxes)), (w, h))
-            filter_indices = confidences > config.to_boxes_threshold
-            _boxes = _boxes[filter_indices]
-            labels = labels[filter_indices]
             plot = DetectionPlot(inv_normalize(img))
-            plot.draw_boxes(boxes=_boxes, confidences=confidences, labels=labels)
+            plot.draw_boxes(boxes=boxes, labels=labels, confidences=confidences)
             plot.save(out_dir.joinpath(f"{id}.jpg"))
-            _boxes = resize(
-                _boxes, scale=(config.original_width / w, config.original_height / h)
+
+            boxes = resize(
+                boxes, scale=(config.original_width / w, config.original_height / h)
             )
-            add_submission(submission, id, boxes=_boxes, labels=labels)
+
+            add_submission(submission, id, boxes=boxes, labels=labels)
 
     with open(out_dir.joinpath("submission.json"), "w") as f:
         json.dump(submission, f)
