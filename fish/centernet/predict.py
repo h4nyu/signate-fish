@@ -47,7 +47,7 @@ def predict(device: str) -> None:
         shuffle=False,
         drop_last=False,
     )
-    weights = [1, 1, 1]
+    weights = [1, 1]
     submission: Submission = {}
     for ids, image_batch in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
