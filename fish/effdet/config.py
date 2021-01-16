@@ -3,7 +3,7 @@ from object_detection.model_loader import WatchMode
 from fish.config import *
 
 
-out_dir = "/store/efficientdet2"
+out_dir = "/store/efficientdet3"
 
 # train
 use_amp = True
