@@ -83,7 +83,7 @@ def train(epochs: int) -> None:
     api = StoreApi()
     labeled_rows = api.filter()
     labeled_keys = set(x['id'] for x in labeled_rows)
-    train_rows = keyfilter(lambda x: x in labeled_keys, train_rows)
+    train_rows = keyfilter(lambda x: x not in labeled_keys, train_rows)
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
