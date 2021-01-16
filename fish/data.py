@@ -221,19 +221,12 @@ class FileDataset(Dataset):
     def __getitem__(self, idx: int) -> TrainSample:
         id, annot = self.rows[idx]
         image = imread(annot["image_path"])
-        boxes = PascalBoxes(torch.tensor(annot["boxes"]))
-        labels = Labels(torch.tensor(annot["labels"]))
-        boxes, indices = filter_boxes(
-            boxes,
-            min_height=config.min_box_height,
-            min_width=config.min_box_width,
-            min_area=config.min_box_area,
-        )
-        labels = Labels(labels[indices])
+        boxes = annot["boxes"]
+        labels = annot["labels"]
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
-            Image(transed["image"].float()),
+            Image(transed["image"]),
             PascalBoxes(torch.tensor(transed["bboxes"])),
             Labels(torch.tensor(transed["labels"])),
         )
