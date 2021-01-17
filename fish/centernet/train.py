@@ -20,8 +20,8 @@ from object_detection.models.mkmaps import (
     MkCenterBoxMaps,
 )
 from object_detection.utils import DetectionPlot
-from object_detection.models.backbones.resnet import (
-    ResNetBackbone,
+from object_detection.models.backbones.effnet import (
+    EfficientNetBackbone,
 )
 from object_detection.model_loader import (
     ModelLoader,
@@ -58,7 +58,7 @@ logger = getLogger(config.out_dir)
 
 
 device = torch.device("cuda")
-backbone = ResNetBackbone("resnet50", out_channels=config.channels)
+backbone = EfficientNetBackbone(3, out_channels=config.channels, pretrained=True)
 model = CenterNet(
     backbone=backbone,
     num_classes=config.num_classes,

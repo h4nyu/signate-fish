@@ -3,9 +3,9 @@ from fish.config import *
 from object_detection.model_loader import WatchMode
 from object_detection.models.mkmaps import GaussianMapMode
 
-out_dir = "store/centernet-2"
+out_dir = "store/centernet3"
 
-batch_size = 3
+batch_size = 2
 mk_map_mode: GaussianMapMode = "aspect"
 
 # model
