@@ -12,5 +12,8 @@ image_size = 1024 * 2
 scale = image_size / original_width
 num_classes = 2
 
+# to_boxes
+to_box_limit = 20
+
 # fold
 n_splits = 5

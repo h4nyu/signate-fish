@@ -68,7 +68,9 @@ model = CenterNet(
     box_depth=config.box_depth,
 ).to(device)
 to_boxes = ToBoxes(
-    threshold=config.to_boxes_threshold, kernel_size=config.to_boxes_kernel_size
+    threshold=config.to_boxes_threshold,
+    kernel_size=config.to_boxes_kernel_size,
+    limit=config.to_box_limit,
 )
 model_loader = ModelLoader(
     out_dir=config.out_dir,
@@ -82,7 +84,7 @@ def train(epochs: int) -> None:
     train_rows, test_rows = kfold(annotations)
     api = StoreApi()
     labeled_rows = api.filter()
-    labeled_keys = set(x['id'] for x in labeled_rows)
+    labeled_keys = set(x["id"] for x in labeled_rows)
     train_rows = keyfilter(lambda x: x not in labeled_keys, train_rows)
     train_dataset: Any = ConcatDataset(
         [

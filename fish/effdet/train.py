@@ -67,6 +67,7 @@ model_loader = ModelLoader(
 to_boxes = ToBoxes(
     confidence_threshold=config.confidence_threshold,
     iou_threshold=config.iou_threshold,
+    limit=config.to_box_limit,
 )
 
 
@@ -75,7 +76,7 @@ def train(epochs: int) -> None:
     api = StoreApi()
     train_rows, test_rows = kfold(annotations)
     labeled_rows = api.filter()
-    labeled_keys = set(x['id'] for x in labeled_rows)
+    labeled_keys = set(x["id"] for x in labeled_rows)
     train_rows = keyfilter(lambda x: x not in labeled_keys, train_rows)
     train_dataset: Any = ConcatDataset(
         [
