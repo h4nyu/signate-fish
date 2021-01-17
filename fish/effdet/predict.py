@@ -11,12 +11,14 @@ from object_detection.entities.box import (
     resize,
 )
 from fish.data import (
-    read_train_rows,
+    read_test_rows,
     FileDataset,
     test_transforms,
     kfold,
     inv_normalize,
     add_submission,
+    prediction_transforms,
+    TestDataset,
     Submission,
 )
 from fish.effdet import config
@@ -33,26 +35,23 @@ logger = getLogger(config.out_dir)
 
 @torch.no_grad()
 def predict(device: str) -> None:
-    annotations = read_train_rows("/store")
-    out_dir = Path("/store/evaluate")
+    rows = read_test_rows("/store")
+    out_dir = Path("/store/submission")
     shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
-    dataset = FileDataset(rows=annotations, transforms=test_transforms)
+    dataset = TestDataset(rows=rows, transforms=prediction_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(
         dataset,
-        collate_fn=collate_fn,
         batch_size=config.batch_size,
         shuffle=False,
         drop_last=False,
     )
     weights = [1]
     submission: Submission = {}
-    for image_batch, gt_box_batch, gt_label_batch, ids in tqdm.tqdm(loader):
+    for ids, image_batch in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
         _, _, h, w = image_batch.shape
-        gt_box_batch = [x.to(device) for x in gt_box_batch]
-        gt_label_batch = [x.to(device) for x in gt_label_batch]
         box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
         h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
             net(hflip(image_batch))
