@@ -18,7 +18,7 @@ box_depth = 1
 lr = 1e-3
 box_weight = 1.0
 heatmap_weight = 1.0
-sigma = 15
+sigma = 9
 metric: Tuple[str, WatchMode] = ("score", "max")
 
 # to_boxes
