@@ -167,17 +167,16 @@ train_transforms = albm.Compose(
     [
         A.HorizontalFlip(p=0.5),
         A.ShiftScaleRotate(
-            shift_limit=0.05,
-            scale_limit=(-0.1, 0.1),
+            shift_limit=0.1,
+            scale_limit=(-0.2, 0.2),
             rotate_limit=10,
             p=1.0,
             border_mode=cv2.BORDER_CONSTANT,
         ),
-        A.LongestMaxSize(max_size=config.image_size),
         A.OneOf(
             [
                 A.HueSaturationValue(
-                    hue_shift_limit=10, sat_shift_limit=20, val_shift_limit=20, p=0.9
+                    hue_shift_limit=5, sat_shift_limit=5, val_shift_limit=5, p=0.3
                 ),
                 A.RandomBrightnessContrast(
                     brightness_limit=0.2, contrast_limit=0.2, p=0.9
@@ -188,10 +187,15 @@ train_transforms = albm.Compose(
         A.OneOf(
             [
                 A.Blur(blur_limit=3, p=1.0),
+                A.Blur(blur_limit=5, p=1.0),
+                A.Blur(blur_limit=7, p=1.0),
                 A.MedianBlur(blur_limit=3, p=1.0),
+                A.MedianBlur(blur_limit=5, p=1.0),
+                A.MedianBlur(blur_limit=7, p=1.0),
                 A.MotionBlur(blur_limit=3, p=1.0),
+                A.MotionBlur(blur_limit=5, p=1.0),
             ],
-            p=0.2,
+            p=0.3,
         ),
         A.OneOf(
             [
@@ -200,6 +204,7 @@ train_transforms = albm.Compose(
             ],
             p=0.2,
         ),
+        A.LongestMaxSize(max_size=config.image_size),
         A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
     ],

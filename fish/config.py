@@ -13,4 +13,4 @@ scale = image_size / original_width
 num_classes = 2
 
 # fold
-n_splits = 6
+n_splits = 5
