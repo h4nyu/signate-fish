@@ -17,7 +17,7 @@ batch_size = 6
 channels = 64
 box_depth = 1
 fpn_depth = 1
-lr = 5e-4
+lr = 1e-3
 out_ids: List[int] = [6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
