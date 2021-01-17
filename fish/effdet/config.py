@@ -25,7 +25,7 @@ pretrained = True
 
 # criterion
 topk = 39
-box_weight = 10
+box_weight = 5
 cls_weight = 1
 
 anchor_ratios = [1.3, 1.9, 2.9]
