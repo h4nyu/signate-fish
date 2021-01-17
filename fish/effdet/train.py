@@ -4,8 +4,8 @@ import torch
 from toolz import keyfilter
 from typing import Dict, Any
 from torch.utils.data import DataLoader, ConcatDataset
-from object_detection.models.backbones.resnet import (
-    ResNetBackbone,
+from object_detection.models.backbones.effnet import (
+    EfficientNetBackbone,
 )
 import torch_optimizer as optim
 from torch.cuda.amp import GradScaler, autocast
@@ -48,7 +48,7 @@ anchors = Anchors(
     ratios=config.anchor_ratios,
     scales=config.anchor_scales,
 )
-backbone = ResNetBackbone("resnet50", out_channels=config.channels)
+backbone = EfficientNetBackbone(3, out_channels=config.channels, pretrained=True)
 model = EfficientDet(
     num_classes=config.num_classes,
     out_ids=config.out_ids,
