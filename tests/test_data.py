@@ -5,12 +5,17 @@ from fish.data import (
     read_train_rows,
     read_test_rows,
     kfold,
-    cutmix,
+    resize_mix,
     find_prev_frame,
     FrameDataset,
     inv_normalize,
     LabeledDataset,
+    resize_mix,
+    annot_to_tuple,
+    ResizeMixDataset,
+    test_transforms,
 )
+from albumentations.pytorch.transforms import ToTensorV2
 from toolz.curried import filter, pipe
 from object_detection.models.anchors import Anchors
 from object_detection.entities.box import PascalBoxes
@@ -18,6 +23,28 @@ from object_detection.entities import ImageBatch
 from fish.store import StoreApi
 from toolz import valfilter
 from object_detection.utils import DetectionPlot
+from torchvision.transforms import ToTensor
+
+
+def test_resize_mix() -> None:
+    annotations = list(read_train_rows("/store").values())
+    base = annot_to_tuple(annotations[197])
+    other = annot_to_tuple(annotations[196])
+    img, boxes, labels = resize_mix(base, other, scale=0.7)
+    img_tensor = ToTensor()(img)
+    plot = DetectionPlot(img_tensor)
+    plot.draw_boxes(boxes=boxes, labels=labels)
+    plot.save(f"store/test-resize-mix.jpg")
+
+
+def test_resize_mix_dataset() -> None:
+    dataset = ResizeMixDataset(transforms=test_transforms)
+    dataset.load()
+    for i in range(len(dataset)):
+        id, image, boxes, labels = dataset[i]
+        plot = DetectionPlot(inv_normalize(image))
+        plot.draw_boxes(boxes=boxes, labels=labels)
+        plot.save(f"store/test-resize-dataset-{i}.png")
 
 
 def test_dataset() -> None:
@@ -99,12 +126,6 @@ def test_fold() -> None:
     test_seqs = set([r["sequence_id"] for r in test.values()])
 
     assert len(train_seqs.intersection(test_seqs)) == 0
-
-
-def test_cutmix() -> None:
-    rows = read_train_rows("/store")
-    rows = valfilter(lambda x: x["sequence_id"] == 0, rows)
-    cutmix(rows)
 
 
 def test_find_prev_frame() -> None:

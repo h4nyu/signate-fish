@@ -1,4 +1,4 @@
-import torch, typing, numpy as np, cv2
+import torch, typing, numpy as np, cv2, random
 from typing import *
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -6,6 +6,7 @@ from skimage.io import imread
 from toolz.curried import map, pipe, keyfilter, valfilter, filter, sorted
 from io import BytesIO
 import albumentations as A
+from torchvision.ops.boxes import box_iou, box_area
 from albumentations.pytorch.transforms import ToTensorV2
 from torchvision.transforms import Normalize
 from PIL import Image as PILImage
@@ -17,8 +18,9 @@ from object_detection.entities import (
     Image,
     PascalBoxes,
     Labels,
+    box_in_area,
 )
-from object_detection.entities.box import filter_size, resize
+from object_detection.entities.box import filter_size, resize, shift, Nummber
 import albumentations as albm
 from sklearn.model_selection import GroupKFold, StratifiedKFold
 import glob, typing, json, re
@@ -30,6 +32,7 @@ from fish.store import StoreApi, Rows
 Annotation = typing.TypedDict(
     "Annotation",
     {
+        "id": str,
         "boxes": typing.List[typing.List[int]],
         "labels": typing.List[int],
         "image_path": str,
@@ -42,6 +45,7 @@ Annotations = typing.Dict[str, Annotation]
 TestRow = typing.TypedDict(
     "TestRow",
     {
+        "id": str,
         "image_path": str,
         "sequence_id": int,
         "frame_id": int,
@@ -62,8 +66,41 @@ def add_submission(
     submission[f"{id}.jpg"] = row
 
 
-def cutmix(rows: Annotations) -> None:
-    ...
+def annot_to_tuple(row: Annotation) -> Tuple[Any, PascalBoxes, Labels]:
+    img = PILImage.open(row["image_path"])
+    boxes = PascalBoxes(torch.tensor(row["boxes"]))
+    labels = Labels(torch.tensor(row["labels"]))
+    return img, boxes, labels
+
+
+def resize_mix(
+    base: Tuple[Any, PascalBoxes, Labels],
+    other: Tuple[Any, PascalBoxes, Labels],
+    scale: float = 0.5,
+) -> Tuple[Any, PascalBoxes, Labels]:
+    base_img, base_boxes, base_labels = base
+    other_img, other_boxes, other_labels = other
+    base_w, base_h = base_img.size
+    resized_w, resized_h = int(base_w * scale), int(base_h * scale)
+    start_x, start_y = random.randint(0, base_w - resized_w), random.randint(
+        0, base_h - resized_h
+    )
+    indices = ~box_in_area(
+        base_boxes,
+        torch.tensor([start_x, start_y, start_x + resized_w, start_y + resized_h]),
+        min_fill=0.8,
+    )
+    base_boxes = PascalBoxes(base_boxes[indices])
+    base_labels = Labels(base_labels[indices])
+
+    other_boxes = resize(other_boxes, (scale, scale))
+    other_boxes = shift(other_boxes, (start_x, start_y))
+
+    other_img = other_img.resize((resized_w, resized_h))
+    base_img.paste(other_img, (start_x, start_y))
+    boxes = torch.cat([other_boxes, base_boxes], dim=0)
+    labels = torch.cat([base_labels, other_labels], dim=0)
+    return base_img, PascalBoxes(boxes), Labels(labels)
 
 
 def parse_label(value: str) -> typing.Optional[int]:
@@ -97,6 +134,7 @@ def read_train_rows(dataset_dir: str) -> Annotations:
 
         image_path = str(image_dir.joinpath(f"{id}.jpg"))
         annotations[id] = dict(
+            id=id,
             boxes=boxes,
             labels=labels,
             image_path=image_path,
@@ -120,6 +158,7 @@ def read_test_rows(dataset_dir: str) -> TestRows:
         frame_id = row["attributes"]["frame_id"]
         image_path = str(image_dir.joinpath(f"{id}.jpg"))
         rows[id] = dict(
+            id=id,
             image_path=image_path,
             sequence_id=sequence_id,
             frame_id=frame_id,
@@ -167,7 +206,9 @@ inv_normalize = Normalize(
 
 train_transforms = albm.Compose(
     [
-        A.PadIfNeeded(min_height=config.original_height, min_width=config.original_width, p=1),
+        A.PadIfNeeded(
+            min_height=config.original_height, min_width=config.original_width, p=1
+        ),
         A.RandomSizedCrop(
             (
                 config.original_height - config.original_height * 0.3,
@@ -308,6 +349,42 @@ def find_prev_frame(
         iter,
         lambda x: next(x, None),
     )
+
+
+class ResizeMixDataset(Dataset):
+    def __init__(
+        self,
+        transforms: typing.Any,
+        dataset_dir: str = "/store/resize-mix",
+    ) -> None:
+        self.dataset_dir = dataset_dir
+        self.rows: List[Tuple[str, Annotation]] = []
+        self.transforms = transforms
+
+    def load(self) -> None:
+        rows = {}
+        for p in glob.glob(f"{self.dataset_dir}/*.json"):
+            path = Path(p)
+            with path.open("r") as f:
+                row: Annotation = json.load(f)
+                rows[row["id"]] = row
+        self.rows = list(rows.items())
+
+    def __getitem__(self, idx: int) -> TrainSample:
+        id, annot = self.rows[idx]
+        image = imread(annot["image_path"])
+        boxes = annot["boxes"]
+        labels = annot["labels"]
+        transed = self.transforms(image=image, bboxes=boxes, labels=labels)
+        return (
+            ImageId(id),
+            Image(transed["image"]),
+            PascalBoxes(torch.tensor(transed["bboxes"])),
+            Labels(torch.tensor(transed["labels"])),
+        )
+
+    def __len__(self) -> int:
+        return len(self.rows)
 
 
 class FrameDataset(Dataset):
