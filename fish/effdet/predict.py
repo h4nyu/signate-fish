@@ -43,7 +43,7 @@ def predict(device: str) -> None:
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(
         dataset,
-        batch_size=config.batch_size,
+        batch_size=1,
         shuffle=False,
         drop_last=False,
     )

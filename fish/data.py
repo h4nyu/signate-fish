@@ -167,15 +167,17 @@ inv_normalize = Normalize(
 
 train_transforms = albm.Compose(
     [
+        A.PadIfNeeded(min_height=config.original_height, min_width=config.original_width, p=1),
+        A.RandomSizedCrop(
+            (
+                config.original_height - config.original_height * 0.2,
+                config.original_height,
+            ),
+            height=config.original_height,
+            width=config.original_width,
+        ),
         A.VerticalFlip(p=0.5),
         A.HorizontalFlip(p=0.5),
-        A.ShiftScaleRotate(
-            shift_limit=0.1,
-            scale_limit=(-0.2, 0.2),
-            rotate_limit=10,
-            p=1.0,
-            border_mode=cv2.BORDER_CONSTANT,
-        ),
         A.OneOf(
             [
                 A.HueSaturationValue(
@@ -266,7 +268,7 @@ class LabeledDataset(Dataset):
     def __getitem__(self, idx: int) -> TrainSample:
         row = self.rows[idx]
         id = row["id"]
-        path = self.image_dir.joinpath(id if 'jpg' in id else f"{id}.jpg")
+        path = self.image_dir.joinpath(id if "jpg" in id else f"{id}.jpg")
         image = imread(path)
         h, w, _ = image.shape
         boxes = PascalBoxes(
