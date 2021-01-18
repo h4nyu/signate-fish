@@ -364,9 +364,7 @@ class ResizeMixDataset(Dataset):
     def __getitem__(self, idx: int) -> TrainSample:
         id, base = self.rows[idx]
         _, other = self.rows[random.choice(self.indices)]
-        image, boxes, labels = resize_mix(
-            annot_to_tuple(base), annot_to_tuple(other)
-        )
+        image, boxes, labels = resize_mix(annot_to_tuple(base), annot_to_tuple(other))
         transed = self.transforms(image=np.array(image), bboxes=boxes, labels=labels)
         return (
             ImageId(id),

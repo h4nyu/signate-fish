@@ -92,7 +92,7 @@ def train(epochs: int) -> None:
             ResizeMixDataset(
                 rows=annotations,
                 transforms=train_transforms,
-            )
+            ),
         ]
     )
     test_dataset = FileDataset(
