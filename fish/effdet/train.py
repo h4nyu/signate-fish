@@ -32,6 +32,7 @@ from fish.data import (
     test_transforms,
     read_train_rows,
     inv_normalize,
+    ResizeMixDataset,
 )
 from fish.store import StoreApi
 from fish.effdet import config
@@ -88,6 +89,10 @@ def train(epochs: int) -> None:
                 rows=labeled_rows,
                 transforms=train_transforms,
             ),
+            ResizeMixDataset(
+                rows=annotations,
+                transforms=train_transforms,
+            )
         ]
     )
     test_dataset = FileDataset(

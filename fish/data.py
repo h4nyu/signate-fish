@@ -354,28 +354,20 @@ def find_prev_frame(
 class ResizeMixDataset(Dataset):
     def __init__(
         self,
+        rows: Annotations,
         transforms: typing.Any,
-        dataset_dir: str = "/store/resize-mix",
     ) -> None:
-        self.dataset_dir = dataset_dir
-        self.rows: List[Tuple[str, Annotation]] = []
+        self.rows = list(rows.items())
+        self.indices = list(range(len(self.rows)))
         self.transforms = transforms
 
-    def load(self) -> None:
-        rows = {}
-        for p in glob.glob(f"{self.dataset_dir}/*.json"):
-            path = Path(p)
-            with path.open("r") as f:
-                row: Annotation = json.load(f)
-                rows[row["id"]] = row
-        self.rows = list(rows.items())
-
     def __getitem__(self, idx: int) -> TrainSample:
-        id, annot = self.rows[idx]
-        image = imread(annot["image_path"])
-        boxes = annot["boxes"]
-        labels = annot["labels"]
-        transed = self.transforms(image=image, bboxes=boxes, labels=labels)
+        id, base = self.rows[idx]
+        _, other = self.rows[random.choice(self.indices)]
+        image, boxes, labels = resize_mix(
+            annot_to_tuple(base), annot_to_tuple(other)
+        )
+        transed = self.transforms(image=np.array(image), bboxes=boxes, labels=labels)
         return (
             ImageId(id),
             Image(transed["image"]),
