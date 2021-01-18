@@ -145,7 +145,7 @@ bbox_params = {"format": "pascal_voc", "label_fields": ["labels"]}
 test_transforms = albm.Compose(
     [
         albm.LongestMaxSize(max_size=config.image_width),
-        A.PadIfNeeded(min_width=config.image_width, min_height=config.image_height),
+        A.Resize(width=config.image_width, height=config.image_height),
         ToTensorV2(),
     ],
     bbox_params=bbox_params,
@@ -154,7 +154,7 @@ test_transforms = albm.Compose(
 prediction_transforms = albm.Compose(
     [
         albm.LongestMaxSize(max_size=config.image_width),
-        A.PadIfNeeded(min_width=config.image_width, min_height=config.image_height),
+        A.Resize(width=config.image_width, height=config.image_height),
         A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
     ],
@@ -207,7 +207,7 @@ train_transforms = albm.Compose(
             p=0.2,
         ),
         A.LongestMaxSize(max_size=config.image_width),
-        A.PadIfNeeded(min_width=config.image_width, min_height=config.image_height),
+        A.Resize(width=config.image_width, height=config.image_height),
         A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
     ],
