@@ -118,7 +118,7 @@ def read_test_rows(dataset_dir: str) -> TestRows:
             row = json.load(f)
         sequence_id = row["attributes"]["sequence_id"]
         frame_id = row["attributes"]["frame_id"]
-        image_path = str(image_dir.joinpath(f"{id}.jpg"))
+        image_path = str(image_dir.joinpath(id if "jpg" in id else f"{id}.jpg"))
         rows[id] = dict(
             image_path=image_path,
             sequence_id=sequence_id,

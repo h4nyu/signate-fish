@@ -25,7 +25,7 @@ def test_dataset() -> None:
 
     dataset = FileDataset(rows=annotations, transforms=train_transforms)
     for i in range(10):
-        id, image, boxes, labels = dataset[5]
+        id, image, boxes, labels = dataset[0]
         plot = DetectionPlot(inv_normalize(image))
         plot.draw_boxes(boxes=boxes, labels=labels)
         plot.save(f"store/test-plot-{id}-{i}.png")
