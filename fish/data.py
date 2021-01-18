@@ -146,6 +146,7 @@ test_transforms = albm.Compose(
     [
         albm.LongestMaxSize(max_size=config.image_width),
         A.Resize(width=config.image_width, height=config.image_height),
+        A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
     ],
     bbox_params=bbox_params,
