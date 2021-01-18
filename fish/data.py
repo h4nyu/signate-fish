@@ -170,13 +170,13 @@ train_transforms = albm.Compose(
         A.PadIfNeeded(min_height=config.original_height, min_width=config.original_width, p=1),
         A.RandomSizedCrop(
             (
-                config.original_height - config.original_height * 0.2,
+                config.original_height - config.original_height * 0.3,
                 config.original_height,
             ),
             height=config.original_height,
             width=config.original_width,
         ),
-        A.VerticalFlip(p=0.5),
+        # A.VerticalFlip(p=0.5),
         A.HorizontalFlip(p=0.5),
         A.OneOf(
             [

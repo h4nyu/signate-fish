@@ -17,8 +17,8 @@ batch_size = 5
 channels = 64
 box_depth = 1
 fpn_depth = 1
-lr = 1e-3
-out_ids: List[int] = [6, 7]
+lr = 1e-4
+out_ids: List[int] = [5, 6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
@@ -30,4 +30,4 @@ cls_weight = 1
 
 anchor_ratios = [1.3, 1.9, 2.9]
 anchor_scales = [1.0, 1.44]
-anchor_size = 1
+anchor_size = 2
