@@ -9,6 +9,7 @@ from object_detection.entities.box import (
     Confidences,
     Labels,
     resize,
+    box_hflip,
 )
 from fish.data import (
     read_test_rows,
@@ -47,7 +48,7 @@ def predict(device: str) -> None:
         shuffle=False,
         drop_last=False,
     )
-    weights = [1]
+    weights = [1, 1]
     submission: Submission = {}
     for ids, image_batch in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
@@ -75,15 +76,28 @@ def predict(device: str) -> None:
             label_batch,
             h_label_batch,
         ):
+            m_boxes, m_confidences, m_labels = weighted_boxes_fusion(
+                [
+                    resize(boxes, (1/w, 1/h)),
+                    box_hflip(resize(h_boxes, (1/w, 1/h)), (1, 1)),
+                ],
+                [confidences, h_confidences],
+                [labels, h_labels],
+                iou_thr=config.iou_threshold,
+                weights=weights,
+            )
+
+            m_boxes = resize(PascalBoxes(torch.from_numpy(m_boxes)), (w, h))
+
             plot = DetectionPlot(inv_normalize(img))
-            plot.draw_boxes(boxes=boxes, labels=labels, confidences=confidences)
+            plot.draw_boxes(boxes=m_boxes, labels=m_labels, confidences=m_confidences)
             plot.save(out_dir.joinpath(f"{id}.jpg"))
 
             boxes = resize(
-                boxes, scale=(config.original_width / w, config.original_height / h)
+                m_boxes, scale=(config.original_width / w, config.original_height / h)
             )
 
-            add_submission(submission, id, boxes=boxes, labels=labels)
+            add_submission(submission, id, boxes=m_boxes, labels=m_labels)
 
     with open(out_dir.joinpath("submission.json"), "w") as f:
         json.dump(submission, f)
