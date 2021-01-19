@@ -9,7 +9,7 @@ out_dir = "/store/efficientdet4"
 use_amp = True
 
 # data
-confidence_threshold = 0.1
+confidence_threshold = 0.01
 iou_threshold = 0.20
 batch_size = 5
 
