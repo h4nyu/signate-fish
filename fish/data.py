@@ -211,7 +211,7 @@ train_transforms = albm.Compose(
             height=config.original_height,
             width=config.original_width,
         ),
-        # A.VerticalFlip(p=0.5),
+        A.VerticalFlip(p=0.5),
         A.HorizontalFlip(p=0.5),
         A.OneOf(
             [
