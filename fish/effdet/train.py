@@ -85,10 +85,10 @@ def train(epochs: int) -> None:
                 rows=train_rows,
                 transforms=train_transforms,
             ),
-            # LabeledDataset(
-            #     rows=labeled_rows,
-            #     transforms=train_transforms,
-            # ),
+            LabeledDataset(
+                rows=labeled_rows,
+                transforms=train_transforms,
+            ),
             ResizeMixDataset(
                 rows=train_rows,
                 transforms=train_transforms,
@@ -165,7 +165,7 @@ def train(epochs: int) -> None:
             logs["train_loss"] = loss_meter.get_value()
             logs["train_box"] = box_loss_meter.get_value()
             logs["train_label"] = label_loss_meter.get_value()
-            if i % 100 == 1:
+            if i % 200 == 199:
                 eval_step()
                 log()
 

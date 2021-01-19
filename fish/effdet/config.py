@@ -11,14 +11,14 @@ use_amp = True
 
 # data
 confidence_threshold = 0.01
-iou_threshold = 0.15
-batch_size = 4
+iou_threshold = 0.2
+batch_size = 3
 
 # model
-channels = 48
+channels = 64
 box_depth = 1
 fpn_depth = 1
-lr = 5e-4
+lr = 2e-4
 out_ids: List[int] = [5, 6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
