@@ -110,9 +110,9 @@ def test_labeled_dataset() -> None:
     rows = api.filter()
     rows = pipe(rows, filter(lambda x: x["state"] == "Done"), list)
     dataset = LabeledDataset(rows=rows, transforms=train_transforms)
-    if len(rows) == 0:
+    if len(rows) < 4:
         return
-    for i in range(len(dataset)):
+    for i in range(3):
         id, image, boxes, labels = dataset[i]
         plot = DetectionPlot(inv_normalize(image))
         plot.draw_boxes(boxes=boxes, labels=labels)

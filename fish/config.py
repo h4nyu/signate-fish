@@ -17,4 +17,4 @@ num_classes = 2
 to_box_limit = 20
 
 # fold
-n_splits = 5
+n_splits = 6

@@ -226,16 +226,27 @@ train_transforms = albm.Compose(
         ),
         A.OneOf(
             [
-                A.Blur(blur_limit=3, p=1.0),
-                A.Blur(blur_limit=5, p=1.0),
-                A.Blur(blur_limit=7, p=1.0),
-                A.MedianBlur(blur_limit=3, p=1.0),
-                A.MedianBlur(blur_limit=5, p=1.0),
-                A.MedianBlur(blur_limit=7, p=1.0),
-                A.MotionBlur(blur_limit=3, p=1.0),
-                A.MotionBlur(blur_limit=5, p=1.0),
+                A.RGBShift(
+                    r_shift_limit=10,
+                    g_shift_limit=10,
+                    b_shift_limit=10
+                ),
             ],
             p=0.3,
+        ),
+        A.OneOf(
+            [
+                A.Blur(blur_limit=5, p=1.0),
+                A.Blur(blur_limit=13, p=1.0),
+                A.Blur(blur_limit=17, p=1.0),
+                A.MedianBlur(blur_limit=5, p=1.0),
+                A.MedianBlur(blur_limit=11, p=1.0),
+                A.MedianBlur(blur_limit=17, p=1.0),
+                A.MotionBlur(blur_limit=5, p=1.0),
+                A.MotionBlur(blur_limit=13, p=1.0),
+                A.MotionBlur(blur_limit=17, p=1.0),
+            ],
+            p=0.4,
         ),
         A.OneOf(
             [
@@ -321,7 +332,7 @@ class LabeledDataset(Dataset):
         )
         boxes = resize(boxes, (w, h))
         labels = [int(float(b["label"])) for b in row["boxes"]]
-        transed = self.transforms(image=image, bboxes=[], labels=[])
+        transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
             Image(transed["image"]),

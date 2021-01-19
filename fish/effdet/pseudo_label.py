@@ -39,7 +39,7 @@ store = StoreApi()
 @torch.no_grad()
 def predict(device: str) -> None:
     rows = store.filter()
-    rows = pipe(rows, filter(lambda x: "test" in x['id']), list)
+    rows = pipe(rows, filter(lambda x: "test" in x["id"]), list)
     out_dir = Path("/store/pseudo")
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -52,7 +52,7 @@ def predict(device: str) -> None:
         num_workers=1,
         shuffle=False,
         drop_last=False,
-        collate_fn=collate_fn
+        collate_fn=collate_fn,
     )
     weights = [1, 1]
     for image_batch, _, _, ids in tqdm.tqdm(loader):
@@ -100,7 +100,11 @@ def predict(device: str) -> None:
             print(m_confidences)
 
             plot = DetectionPlot(inv_normalize(img))
-            plot.draw_boxes(boxes=resize(m_boxes, (w,h)), labels=m_labels, confidences=m_confidences)
+            plot.draw_boxes(
+                boxes=resize(m_boxes, (w, h)),
+                labels=m_labels,
+                confidences=m_confidences,
+            )
             plot.save(out_dir.joinpath(f"{id}.jpg"))
 
             annotate(store, id, boxes=m_boxes, labels=m_labels)

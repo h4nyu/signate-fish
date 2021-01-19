@@ -37,4 +37,3 @@ box_df["aspect"] = box_df["w"] / box_df["h"]
 print(f"{box_df.describe()}")
 print(f"{box_df['area'].median() **(1/2)=}")
 print(f"{(box_df['area'].median() * 4) **(1/2)=}")
-print(f"{(2630) **(1/2)=}")
