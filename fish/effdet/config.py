@@ -3,7 +3,7 @@ from object_detection.model_loader import WatchMode
 from fish.config import *
 
 
-out_dir = "/store/efficientdet4"
+out_dir = "/store/efficientdet5-high-reso"
 pseudo_threshold = 0.15
 
 # train
@@ -12,10 +12,10 @@ use_amp = True
 # data
 confidence_threshold = 0.01
 iou_threshold = 0.15
-batch_size = 2
+batch_size = 4
 
 # model
-channels = 64
+channels = 48
 box_depth = 1
 fpn_depth = 1
 lr = 1e-4

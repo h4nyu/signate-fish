@@ -85,10 +85,10 @@ def train(epochs: int) -> None:
             #     rows=train_rows,
             #     transforms=train_transforms,
             # ),
-            # LabeledDataset(
-            #     rows=labeled_rows,
-            #     transforms=train_transforms,
-            # ),
+            LabeledDataset(
+                rows=labeled_rows,
+                transforms=train_transforms,
+            ),
             ResizeMixDataset(
                 rows=train_rows,
                 transforms=train_transforms,
