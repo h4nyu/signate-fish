@@ -13,7 +13,7 @@ from object_detection.entities.box import (
     filter_size,
     resize,
 )
-from fish.data import read_test_rows, TestDataset, prediction_transforms
+from fish.data import read_test_rows, TestDataset, test_transforms
 from fish.centernet import config
 from fish.centernet.train import model, model_loader, to_boxes
 from ensemble_boxes import weighted_boxes_fusion
@@ -38,7 +38,7 @@ def predict(device: str) -> None:
     out_dir.mkdir(exist_ok=True)
     dataset = TestDataset(
         rows=rows,
-        transforms=prediction_transforms,
+        transforms=test_transforms,
     )
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(

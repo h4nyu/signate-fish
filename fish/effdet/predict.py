@@ -18,7 +18,7 @@ from fish.data import (
     kfold,
     inv_normalize,
     add_submission,
-    prediction_transforms,
+    test_transforms,
     TestDataset,
     Submission,
 )
@@ -40,7 +40,7 @@ def predict(device: str) -> None:
     out_dir = Path("/store/submission")
     shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
-    dataset = TestDataset(rows=rows, transforms=prediction_transforms)
+    dataset = TestDataset(rows=rows, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(
         dataset,
@@ -78,8 +78,8 @@ def predict(device: str) -> None:
         ):
             m_boxes, m_confidences, m_labels = weighted_boxes_fusion(
                 [
-                    resize(boxes, (1/w, 1/h)),
-                    box_hflip(resize(h_boxes, (1/w, 1/h)), (1, 1)),
+                    resize(boxes, (1 / w, 1 / h)),
+                    box_hflip(resize(h_boxes, (1 / w, 1 / h)), (1, 1)),
                 ],
                 [confidences, h_confidences],
                 [labels, h_labels],
