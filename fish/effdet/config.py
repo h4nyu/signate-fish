@@ -3,13 +3,13 @@ from object_detection.model_loader import WatchMode
 from fish.config import *
 
 
-out_dir = "/store/efficientdet4"
+out_dir = "/store/efficientdet-scse"
 
 # train
 use_amp = True
 
 # data
-confidence_threshold = 0.1
+confidence_threshold = 0.0
 iou_threshold = 0.20
 batch_size = 5
 
