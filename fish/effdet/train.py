@@ -82,7 +82,7 @@ def train(epochs: int) -> None:
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
-                rows=annotations,
+                rows=train_rows,
                 transforms=train_transforms,
             ),
             LabeledDataset(
@@ -90,14 +90,14 @@ def train(epochs: int) -> None:
                 transforms=train_transforms,
             ),
             ResizeMixDataset(
-                rows=train_rows,
+                rows=annotations,
                 transforms=train_transforms,
             ),
         ]
     )
-    test_dataset = LabeledDataset(
-        rows=labeled_rows,
-        transforms=test_transforms,
+    test_dataset = FileDataset(
+            rows=test_rows,
+            transforms=train_transforms,
     )
     train_loader = DataLoader(
         train_dataset,
