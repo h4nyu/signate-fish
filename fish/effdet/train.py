@@ -128,21 +128,20 @@ def train(epochs: int) -> None:
     visualize = Visualize(
         config.out_dir, "test", limit=config.batch_size * 2, transforms=inv_normalize
     )
-    get_score = MeanPrecition(iou_thresholds=[0.3])
+    get_score = MeanPrecition(iou_thresholds=[config.ap_iou])
     scaler = GradScaler()
     logs: Dict[str, float] = {}
-
     def train_step() -> None:
-        model.train()
         loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
-        for (
+        for i, (
             image_batch,
             gt_box_batch,
             gt_label_batch,
             _,
-        ) in tqdm(train_loader):
+        ) in tqdm(enumerate(train_loader)):
+            model.train()
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
@@ -161,9 +160,13 @@ def train(epochs: int) -> None:
             loss_meter.update(loss.item())
             box_loss_meter.update(box_loss.item())
             label_loss_meter.update(label_loss.item())
-        logs["train_loss"] = loss_meter.get_value()
-        logs["train_box"] = box_loss_meter.get_value()
-        logs["train_label"] = label_loss_meter.get_value()
+
+            logs["train_loss"] = loss_meter.get_value()
+            logs["train_box"] = box_loss_meter.get_value()
+            logs["train_label"] = label_loss_meter.get_value()
+            if i % 200 == 199:
+                eval_step()
+                log()
 
     @torch.no_grad()
     def eval_step() -> None:
@@ -224,8 +227,6 @@ def train(epochs: int) -> None:
     model_loader.load_if_needed(model)
     for _ in range(epochs):
         train_step()
-        eval_step()
-        log()
 
 
 if __name__ == "__main__":

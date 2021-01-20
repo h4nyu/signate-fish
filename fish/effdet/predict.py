@@ -86,6 +86,9 @@ def predict(device: str) -> None:
                 iou_thr=config.iou_threshold,
                 weights=weights,
             )
+            m_boxes = m_boxes[:config.to_box_limit]
+            m_confidences = m_confidences[:config.to_box_limit]
+            m_labels = m_labels[:config.to_box_limit]
 
             m_boxes = resize(PascalBoxes(torch.from_numpy(m_boxes)), (w, h))
 
@@ -93,7 +96,7 @@ def predict(device: str) -> None:
             plot.draw_boxes(boxes=m_boxes, labels=m_labels, confidences=m_confidences)
             plot.save(out_dir.joinpath(f"{id}.jpg"))
 
-            boxes = resize(
+            m_boxes = resize(
                 m_boxes, scale=(config.original_width / w, config.original_height / h)
             )
 

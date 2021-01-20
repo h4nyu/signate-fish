@@ -73,7 +73,7 @@ def predict(device: str) -> None:
                 weights=weights,
                 skip_box_thr=config.to_boxes_threshold,
             )
-            _boxes = resize(PascalBoxes(torch.from_numpy(_boxes)), (w, h))
+            _m_confidencesboxes = resize(PascalBoxes(torch.from_numpy(_boxes)), (w, h))
             plot = DetectionPlot(img)
             plot.draw_boxes(boxes=_boxes, confidences=confidences, labels=labels)
             plot.save(out_dir.joinpath(f"{id}.jpg"))
