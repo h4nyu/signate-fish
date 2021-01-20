@@ -81,8 +81,14 @@ def predict(device: str) -> None:
                     resize(boxes, (1 / w, 1 / h)),
                     box_hflip(resize(h_boxes, (1 / w, 1 / h)), (1, 1)),
                 ],
-                [confidences, h_confidences],
-                [labels, h_labels],
+                [
+                    confidences,
+                    h_confidences
+                ],
+                [
+                    labels,
+                    h_labels
+                ],
                 iou_thr=config.iou_threshold,
                 weights=weights,
             )
@@ -94,7 +100,10 @@ def predict(device: str) -> None:
 
             plot = DetectionPlot(inv_normalize(img))
             plot.draw_boxes(boxes=m_boxes, labels=m_labels, confidences=m_confidences)
-            plot.save(out_dir.joinpath(f"{id}.jpg"))
+            row = rows[id]
+            sequence_id = row["sequence_id"]
+            frame_id = row["frame_id"]
+            plot.save(out_dir.joinpath(f"{sequence_id}-{frame_id}-{id}.jpg"))
 
             m_boxes = resize(
                 m_boxes, scale=(config.original_width / w, config.original_height / h)

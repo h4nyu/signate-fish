@@ -5,6 +5,7 @@ from toolz.curried import groupby
 from typing import List
 import os
 import typing
+from typing import *
 
 Box = typing.TypedDict(
     "Box", {"x0": float, "y0": float, "x1": float, "y1": float, "label": str}
@@ -54,16 +55,16 @@ class StoreApi:
             row["boxes"] = boxes.get(row["id"]) or []
         return rows
 
-    def predict(self, id: str, boxes: typing.List[Box]) -> None:
+    def predict(self, id: str, boxes: typing.List[Box], loss:Optional[float]=None) -> None:
         res = requests.post(
             urljoin(self.url, "/api/v1/box/predict"),
-            json={"imageId": id, "boxes": boxes},
+            json={"imageId": id, "boxes": boxes, "loss":loss},
         )
         res.raise_for_status()
 
     def annotate(self, id: str, boxes: typing.List[Box]) -> None:
         res = requests.post(
-            urljoin(self.url, "/api/v1/box/annotate"),
+            urljoin(self.url, "/api/v1/box/predict"),
             json={"imageId": id, "boxes": boxes},
         )
         res.raise_for_status()

@@ -71,6 +71,11 @@ to_boxes = ToBoxes(
     limit=config.to_box_limit,
 )
 
+criterion = Criterion(
+    topk=config.topk,
+    box_weight=config.box_weight,
+    cls_weight=config.cls_weight,
+)
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
@@ -112,11 +117,6 @@ def train(epochs: int) -> None:
         batch_size=config.batch_size * 2,
         num_workers=config.batch_size,
         shuffle=False,
-    )
-    criterion = Criterion(
-        topk=config.topk,
-        box_weight=config.box_weight,
-        cls_weight=config.cls_weight,
     )
     optimizer = optim.RAdam(
         model.parameters(),

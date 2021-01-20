@@ -76,7 +76,10 @@ def predict(device: str) -> None:
             _m_confidencesboxes = resize(PascalBoxes(torch.from_numpy(_boxes)), (w, h))
             plot = DetectionPlot(img)
             plot.draw_boxes(boxes=_boxes, confidences=confidences, labels=labels)
-            plot.save(out_dir.joinpath(f"{id}.jpg"))
+            row = rows[id]
+            sequence_id = row["sequence_id"]
+            frame_id = row["frame_id"]
+            plot.save(out_dir.joinpath(f"{sequence_id}-{frame_id}-{id}.jpg"))
             _boxes = resize(
                 _boxes, scale=(config.original_width / w, config.original_height / h)
             )

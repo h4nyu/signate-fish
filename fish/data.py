@@ -183,7 +183,7 @@ def read_test_rows(dataset_dir: str) -> TestRows:
 
 
 bbox_params = {"format": "pascal_voc", "label_fields": ["labels"]}
-test_transforms = albm.Compose(
+test_transforms = A.Compose(
     [
         albm.LongestMaxSize(max_size=config.image_width),
         A.Resize(width=config.image_width, height=config.image_height),
@@ -428,7 +428,7 @@ class TestDataset(Dataset):
     def __getitem__(self, idx: int) -> Tuple[ImageId, Image]:
         id, row = self.rows[idx]
         image = imread(row["image_path"])
-        transed = self.transforms(image=image)
+        transed = self.transforms(image=image, labels=[], bboxes=[])
         return (
             ImageId(id),
             Image(transed["image"].float()),
@@ -450,3 +450,16 @@ def annotate(store: StoreApi, id: str, boxes: PascalBoxes, labels: Labels) -> No
         for b, l in zip(boxes.tolist(), labels.tolist())
     ]
     store.annotate(id, payload_boxes)
+
+def psseudo_predict(store: StoreApi, id: str, boxes: PascalBoxes, labels: Labels, loss:Optional[float]) -> None:
+    payload_boxes: List[Box] = [
+        dict(
+            x0=float(b[0]),
+            y0=float(b[1]),
+            x1=float(b[2]),
+            y1=float(b[3]),
+            label=str(l),
+        )
+        for b, l in zip(boxes.tolist(), labels.tolist())
+    ]
+    store.predict(id, payload_boxes, loss)
