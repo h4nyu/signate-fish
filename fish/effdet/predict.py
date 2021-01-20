@@ -81,20 +81,14 @@ def predict(device: str) -> None:
                     resize(boxes, (1 / w, 1 / h)),
                     box_hflip(resize(h_boxes, (1 / w, 1 / h)), (1, 1)),
                 ],
-                [
-                    confidences,
-                    h_confidences
-                ],
-                [
-                    labels,
-                    h_labels
-                ],
+                [confidences, h_confidences],
+                [labels, h_labels],
                 iou_thr=config.iou_threshold,
                 weights=weights,
             )
-            m_boxes = m_boxes[:config.to_box_limit]
-            m_confidences = m_confidences[:config.to_box_limit]
-            m_labels = m_labels[:config.to_box_limit]
+            m_boxes = m_boxes[: config.to_box_limit]
+            m_confidences = m_confidences[: config.to_box_limit]
+            m_labels = m_labels[: config.to_box_limit]
 
             m_boxes = resize(PascalBoxes(torch.from_numpy(m_boxes)), (w, h))
 
