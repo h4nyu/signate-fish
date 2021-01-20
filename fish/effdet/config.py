@@ -10,8 +10,8 @@ pseudo_threshold = 0.15
 use_amp = True
 
 # data
-confidence_threshold = 0.05
-iou_threshold = 0.15
+confidence_threshold = 0.00
+iou_threshold = 0.2
 batch_size = 4
 
 # model
