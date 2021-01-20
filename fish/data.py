@@ -182,7 +182,7 @@ def read_test_rows(dataset_dir: str) -> TestRows:
     return rows
 
 
-bbox_params = {"format": "pascal_voc", "label_fields": ["labels"]}
+bbox_params = dict(format="pascal_voc", label_fields=["labels"], min_area=15)
 test_transforms = A.Compose(
     [
         albm.LongestMaxSize(max_size=config.image_width),
