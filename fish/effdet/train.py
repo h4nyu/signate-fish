@@ -1,7 +1,7 @@
 from adabelief_pytorch import AdaBelief
 from tqdm import tqdm
 import torch
-from toolz import keyfilter
+from toolz import keyfilter, filter, pipe
 from typing import Dict, Any
 from torch.utils.data import DataLoader, ConcatDataset
 from object_detection.models.backbones.effnet import (
@@ -82,7 +82,9 @@ def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
     api = StoreApi()
     train_rows, test_rows = kfold(annotations)
+    test_keys = set(test_rows.keys())
     labeled_rows = api.filter()
+    labeled_rows = pipe(labeled_rows, filter( lambda x: x['id'] not in test_keys), list)
     labeled_keys = set(x["id"] for x in labeled_rows)
     train_rows = keyfilter(lambda x: x not in labeled_keys, train_rows)
     train_dataset: Any = ConcatDataset(
