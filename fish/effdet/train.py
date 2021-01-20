@@ -81,16 +81,16 @@ def train(epochs: int) -> None:
     train_rows = keyfilter(lambda x: x not in labeled_keys, train_rows)
     train_dataset: Any = ConcatDataset(
         [
-            FileDataset(
-                rows=train_rows,
-                transforms=train_transforms,
-            ),
-            LabeledDataset(
-                rows=labeled_rows,
-                transforms=train_transforms,
-            ),
+            # FileDataset(
+            #     rows=train_rows,
+            #     transforms=train_transforms,
+            # ),
+            # LabeledDataset(
+            #     rows=labeled_rows,
+            #     transforms=train_transforms,
+            # ),
             ResizeMixDataset(
-                rows=annotations,
+                rows=train_rows,
                 transforms=train_transforms,
             ),
         ]

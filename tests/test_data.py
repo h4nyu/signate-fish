@@ -112,11 +112,11 @@ def test_labeled_dataset() -> None:
     dataset = LabeledDataset(rows=rows, transforms=train_transforms)
     if len(rows) == 0:
         return
-    id, image, boxes, labels = dataset[0]
-    print(labels.shape)
-    plot = DetectionPlot(inv_normalize(image))
-    plot.draw_boxes(boxes=boxes, labels=labels)
-    plot.save(f"store/test-labeled-{id}.png")
+    for i in range(len(dataset)):
+        id, image, boxes, labels = dataset[i]
+        plot = DetectionPlot(inv_normalize(image))
+        plot.draw_boxes(boxes=boxes, labels=labels)
+        plot.save(f"store/test-labeled-{id}.png")
 
 
 def test_fold() -> None:

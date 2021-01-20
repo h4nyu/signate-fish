@@ -1,56 +1,61 @@
 import glob, tqdm, torch, json, shutil
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 from torch.utils.data import DataLoader
 from object_detection.utils import DetectionPlot
-from object_detection.metrics import MeanAveragePrecision
 from object_detection.entities.box import (
+    yolo_to_pascal,
+    yolo_vflip,
+    yolo_hflip,
     PascalBoxes,
     Confidences,
     Labels,
     resize,
+    filter_size,
+    resize,
     box_hflip,
+    box_vflip,
 )
 from fish.data import (
     read_test_rows,
-    FileDataset,
+    LabeledDataset,
     test_transforms,
-    kfold,
     inv_normalize,
-    add_submission,
-    test_transforms,
-    TestDataset,
-    Submission,
+    annotate,
 )
 from fish.effdet import config
 from fish.effdet.train import model, model_loader, to_boxes, collate_fn
 from ensemble_boxes import weighted_boxes_fusion
 from torchvision.transforms.functional import hflip, vflip
+from fish.store import StoreApi, Box
+from toolz.curried import pipe, filter
 
-from logging import (
-    getLogger,
-)
+Submission = Dict[str, Any]
 
-logger = getLogger(config.out_dir)
+
+store = StoreApi()
 
 
 @torch.no_grad()
 def predict(device: str) -> None:
-    rows = read_test_rows("/store")
-    out_dir = Path("/store/submission")
-    shutil.rmtree(out_dir)
+    rows = store.filter()
+    rows = pipe(rows, filter(lambda x: "test" in x['id']), list)
+    out_dir = Path("/store/pseudo")
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
-    dataset = TestDataset(rows=rows, transforms=test_transforms)
+    dataset = LabeledDataset(rows=rows, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(
         dataset,
         batch_size=1,
+        num_workers=1,
         shuffle=False,
         drop_last=False,
+        collate_fn=collate_fn
     )
     weights = [1, 1]
-    submission: Submission = {}
-    for ids, image_batch in tqdm.tqdm(loader):
+    for image_batch, _, _, ids in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
         _, _, h, w = image_batch.shape
         box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
@@ -86,24 +91,19 @@ def predict(device: str) -> None:
                 iou_thr=config.iou_threshold,
                 weights=weights,
             )
-            m_boxes = m_boxes[:config.to_box_limit]
-            m_confidences = m_confidences[:config.to_box_limit]
-            m_labels = m_labels[:config.to_box_limit]
 
-            m_boxes = resize(PascalBoxes(torch.from_numpy(m_boxes)), (w, h))
+            m_confidences = torch.from_numpy(m_confidences)
+            indices = m_confidences > config.pseudo_threshold
+            m_boxes = PascalBoxes(torch.from_numpy(m_boxes)[indices])
+            m_labels = Labels(torch.from_numpy(m_labels)[indices])
+            m_confidences = Confidences(m_confidences[indices])
+            print(m_confidences)
 
             plot = DetectionPlot(inv_normalize(img))
-            plot.draw_boxes(boxes=m_boxes, labels=m_labels, confidences=m_confidences)
+            plot.draw_boxes(boxes=resize(m_boxes, (w,h)), labels=m_labels, confidences=m_confidences)
             plot.save(out_dir.joinpath(f"{id}.jpg"))
 
-            m_boxes = resize(
-                m_boxes, scale=(config.original_width / w, config.original_height / h)
-            )
-
-            add_submission(submission, id, boxes=m_boxes, labels=m_labels)
-
-    with open(out_dir.joinpath("submission.json"), "w") as f:
-        json.dump(submission, f)
+            annotate(store, id, boxes=m_boxes, labels=m_labels)
 
 
 if __name__ == "__main__":

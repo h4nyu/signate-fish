@@ -26,7 +26,7 @@ from sklearn.model_selection import GroupKFold, StratifiedKFold
 import glob, typing, json, re
 from pathlib import Path
 from fish import config
-from fish.store import StoreApi, Rows
+from fish.store import StoreApi, Rows, Box
 
 
 Annotation = typing.TypedDict(
@@ -103,6 +103,22 @@ def resize_mix(
     return base_img, PascalBoxes(boxes), Labels(labels)
 
 
+def kfold(
+    rows: Annotations, n_splits: int = config.n_splits, seed: int = 7
+) -> typing.Tuple[Annotations, Annotations]:
+    kf = GroupKFold(n_splits)
+    x = list(rows.keys())
+    y = [len(i["boxes"]) for i in rows.values()]
+    groups = [i["sequence_id"] for i in rows.values()]
+
+    train_ids, test_ids = next(kf.split(x, y, groups))
+    train_keys = set([x[i] for i in train_ids])
+    test_keys = set([x[i] for i in test_ids])
+    return keyfilter(lambda k: k in train_keys, rows), keyfilter(
+        lambda k: k in test_keys, rows
+    )
+
+
 def parse_label(value: str) -> typing.Optional[int]:
     if value == "Jumper School":
         return 0
@@ -166,20 +182,6 @@ def read_test_rows(dataset_dir: str) -> TestRows:
     return rows
 
 
-def kfold(
-    rows: Annotations, n_splits: int = config.n_splits
-) -> typing.Tuple[Annotations, Annotations]:
-    kf = StratifiedKFold(n_splits)
-    x = list(rows.keys())
-    y = [len(i["boxes"]) for i in rows.values()]
-    train_ids, test_ids = next(kf.split(x, y))
-    train_keys = set([x[i] for i in train_ids])
-    test_keys = set([x[i] for i in test_ids])
-    return keyfilter(lambda k: k in train_keys, rows), keyfilter(
-        lambda k: k in test_keys, rows
-    )
-
-
 bbox_params = {"format": "pascal_voc", "label_fields": ["labels"]}
 test_transforms = albm.Compose(
     [
@@ -191,14 +193,6 @@ test_transforms = albm.Compose(
     bbox_params=bbox_params,
 )
 
-prediction_transforms = albm.Compose(
-    [
-        albm.LongestMaxSize(max_size=config.image_width),
-        A.Resize(width=config.image_width, height=config.image_height),
-        A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
-        ToTensorV2(),
-    ],
-)
 inv_normalize = Normalize(
     mean=[-m / s for m, s in zip(config.normalize_mean, config.normalize_std)],
     std=[1 / s for s in config.normalize_std],
@@ -330,7 +324,7 @@ class LabeledDataset(Dataset):
         )
         boxes = resize(boxes, (w, h))
         labels = [int(float(b["label"])) for b in row["boxes"]]
-        transed = self.transforms(image=image, bboxes=boxes, labels=labels)
+        transed = self.transforms(image=image, bboxes=[], labels=[])
         return (
             ImageId(id),
             Image(transed["image"]),
@@ -442,3 +436,17 @@ class TestDataset(Dataset):
 
     def __len__(self) -> int:
         return len(self.rows)
+
+
+def annotate(store: StoreApi, id: str, boxes: PascalBoxes, labels: Labels) -> None:
+    payload_boxes: List[Box] = [
+        dict(
+            x0=float(b[0]),
+            y0=float(b[1]),
+            x1=float(b[2]),
+            y1=float(b[3]),
+            label=str(l),
+        )
+        for b, l in zip(boxes.tolist(), labels.tolist())
+    ]
+    store.annotate(id, payload_boxes)

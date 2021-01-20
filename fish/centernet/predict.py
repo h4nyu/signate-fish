@@ -17,7 +17,7 @@ from object_detection.entities.box import (
 from fish.data import (
     read_test_rows,
     TestDataset,
-    prediction_transforms,
+    test_transforms,
     inv_normalize,
     add_submission,
     Submission,
@@ -34,7 +34,7 @@ def predict(device: str) -> None:
     out_dir = Path("/store/submission")
     shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
-    dataset = TestDataset(rows=rows, transforms=prediction_transforms)
+    dataset = TestDataset(rows=rows, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(
         dataset,
