@@ -4,3 +4,4 @@ store
 signate.json
 *.log
 .env
+.mypy_cache
