@@ -1,7 +1,7 @@
 from adabelief_pytorch import AdaBelief
 from tqdm import tqdm
 import torch
-from toolz import keyfilter, filter, pipe
+from toolz.curried import keyfilter, filter, pipe, map
 from typing import Dict, Any
 from torch.utils.data import DataLoader, ConcatDataset
 from object_detection.models.backbones.effnet import (
