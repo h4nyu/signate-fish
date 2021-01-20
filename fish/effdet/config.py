@@ -3,7 +3,7 @@ from object_detection.model_loader import WatchMode
 from fish.config import *
 
 
-out_dir = "/store/efficientdet4"
+out_dir = f"/store/efficientdet4-{image_width}"
 pseudo_threshold = 0.15
 
 # train
@@ -12,13 +12,13 @@ use_amp = True
 # data
 confidence_threshold = 0.01
 iou_threshold = 0.15
-batch_size = 5
+batch_size = 3
 
 # model
 channels = 64
 box_depth = 1
 fpn_depth = 1
-lr = 1e-4
+lr = 4e-4
 out_ids: List[int] = [5, 6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
