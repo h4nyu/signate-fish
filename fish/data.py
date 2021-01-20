@@ -183,7 +183,7 @@ def read_test_rows(dataset_dir: str) -> TestRows:
 
 
 bbox_params = {"format": "pascal_voc", "label_fields": ["labels"]}
-test_transforms = albm.Compose(
+test_transforms = A.Compose(
     [
         albm.LongestMaxSize(max_size=config.image_width),
         A.Resize(width=config.image_width, height=config.image_height),
@@ -428,7 +428,7 @@ class TestDataset(Dataset):
     def __getitem__(self, idx: int) -> Tuple[ImageId, Image]:
         id, row = self.rows[idx]
         image = imread(row["image_path"])
-        transed = self.transforms(image=image)
+        transed = self.transforms(image=image, labels=[], bboxes=[])
         return (
             ImageId(id),
             Image(transed["image"].float()),

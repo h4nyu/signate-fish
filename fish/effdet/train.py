@@ -96,8 +96,8 @@ def train(epochs: int) -> None:
         ]
     )
     test_dataset = FileDataset(
-            rows=test_rows,
-            transforms=train_transforms,
+        rows=test_rows,
+        transforms=test_transforms,
     )
     train_loader = DataLoader(
         train_dataset,
