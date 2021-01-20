@@ -23,7 +23,7 @@ from fish.data import (
     test_transforms,
     inv_normalize,
     annotate,
-    psseudo_predict,
+    pseudo_predict,
     read_test_rows,
     read_train_rows,
     FileDataset,
@@ -43,26 +43,13 @@ store = StoreApi()
 
 @torch.no_grad()
 def predict(device: str) -> None:
-    rows = read_train_rows("/store")
-    saved_rows = store.filter(state="Todo")
-    saved_ids = pipe(
-        saved_rows,
-        filter(lambda x: "train" in x['id'] and x.get('loss') is None),
-        map(lambda x: x['id']),
-        set,
-    )
-    rows = keyfilter(lambda x: x in saved_ids, rows)
-
-    # rows = pipe(rows, filter(lambda x: "test" in x['id']), list)
+    rows = store.filter(state="Todo")
+    rows = pipe(rows, filter(lambda x: "test" in x["id"]), list)
     out_dir = Path("/store/pseudo")
     if out_dir.exists():
         shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
-    # dataset = LabeledDataset(rows=rows, transforms=test_transforms)
-    dataset = FileDataset(
-        rows=rows,
-        transforms=test_transforms,
-    )
+    dataset = LabeledDataset(rows=rows, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(
         dataset,
@@ -70,7 +57,7 @@ def predict(device: str) -> None:
         num_workers=1,
         shuffle=False,
         drop_last=False,
-        collate_fn=collate_fn
+        collate_fn=collate_fn,
     )
     weights = [2, 1]
     for image_batch, gt_box_batch, gt_label_batch, ids in tqdm.tqdm(loader):
@@ -132,11 +119,15 @@ def predict(device: str) -> None:
             m_boxes = PascalBoxes(torch.from_numpy(m_boxes)[indices])
             m_labels = Labels(torch.from_numpy(m_labels)[indices])
             m_confidences = Confidences(m_confidences[indices])
-            annotate(store, id, boxes=resize(gt_boxes, (1 / w, 1 / h)), labels=gt_labels)
-            psseudo_predict(store, id, boxes=m_boxes, labels=m_labels, loss=loss.item())
+            # annotate(store, id, boxes=resize(gt_boxes, (1 / w, 1 / h)), labels=gt_labels)
+            pseudo_predict(store, id, boxes=m_boxes, labels=m_labels)
             print(id)
             plot = DetectionPlot(inv_normalize(img))
-            plot.draw_boxes(boxes=resize(m_boxes, (w,h)), labels=m_labels, confidences=m_confidences)
+            plot.draw_boxes(
+                boxes=resize(m_boxes, (w, h)),
+                labels=m_labels,
+                confidences=m_confidences,
+            )
             plot.save(out_dir.joinpath(f"{id}.jpg"))
 
 

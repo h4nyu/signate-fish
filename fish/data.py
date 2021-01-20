@@ -451,7 +451,14 @@ def annotate(store: StoreApi, id: str, boxes: PascalBoxes, labels: Labels) -> No
     ]
     store.annotate(id, payload_boxes)
 
-def psseudo_predict(store: StoreApi, id: str, boxes: PascalBoxes, labels: Labels, loss:Optional[float]) -> None:
+
+def pseudo_predict(
+    store: StoreApi,
+    id: str,
+    boxes: PascalBoxes,
+    labels: Labels,
+    loss: Optional[float] = None,
+) -> None:
     payload_boxes: List[Box] = [
         dict(
             x0=float(b[0]),

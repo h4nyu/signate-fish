@@ -55,10 +55,12 @@ class StoreApi:
             row["boxes"] = boxes.get(row["id"]) or []
         return rows
 
-    def predict(self, id: str, boxes: typing.List[Box], loss:Optional[float]=None) -> None:
+    def predict(
+        self, id: str, boxes: typing.List[Box], loss: Optional[float] = None
+    ) -> None:
         res = requests.post(
             urljoin(self.url, "/api/v1/box/predict"),
-            json={"imageId": id, "boxes": boxes, "loss":loss},
+            json={"imageId": id, "boxes": boxes, "loss": loss},
         )
         res.raise_for_status()
 

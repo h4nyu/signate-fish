@@ -77,6 +77,7 @@ criterion = Criterion(
     cls_weight=config.cls_weight,
 )
 
+
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
     api = StoreApi()
@@ -131,6 +132,7 @@ def train(epochs: int) -> None:
     get_score = MeanPrecition(iou_thresholds=[config.ap_iou])
     scaler = GradScaler()
     logs: Dict[str, float] = {}
+
     def train_step() -> None:
         loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
