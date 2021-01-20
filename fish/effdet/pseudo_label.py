@@ -33,7 +33,7 @@ from fish.effdet.train import model, model_loader, to_boxes, collate_fn, criteri
 from ensemble_boxes import weighted_boxes_fusion
 from torchvision.transforms.functional import hflip, vflip
 from fish.store import StoreApi, Box
-from toolz.curried import pipe, filter
+from toolz.curried import pipe, filter, map, keyfilter
 
 Submission = Dict[str, Any]
 
@@ -44,7 +44,15 @@ store = StoreApi()
 @torch.no_grad()
 def predict(device: str) -> None:
     rows = read_train_rows("/store")
-    # rows = store.filter()
+    saved_rows = store.filter(state="Todo")
+    saved_ids = pipe(
+        saved_rows,
+        filter(lambda x: "train" in x['id'] and x.get('loss') is None),
+        map(lambda x: x['id']),
+        set,
+    )
+    rows = keyfilter(lambda x: x in saved_ids, rows)
+
     # rows = pipe(rows, filter(lambda x: "test" in x['id']), list)
     out_dir = Path("/store/pseudo")
     if out_dir.exists():
