@@ -450,3 +450,16 @@ def annotate(store: StoreApi, id: str, boxes: PascalBoxes, labels: Labels) -> No
         for b, l in zip(boxes.tolist(), labels.tolist())
     ]
     store.annotate(id, payload_boxes)
+
+def psseudo_predict(store: StoreApi, id: str, boxes: PascalBoxes, labels: Labels, loss:Optional[float]) -> None:
+    payload_boxes: List[Box] = [
+        dict(
+            x0=float(b[0]),
+            y0=float(b[1]),
+            x1=float(b[2]),
+            y1=float(b[3]),
+            label=str(l),
+        )
+        for b, l in zip(boxes.tolist(), labels.tolist())
+    ]
+    store.predict(id, payload_boxes, loss)

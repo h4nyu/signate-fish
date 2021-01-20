@@ -10,9 +10,9 @@ pseudo_threshold = 0.15
 use_amp = True
 
 # data
-confidence_threshold = 0.01
+confidence_threshold = 0.05
 iou_threshold = 0.15
-batch_size = 5
+batch_size = 4
 
 # model
 channels = 64
@@ -26,7 +26,7 @@ pretrained = True
 
 # criterion
 topk = 39
-box_weight = 5
+box_weight = 3
 cls_weight = 1
 
 anchor_ratios = [1.3, 1.9, 2.9]
