@@ -11,14 +11,14 @@ use_amp = True
 # data
 confidence_threshold = 0.00
 iou_threshold = 0.2
-batch_size = 4
+batch_size = 5
 
 # model
 channels = 96
 box_depth = 1
 fpn_depth = 1
-lr = 1e-4
-out_ids: List[int] = [4, 5, 6, 7]
+lr = 2e-4
+out_ids: List[int] = [5, 6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
@@ -28,8 +28,9 @@ topk = 39
 box_weight = 3
 cls_weight = 1
 
-anchor_ratios = [1.3, 1.9, 2.9]
+anchor_ratios = [1.9]
 anchor_scales = [1.0, 1.44]
+num_anchors = len(anchor_ratios) * len(anchor_scales)
 anchor_size = 1
 
-out_dir = f"/store/efficientdet4-{channels}"
+out_dir = f"/store/efficientdet-{num_anchors}-{channels}"

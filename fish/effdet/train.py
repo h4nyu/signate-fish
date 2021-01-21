@@ -114,7 +114,7 @@ def train(epochs: int) -> None:
             ),
             LabeledDataset(
                 rows=test_fixed_rows,
-                transforms=train_transforms,
+                transforms=test_transforms,
             ),
         ]
     )
