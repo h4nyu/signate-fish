@@ -1,7 +1,7 @@
 import base64
 import requests
 from urllib.parse import urljoin
-from toolz.curried import groupby
+from toolz.curried import groupby, pipe, filter
 from typing import List
 import os
 import typing
@@ -46,10 +46,14 @@ class StoreApi:
         img_res.raise_for_status()
         boxes_res = requests.post(
             urljoin(self.url, "/api/v1/box/filter"),
-            json={"isGrandTruth": True},
+            json={},
         )
         boxes_res.raise_for_status()
-        boxes = groupby(lambda x: x["imageId"])(boxes_res.json())
+        boxes = pipe(
+            boxes_res.json(),
+            filter(lambda x: x["isGrandTruth"]),
+            groupby(lambda x: x["imageId"]),
+        )
         rows = img_res.json()
         for row in rows:
             row["boxes"] = boxes.get(row["id"]) or []

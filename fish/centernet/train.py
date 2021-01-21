@@ -88,12 +88,12 @@ def train(epochs: int) -> None:
     train_keys = set(train_rows.keys())
     fixed_rows = api.filter()
     for i in fixed_rows:
-        print(i['id'], len(i['boxes']))
+        print(i["id"], len(i["boxes"]))
     train_fixed_rows = pipe(
         fixed_rows, filter(lambda x: x["id"] not in test_keys), list
     )
     for i in train_fixed_rows:
-        print(i['id'], len(i['boxes']))
+        print(i["id"], len(i["boxes"]))
     test_fixed_rows = pipe(
         fixed_rows, filter(lambda x: x["id"] not in train_keys), list
     )
