@@ -6,7 +6,7 @@ from object_detection.models.mkmaps import GaussianMapMode
 out_dir = "store/centernet3"
 
 batch_size = 5
-mk_map_mode: GaussianMapMode = "length"
+mk_map_mode: GaussianMapMode = "aspect"
 
 # model
 channels = 64
@@ -18,7 +18,7 @@ box_depth = 1
 lr = 1e-3
 box_weight = 1.0
 heatmap_weight = 1.0
-sigma = 6
+sigma = 4
 metric: Tuple[str, WatchMode] = ("score", "max")
 
 # to_boxes

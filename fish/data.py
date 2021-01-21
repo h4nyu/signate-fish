@@ -320,7 +320,7 @@ class LabeledDataset(Dataset):
                     ]
                     for b in row["boxes"]
                 ]
-            )
+            ).clamp(min=0, max=1)
         )
         boxes = resize(boxes, (w, h))
         labels = [int(float(b["label"])) for b in row["boxes"]]
