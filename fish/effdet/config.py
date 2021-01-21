@@ -28,8 +28,8 @@ topk = 39
 box_weight = 3
 cls_weight = 1
 
-anchor_ratios = [1.0, 1.9]
-anchor_scales = [1.0]
+anchor_ratios = [0.7, 1.0, 1.3]
+anchor_scales = [1.0, 1.44]
 num_anchors = len(anchor_ratios) * len(anchor_scales)
 anchor_size = 1
 
