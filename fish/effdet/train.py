@@ -229,7 +229,6 @@ def train(epochs: int) -> None:
         for k, v in scores.items():
             logs[f"score-{k}"] = v
 
-        print(ids)
         visualize(
             image_batch,
             (box_batch, confidence_batch, label_batch),
