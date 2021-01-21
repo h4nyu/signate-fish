@@ -2,7 +2,7 @@ from typing import List, Any, Tuple
 from adabelief_pytorch import AdaBelief
 import torch
 from typing import Dict
-from toolz import keyfilter
+from toolz.curried import keyfilter, filter, pipe, map
 from tqdm import tqdm
 from torch.utils.data import DataLoader, ConcatDataset
 from torch.cuda.amp import GradScaler, autocast
@@ -46,6 +46,7 @@ from fish.data import (
     test_transforms,
     read_train_rows,
     inv_normalize,
+    ResizeMixDataset,
 )
 from fish.store import StoreApi
 from object_detection.metrics import MeanPrecition
@@ -81,11 +82,20 @@ model_loader = ModelLoader(
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
-    train_rows, test_rows = kfold(annotations)
     api = StoreApi()
-    labeled_rows = api.filter()
-    labeled_keys = set(x["id"] for x in labeled_rows)
-    train_rows = keyfilter(lambda x: x not in labeled_keys, train_rows)
+    train_rows, test_rows = kfold(annotations)
+    test_keys = set(test_rows.keys())
+    train_keys = set(train_rows.keys())
+    fixed_rows = api.filter()
+    train_fixed_rows = pipe(
+        fixed_rows, filter(lambda x: x["id"] not in test_keys), list
+    )
+    test_fixed_rows = pipe(
+        fixed_rows, filter(lambda x: x["id"] not in train_keys), list
+    )
+    fixed_keys = set(x["id"] for x in fixed_rows)
+    train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
+    test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
@@ -93,14 +103,26 @@ def train(epochs: int) -> None:
                 transforms=train_transforms,
             ),
             LabeledDataset(
-                rows=labeled_rows,
+                rows=train_fixed_rows,
+                transforms=train_transforms,
+            ),
+            ResizeMixDataset(
+                rows=train_rows,
                 transforms=train_transforms,
             ),
         ]
     )
-    test_dataset = FileDataset(
-        rows=test_rows,
-        transforms=test_transforms,
+    test_dataset: Any = ConcatDataset(
+        [
+            FileDataset(
+                rows=test_rows,
+                transforms=test_transforms,
+            ),
+            LabeledDataset(
+                rows=test_fixed_rows,
+                transforms=train_transforms,
+            ),
+        ]
     )
     criterion = Criterion(
         box_weight=config.box_weight,
@@ -147,7 +169,9 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
-        for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(train_loader):
+        for i, (ids, image_batch, gt_box_batch, gt_label_batch) in tqdm(
+            enumerate(train_loader)
+        ):
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
@@ -163,9 +187,13 @@ def train(epochs: int) -> None:
             loss_meter.update(loss.item())
             box_loss_meter.update(box_loss.item())
             label_loss_meter.update(label_loss.item())
-        logs["train_loss"] = loss_meter.get_value()
-        logs["train_box"] = box_loss_meter.get_value()
-        logs["train_label"] = label_loss_meter.get_value()
+            logs["train_loss"] = loss_meter.get_value()
+            logs["train_box"] = box_loss_meter.get_value()
+            logs["train_label"] = label_loss_meter.get_value()
+
+            if i % 100 == 99:
+                eval_step()
+                log()
 
     @torch.no_grad()
     def eval_step() -> None:
@@ -229,8 +257,6 @@ def train(epochs: int) -> None:
     model_loader.load_if_needed(model)
     for _ in range(epochs):
         train_step()
-        eval_step()
-        log()
 
 
 if __name__ == "__main__":
