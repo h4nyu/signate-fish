@@ -14,7 +14,7 @@ iou_threshold = 0.15
 batch_size = 3
 
 # model
-channels = 96
+channels = 64
 box_depth = 1
 fpn_depth = 1
 lr = 5e-4
