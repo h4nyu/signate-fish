@@ -1,7 +1,7 @@
 from adabelief_pytorch import AdaBelief
 from tqdm import tqdm
 import torch
-from toolz import keyfilter
+from toolz.curried import keyfilter, filter, pipe, map
 from typing import Dict, Any
 from torch.utils.data import DataLoader, ConcatDataset
 from object_detection.models.backbones.effnet import (
@@ -82,9 +82,14 @@ def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
     api = StoreApi()
     train_rows, test_rows = kfold(annotations)
-    labeled_rows = api.filter()
-    labeled_keys = set(x["id"] for x in labeled_rows)
-    train_rows = keyfilter(lambda x: x not in labeled_keys, train_rows)
+    test_keys = set(test_rows.keys())
+    train_keys = set(train_rows.keys())
+    fixed_rows = api.filter()
+    train_fixed_rows = pipe(fixed_rows, filter(lambda x: x["id"] not in test_keys), list)
+    test_fixed_rows = pipe(fixed_rows, filter(lambda x: x["id"] not in train_keys), list)
+    fixed_keys = set(x["id"] for x in fixed_rows)
+    train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
+    test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
@@ -92,7 +97,7 @@ def train(epochs: int) -> None:
                 transforms=train_transforms,
             ),
             LabeledDataset(
-                rows=labeled_rows,
+                rows=train_fixed_rows,
                 transforms=train_transforms,
             ),
             ResizeMixDataset(
@@ -101,9 +106,17 @@ def train(epochs: int) -> None:
             ),
         ]
     )
-    test_dataset = FileDataset(
-        rows=test_rows,
-        transforms=test_transforms,
+    test_dataset: Any = ConcatDataset(
+        [
+            FileDataset(
+                rows=test_rows,
+                transforms=test_transforms,
+            ),
+            LabeledDataset(
+                rows=test_fixed_rows,
+                transforms=train_transforms,
+            ),
+        ]
     )
     train_loader = DataLoader(
         train_dataset,
