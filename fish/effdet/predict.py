@@ -82,11 +82,11 @@ def predict(device: str) -> None:
                     # box_hflip(resize(h_boxes, (1 / w, 1 / h)), (1, 1)),
                 ],
                 [
-                    confidences, 
+                    confidences,
                     # h_confidences
                 ],
                 [
-                    labels, 
+                    labels,
                     # h_labels
                 ],
                 iou_thr=config.iou_threshold,

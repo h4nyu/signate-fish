@@ -4,6 +4,7 @@ from typing import Tuple, List, Dict
 from object_detection.entities import PascalBoxes, Labels, Confidences
 from torchvision.ops.boxes import box_iou
 
+
 class AveragePrecision:
     def __init__(
         self,
@@ -35,10 +36,9 @@ class AveragePrecision:
                 return 1.0
             else:
                 return 0.0
-        tp = np.zeros((n_box, ))
+        tp = np.zeros((n_box,))
         sort_indices = confidences.argsort(descending=True)
-        boxes = boxes[sort_indices]
-        iou_matrix = box_iou(boxes, gt_boxes)
+        iou_matrix = box_iou(boxes[sort_indices], gt_boxes)
         ious, matched_indices = torch.max(iou_matrix, dim=1)
         matched: Set = set()
         n_correct = (ious > self.iou_threshold).sum().item()
@@ -50,12 +50,13 @@ class AveragePrecision:
 
         tpc = tp.cumsum()
         fpc = (1 - tp).cumsum()
-        count = (tpc + fpc)
+        count = tpc + fpc
         precision = tpc / count
         div = np.min(np.stack([np.ones(n_box) * n_correct, count]), axis=0)
         print(precision)
         print(div)
         return np.sum(precision / div)
+
 
 # class MeanAveragePrecision:
 #     def __init__(
