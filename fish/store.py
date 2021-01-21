@@ -46,7 +46,7 @@ class StoreApi:
         img_res.raise_for_status()
         boxes_res = requests.post(
             urljoin(self.url, "/api/v1/box/filter"),
-            json={},
+            json={"isGrandTruth": True},
         )
         boxes_res.raise_for_status()
         boxes = groupby(lambda x: x["imageId"])(boxes_res.json())

@@ -196,7 +196,7 @@ def train(epochs: int) -> None:
         metrics = MeanAveragePrecision(
             iou_threshold=0.3, num_classes=config.num_classes
         )
-        for image_batch, gt_box_batch, gt_label_batch, _ in tqdm(test_loader):
+        for image_batch, gt_box_batch, gt_label_batch, ids in tqdm(test_loader):
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
@@ -229,6 +229,7 @@ def train(epochs: int) -> None:
         for k, v in scores.items():
             logs[f"score-{k}"] = v
 
+        print(ids)
         visualize(
             image_batch,
             (box_batch, confidence_batch, label_batch),
