@@ -37,8 +37,7 @@ class AveragePrecision:
                 return 0.0
         tp = np.zeros((n_box, ))
         sort_indices = confidences.argsort(descending=True)
-        boxes = boxes[sort_indices]
-        iou_matrix = box_iou(boxes, gt_boxes)
+        iou_matrix = box_iou(boxes[sort_indices], gt_boxes)
         ious, matched_indices = torch.max(iou_matrix, dim=1)
         matched: Set = set()
         n_correct = (ious > self.iou_threshold).sum().item()
