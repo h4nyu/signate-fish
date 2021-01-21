@@ -6,7 +6,7 @@ from object_detection.models.mkmaps import GaussianMapMode
 out_dir = "store/centernet3"
 
 batch_size = 5
-mk_map_mode: GaussianMapMode = "aspect"
+mk_map_mode: GaussianMapMode = "length"
 
 # model
 channels = 64

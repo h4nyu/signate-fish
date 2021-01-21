@@ -324,7 +324,7 @@ class LabeledDataset(Dataset):
         )
         boxes = resize(boxes, (w, h))
         labels = [int(float(b["label"])) for b in row["boxes"]]
-        transed = self.transforms(image=image, bboxes=[], labels=[])
+        transed = self.transforms(image=image, bboxes=boxes, labels=labels)
         return (
             ImageId(id),
             Image(transed["image"]),

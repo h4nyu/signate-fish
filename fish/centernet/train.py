@@ -120,7 +120,7 @@ def train(epochs: int) -> None:
             ),
             LabeledDataset(
                 rows=test_fixed_rows,
-                transforms=train_transforms,
+                transforms=test_transforms,
             ),
         ]
     )
@@ -145,7 +145,7 @@ def train(epochs: int) -> None:
         test_dataset,
         collate_fn=collate_fn,
         batch_size=config.batch_size * 2,
-        num_workers=config.batch_size,
+        num_workers=config.batch_size * 2,
         shuffle=False,
     )
     optimizer = AdaBelief(
@@ -165,13 +165,13 @@ def train(epochs: int) -> None:
     scaler = GradScaler()
 
     def train_step() -> None:
-        model.train()
         loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
         for i, (ids, image_batch, gt_box_batch, gt_label_batch) in tqdm(
             enumerate(train_loader)
         ):
+            model.train()
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
