@@ -15,7 +15,7 @@ cls_depth = 1
 box_depth = 1
 
 # criterion
-lr = 1e-3
+lr = 5e-4
 box_weight = 1.0
 heatmap_weight = 1.0
 sigma = 4
