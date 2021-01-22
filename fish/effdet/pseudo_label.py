@@ -119,8 +119,7 @@ def predict(device: str) -> None:
             m_boxes = PascalBoxes(torch.from_numpy(m_boxes)[indices])
             m_labels = Labels(torch.from_numpy(m_labels)[indices])
             m_confidences = Confidences(m_confidences[indices])
-            # annotate(store, id, boxes=resize(gt_boxes, (1 / w, 1 / h)), labels=gt_labels)
-            pseudo_predict(store, id, boxes=m_boxes, labels=m_labels)
+            pseudo_predict(store, id, boxes=m_boxes, labels=m_labels, loss=loss.item())
             print(id)
             plot = DetectionPlot(inv_normalize(img))
             plot.draw_boxes(
