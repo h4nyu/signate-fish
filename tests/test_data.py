@@ -109,7 +109,7 @@ def test_labeled_dataset() -> None:
     api = StoreApi()
     rows = api.filter()
     rows = pipe(rows, filter(lambda x: x["state"] == "Done"), list)
-    dataset = LabeledDataset(rows=rows, transforms=train_transforms)
+    dataset = LabeledDataset(rows=rows, transforms=test_transforms)
     if len(rows) == 0:
         return
     for i in range(len(dataset)):

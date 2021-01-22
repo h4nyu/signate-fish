@@ -186,7 +186,6 @@ bbox_params = dict(format="pascal_voc", label_fields=["labels"], min_area=15)
 test_transforms = A.Compose(
     [
         albm.LongestMaxSize(max_size=config.image_width),
-        A.Resize(width=config.image_width, height=config.image_height),
         A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
     ],
@@ -205,7 +204,7 @@ train_transforms = albm.Compose(
         ),
         A.RandomSizedCrop(
             (
-                config.original_height - config.original_height * 0.3,
+                config.original_height - config.original_height * 0.1,
                 config.original_height,
             ),
             height=config.original_height,
@@ -246,7 +245,6 @@ train_transforms = albm.Compose(
             p=0.2,
         ),
         A.LongestMaxSize(max_size=config.image_width),
-        A.Resize(width=config.image_width, height=config.image_height),
         A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
     ],
