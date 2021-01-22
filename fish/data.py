@@ -88,7 +88,7 @@ def resize_mix(
     indices = ~box_in_area(
         base_boxes,
         torch.tensor([start_x, start_y, start_x + resized_w, start_y + resized_h]),
-        min_fill=0.8,
+        min_fill=0.2,
     )
     base_boxes = PascalBoxes(base_boxes[indices])
     base_labels = Labels(base_labels[indices])
