@@ -81,43 +81,33 @@ criterion = Criterion(
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
     api = StoreApi()
-    train_rows, test_rows = kfold(annotations)
-    test_keys = set(test_rows.keys())
-    train_keys = set(train_rows.keys())
+    annotation_keys = set(annotations.keys())
     fixed_rows = api.filter()
-    train_fixed_rows = pipe(
-        fixed_rows, filter(lambda x: x["id"] not in test_keys), list
-    )
-    test_fixed_rows = pipe(
-        fixed_rows, filter(lambda x: x["id"] not in train_keys), list
-    )
+    train_rows, test_rows = kfold(annotations)
+
     fixed_keys = set(x["id"] for x in fixed_rows)
-    train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
-    test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
+    annotations = keyfilter(lambda x: x not in fixed_keys, annotations)
+
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
-                rows=train_rows,
+                rows=annotations,
                 transforms=train_transforms,
             ),
             LabeledDataset(
-                rows=train_fixed_rows,
+                rows=fixed_rows,
                 transforms=train_transforms,
             ),
             ResizeMixDataset(
-                rows=train_rows,
+                rows=annotations,
                 transforms=train_transforms,
             ),
         ]
     )
     test_dataset: Any = ConcatDataset(
         [
-            FileDataset(
-                rows=test_rows,
-                transforms=test_transforms,
-            ),
             LabeledDataset(
-                rows=test_fixed_rows,
+                rows=fixed_rows,
                 transforms=test_transforms,
             ),
         ]

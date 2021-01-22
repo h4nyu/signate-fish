@@ -9,7 +9,7 @@ pseudo_threshold = 0.15
 use_amp = True
 
 # data
-confidence_threshold = 0.1
+confidence_threshold = 0.01
 iou_threshold = 0.2
 batch_size = 4
 
