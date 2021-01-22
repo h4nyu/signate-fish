@@ -215,12 +215,10 @@ train_transforms = albm.Compose(
         A.HorizontalFlip(p=0.5),
         A.OneOf(
             [
-                # A.HueSaturationValue(
-                #     hue_shift_limit=5, sat_shift_limit=5, val_shift_limit=5, p=0.3
-                # ),
-                # A.RGBShift(
-                #     r_shift_limit=5, g_shift_limit=5, b_shift_limit=5, p=0.3
-                # ),
+                A.HueSaturationValue(
+                    hue_shift_limit=5, sat_shift_limit=5, val_shift_limit=5, p=0.3
+                ),
+                A.RGBShift(r_shift_limit=5, g_shift_limit=5, b_shift_limit=5, p=0.3),
                 A.RandomBrightnessContrast(
                     brightness_limit=0.15, contrast_limit=0.15, p=0.9
                 ),
