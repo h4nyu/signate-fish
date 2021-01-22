@@ -76,7 +76,7 @@ def annot_to_tuple(row: Annotation) -> Tuple[Any, PascalBoxes, Labels]:
 def resize_mix(
     base: Tuple[Any, PascalBoxes, Labels],
     other: Tuple[Any, PascalBoxes, Labels],
-    scale: float = 0.5,
+    scale: float = 0.6,
 ) -> Tuple[Any, PascalBoxes, Labels]:
     base_img, base_boxes, base_labels = base
     other_img, other_boxes, other_labels = other
