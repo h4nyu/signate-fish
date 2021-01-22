@@ -11,7 +11,7 @@ use_amp = True
 # data
 confidence_threshold = 0.1
 iou_threshold = 0.2
-batch_size = 5
+batch_size = 6
 
 # model
 channels = 64

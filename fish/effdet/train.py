@@ -135,6 +135,7 @@ def train(epochs: int) -> None:
         batch_size=config.batch_size * 2,
         num_workers=config.batch_size,
         shuffle=False,
+        drop_last=True,
     )
     optimizer = optim.RAdam(
         model.parameters(),
@@ -229,6 +230,7 @@ def train(epochs: int) -> None:
         for k, v in scores.items():
             logs[f"score-{k}"] = v
 
+        print(ids)
         visualize(
             image_batch,
             (box_batch, confidence_batch, label_batch),

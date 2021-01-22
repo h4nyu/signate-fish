@@ -202,6 +202,13 @@ train_transforms = albm.Compose(
         A.PadIfNeeded(
             min_height=config.original_height, min_width=config.original_width, p=1
         ),
+        A.OneOf(
+            [
+                A.HorizontalFlip(p=0.5),
+                A.RandomRotate90(p=0.5),
+            ],
+            p=1.0,
+        ),
         A.RandomSizedCrop(
             (
                 config.original_height - config.original_height * 0.1,
@@ -210,8 +217,6 @@ train_transforms = albm.Compose(
             height=config.original_height,
             width=config.original_width,
         ),
-        # A.VerticalFlip(p=0.5),
-        A.HorizontalFlip(p=0.5),
         A.OneOf(
             [
                 A.HueSaturationValue(
@@ -244,7 +249,9 @@ train_transforms = albm.Compose(
             ],
             p=0.2,
         ),
-        A.LongestMaxSize(max_size=config.image_width),
+        A.LongestMaxSize(
+            max_size=config.image_width,
+        ),
         A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
     ],
