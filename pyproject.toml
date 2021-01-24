@@ -18,12 +18,11 @@ albumentations = "^0.5.2"
 Flask = "^1.1.2"
 Flask-Cors = "^3.0.9"
 scikit-image = "^0.18.1"
-# object-detection = {path = "object-detection"}
+object-detection = {path = "./object-detection" , develop = true}
 
 sklearn = "^0.0"
 adabelief-pytorch = "^0.2.0"
 ensemble-boxes = "^1.0.4"
-object-detection = {path = "object-detection"}
 signate = "^0.9.7"
 torch-optimizer = "^0.1.0"
 [tool.poetry.dev-dependencies]
