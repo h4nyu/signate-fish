@@ -202,13 +202,7 @@ train_transforms = albm.Compose(
         A.PadIfNeeded(
             min_height=config.original_height, min_width=config.original_width, p=1
         ),
-        A.OneOf(
-            [
-                A.HorizontalFlip(p=0.5),
-                A.RandomRotate90(p=0.5),
-            ],
-            p=1.0,
-        ),
+        A.HorizontalFlip(p=0.5),
         A.RandomSizedCrop(
             (
                 config.original_height - config.original_height * 0.1,
@@ -222,9 +216,9 @@ train_transforms = albm.Compose(
                 A.HueSaturationValue(
                     hue_shift_limit=5, sat_shift_limit=5, val_shift_limit=5, p=0.3
                 ),
-                A.RGBShift(r_shift_limit=5, g_shift_limit=5, b_shift_limit=5, p=0.3),
+                # A.RGBShift(r_shift_limit=5, g_shift_limit=5, b_shift_limit=5, p=0.3),
                 A.RandomBrightnessContrast(
-                    brightness_limit=0.15, contrast_limit=0.15, p=0.9
+                    brightness_limit=0.2, contrast_limit=0.2, p=0.9
                 ),
             ],
             p=0.9,
@@ -248,6 +242,10 @@ train_transforms = albm.Compose(
                 A.GaussNoise(),
             ],
             p=0.2,
+        ),
+        A.Cutout(
+            max_w_size=32,
+            max_h_size=32,
         ),
         A.LongestMaxSize(
             max_size=config.image_width,

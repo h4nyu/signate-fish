@@ -112,7 +112,7 @@ def test_labeled_dataset() -> None:
     dataset = LabeledDataset(rows=rows, transforms=test_transforms)
     if len(rows) == 0:
         return
-    for i in range(len(dataset)):
+    for i in range(3):
         id, image, boxes, labels = dataset[i]
         plot = DetectionPlot(inv_normalize(image))
         plot.draw_boxes(boxes=boxes, labels=labels)
