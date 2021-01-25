@@ -24,7 +24,7 @@ metric: Tuple[str, WatchMode] = ("score", "max")
 # to_boxes
 to_boxes_threshold = 0.02
 iou_threshold = 0.2
-to_boxes_kernel_size = 7
+to_boxes_kernel_size = 9
 
 pseudo_threshold = 0.15
 
