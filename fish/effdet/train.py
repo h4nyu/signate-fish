@@ -134,7 +134,7 @@ def train(epochs: int) -> None:
         collate_fn=collate_fn,
         batch_size=config.batch_size * 2,
         num_workers=config.batch_size,
-        shuffle=False,
+        shuffle=True,
         drop_last=True,
     )
     optimizer = optim.RAdam(
