@@ -76,7 +76,7 @@ def annot_to_tuple(row: Annotation) -> Tuple[Any, PascalBoxes, Labels]:
 def resize_mix(
     base: Tuple[Any, PascalBoxes, Labels],
     other: Tuple[Any, PascalBoxes, Labels],
-    scale: float = 0.6,
+    scale: float = 0.8,
 ) -> Tuple[Any, PascalBoxes, Labels]:
     base_img, base_boxes, base_labels = base
     other_img, other_boxes, other_labels = other
@@ -205,7 +205,7 @@ train_transforms = albm.Compose(
         A.HorizontalFlip(p=0.5),
         A.RandomSizedCrop(
             (
-                config.original_height - config.original_height * 0.1,
+                config.original_height - config.original_height * 0.05,
                 config.original_height,
             ),
             height=config.original_height,

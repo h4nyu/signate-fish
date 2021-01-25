@@ -1,7 +1,7 @@
 from adabelief_pytorch import AdaBelief
 from tqdm import tqdm
 import torch
-from toolz.curried import keyfilter, filter, pipe, map
+from toolz.curried import keyfilter, filter, pipe, map, valfilter
 from typing import Dict, Any
 from torch.utils.data import DataLoader, ConcatDataset
 from object_detection.models.backbones.effnet import (
@@ -81,7 +81,8 @@ criterion = Criterion(
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
     api = StoreApi()
-    train_rows, test_rows = kfold(annotations)
+    train_rows = valfilter(lambda x: x['sequence_id'] not in config.test_seq_ids)(annotations)
+    test_rows = valfilter(lambda x: x['sequence_id'] in config.test_seq_ids)(annotations)
     test_keys = set(test_rows.keys())
     train_keys = set(train_rows.keys())
     fixed_rows = api.filter()
@@ -116,10 +117,10 @@ def train(epochs: int) -> None:
                 rows=test_rows,
                 transforms=test_transforms,
             ),
-            LabeledDataset(
-                rows=test_fixed_rows,
-                transforms=test_transforms,
-            ),
+            # LabeledDataset(
+            #     rows=test_fixed_rows,
+            #     transforms=test_transforms,
+            # ),
         ]
     )
     train_loader = DataLoader(

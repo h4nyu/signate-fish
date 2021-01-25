@@ -3,7 +3,7 @@ from object_detection.model_loader import WatchMode
 from fish.config import *
 
 
-pseudo_threshold = 0.15
+pseudo_threshold = 0.10
 
 # train
 use_amp = True
@@ -11,7 +11,7 @@ use_amp = True
 # data
 confidence_threshold = 0.01
 iou_threshold = 0.2
-batch_size = 8
+batch_size = 7
 
 # model
 channels = 64
@@ -25,7 +25,7 @@ pretrained = True
 
 # criterion
 topk = 13
-box_weight = 5
+box_weight = 8
 cls_weight = 1
 
 anchor_ratios = [1.0, 1.3, 1.9]

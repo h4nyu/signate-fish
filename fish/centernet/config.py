@@ -5,17 +5,17 @@ from object_detection.models.mkmaps import GaussianMapMode
 
 out_dir = "store/centernet3"
 
-batch_size = 6
+batch_size = 8
 mk_map_mode: GaussianMapMode = "length"
 
 # model
-channels = 64
+channels = 32
 out_idx = 5
 cls_depth = 1
 box_depth = 1
 
 # criterion
-lr = 2e-4
+lr = 4e-4
 box_weight = 2.0
 heatmap_weight = 1.0
 sigma = 15

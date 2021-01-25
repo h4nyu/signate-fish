@@ -43,7 +43,7 @@ store = StoreApi()
 
 @torch.no_grad()
 def predict(device: str) -> None:
-    rows = store.filter(state="Todo")
+    rows = store.filter(state="Done")
     rows = pipe(rows, filter(lambda x: "test" in x["id"]), list)
     out_dir = Path("/store/pseudo")
     if out_dir.exists():
@@ -119,7 +119,7 @@ def predict(device: str) -> None:
             m_boxes = PascalBoxes(torch.from_numpy(m_boxes)[indices])
             m_labels = Labels(torch.from_numpy(m_labels)[indices])
             m_confidences = Confidences(m_confidences[indices])
-            pseudo_predict(store, id, boxes=m_boxes, labels=m_labels, loss=loss.item())
+            # pseudo_predict(store, id, boxes=m_boxes, labels=m_labels, loss=loss.item())
             print(id)
             plot = DetectionPlot(inv_normalize(img))
             plot.draw_boxes(

@@ -11,6 +11,12 @@ image_width = 1024 + 512
 image_height = int(image_width / aspect_ratio)
 scale = image_width / original_width
 num_classes = 2
+test_seq_ids = set([
+    13,
+    48,
+    105,
+    175
+])
 
 # to_boxes
 to_box_limit = 20
