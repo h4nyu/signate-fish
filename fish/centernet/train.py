@@ -70,6 +70,7 @@ model = CenterNet(
 ).to(device)
 to_boxes = ToBoxes(
     threshold=config.to_boxes_threshold,
+    iou_threshold=config.iou_threshold,
     kernel_size=config.to_boxes_kernel_size,
     limit=config.to_box_limit,
 )
