@@ -32,8 +32,10 @@ from torchvision.transforms.functional import hflip, vflip
 def predict(device: str) -> None:
     rows = read_test_rows("/store")
     out_dir = Path("/store/submission")
-    shutil.rmtree(out_dir)
-    out_dir.mkdir(exist_ok=True)
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
+    else:
+        out_dir.mkdir(exist_ok=True)
     dataset = TestDataset(rows=rows, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(
