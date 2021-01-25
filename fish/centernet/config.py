@@ -5,7 +5,7 @@ from object_detection.models.mkmaps import GaussianMapMode
 
 out_dir = "store/centernet3"
 
-batch_size = 5
+batch_size = 8
 mk_map_mode: GaussianMapMode = "aspect"
 
 # model
@@ -18,7 +18,7 @@ box_depth = 1
 lr = 5e-4
 box_weight = 1.0
 heatmap_weight = 1.0
-sigma = 4
+sigma = 8
 metric: Tuple[str, WatchMode] = ("score", "max")
 
 # to_boxes
