@@ -26,6 +26,7 @@ from object_detection.model_loader import (
 from object_detection.metrics import MeanPrecition
 from fish.data import (
     FileDataset,
+    NegativeDataset,
     LabeledDataset,
     kfold,
     train_transforms,
@@ -101,6 +102,7 @@ def train(epochs: int) -> None:
                 rows=train_rows,
                 transforms=train_transforms,
             ),
+            NegativeDataset(transforms=train_transforms),
             LabeledDataset(
                 rows=train_fixed_rows,
                 transforms=train_transforms,

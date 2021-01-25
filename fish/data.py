@@ -348,6 +348,36 @@ def find_prev_frame(
         lambda x: next(x, None),
     )
 
+class NegativeDataset(Dataset):
+    def __init__(
+        self,
+        transforms: typing.Any,
+        image_dir: str = "/store/images",
+    ) -> None:
+        self.rows = pipe(
+            read_test_rows("/store").values(),
+            filter(lambda x: x['sequence_id'] in config.negative_seq_ids),
+            list
+        )
+        self.transforms = transforms
+        self.image_dir = Path(image_dir)
+
+    def __getitem__(self, idx: int) -> TrainSample:
+        row = self.rows[idx]
+        id = row["id"]
+        path = self.image_dir.joinpath(f"{id}.jpg")
+        image = imread(path)
+        transed = self.transforms(image=image, bboxes=[], labels=[])
+        return (
+            ImageId(id),
+            Image(transed["image"]),
+            PascalBoxes(torch.tensor(transed["bboxes"])),
+            Labels(torch.tensor(transed["labels"])),
+        )
+
+    def __len__(self) -> int:
+        return len(self.rows)
+
 
 class ResizeMixDataset(Dataset):
     def __init__(

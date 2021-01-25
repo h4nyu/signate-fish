@@ -41,12 +41,12 @@ from fish.data import (
     LabeledDataset,
     FrameDataset,
     LabeledDataset,
-    kfold,
     train_transforms,
     test_transforms,
     read_train_rows,
     inv_normalize,
     ResizeMixDataset,
+    NegativeDataset,
 )
 from fish.store import StoreApi
 from object_detection.metrics import MeanPrecition
@@ -119,10 +119,11 @@ def train(epochs: int) -> None:
                 rows=train_rows,
                 transforms=train_transforms,
             ),
-            # LabeledDataset(
-            #     rows=train_fixed_rows,
-            #     transforms=train_transforms,
-            # ),
+            NegativeDataset(transforms=train_transforms),
+            LabeledDataset(
+                rows=train_fixed_rows,
+                transforms=train_transforms,
+            ),
             ResizeMixDataset(
                 rows=train_rows,
                 transforms=train_transforms,

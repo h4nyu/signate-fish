@@ -17,6 +17,7 @@ test_seq_ids = set([
     105,
     175
 ])
+negative_seq_ids = set([0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 13])
 
 # to_boxes
 to_box_limit = 20
