@@ -34,8 +34,7 @@ def predict(device: str) -> None:
     out_dir = Path("/store/submission")
     if out_dir.exists():
         shutil.rmtree(out_dir)
-    else:
-        out_dir.mkdir(exist_ok=True)
+    out_dir.mkdir(exist_ok=True)
     dataset = TestDataset(rows=rows, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(
@@ -76,7 +75,7 @@ def predict(device: str) -> None:
         ):
             _, h, w = img.shape
 
-            _boxes, confidences, labels = weighted_boxes_fusion(
+            boxes, confidences, labels = weighted_boxes_fusion(
                 [
                     yolo_to_pascal(boxes, (1, 1)),
                     yolo_to_pascal(yolo_hflip(h_boxes), (1, 1)),
@@ -87,17 +86,17 @@ def predict(device: str) -> None:
                 weights=weights,
                 skip_box_thr=config.to_boxes_threshold,
             )
-            _boxes = resize(PascalBoxes(torch.from_numpy(_boxes)), (w, h))
-            filter_indices = confidences > config.to_boxes_threshold
-            _boxes = _boxes[filter_indices]
-            labels = labels[filter_indices]
+            boxes = PascalBoxes(torch.from_numpy(boxes))
+            row = rows[id]
+            sequence_id = row["sequence_id"]
+            frame_id = row["frame_id"]
             plot = DetectionPlot(inv_normalize(img))
-            plot.draw_boxes(boxes=_boxes, confidences=confidences, labels=labels)
-            plot.save(out_dir.joinpath(f"{id}.jpg"))
-            _boxes = resize(
-                _boxes, scale=(config.original_width / w, config.original_height / h)
+            plot.draw_boxes(boxes=resize(boxes, (w, h)), confidences=confidences, labels=labels)
+            plot.save(out_dir.joinpath(f"{sequence_id}-{frame_id}-{id}.jpg"))
+            boxes = resize(
+                boxes, scale=(config.original_width, config.original_height)
             )
-            add_submission(submission, id, boxes=_boxes, labels=labels)
+            add_submission(submission, id, boxes=boxes, labels=labels)
 
     with open(out_dir.joinpath("submission.json"), "w") as f:
         json.dump(submission, f)

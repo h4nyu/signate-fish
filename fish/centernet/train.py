@@ -79,6 +79,17 @@ model_loader = ModelLoader(
     best_watcher=BestWatcher(mode=config.metric[1]),
 )
 
+criterion = Criterion(
+    box_weight=config.box_weight,
+    heatmap_weight=config.heatmap_weight,
+    mk_hmmaps=MkGaussianMaps(
+        num_classes=config.num_classes,
+        sigma=config.sigma,
+        mode=config.mk_map_mode,
+    ),
+    mk_boxmaps=MkCenterBoxMaps(),
+)
+
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
@@ -128,16 +139,6 @@ def train(epochs: int) -> None:
                 transforms=test_transforms,
             ),
         ]
-    )
-    criterion = Criterion(
-        box_weight=config.box_weight,
-        heatmap_weight=config.heatmap_weight,
-        mk_hmmaps=MkGaussianMaps(
-            num_classes=config.num_classes,
-            sigma=config.sigma,
-            mode=config.mk_map_mode,
-        ),
-        mk_boxmaps=MkCenterBoxMaps(),
     )
     train_loader = DataLoader(
         train_dataset,
