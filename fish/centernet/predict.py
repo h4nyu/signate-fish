@@ -44,50 +44,50 @@ def predict(device: str) -> None:
         shuffle=False,
         drop_last=False,
     )
-    # weights = [1, 1]
-    weights = [1]
+    weights = [1, 1]
+    # weights = [1]
     submission: Submission = {}
     for ids, image_batch in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
 
-        # h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
-        #     net(hflip(image_batch))
-        # )
+        h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
+            net(hflip(image_batch))
+        )
         box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
 
         for (
             img,
             id,
             boxes,
-            # h_boxes,
+            h_boxes,
             confidences,
-            # h_confidences,
+            h_confidences,
             labels,
-            # h_labels,
+            h_labels,
         ) in zip(
             image_batch,
             ids,
             box_batch,
-            # h_box_batch,
+            h_box_batch,
             confidence_batch,
-            # h_confidence_batch,
+            h_confidence_batch,
             label_batch,
-            # h_label_batch,
+            h_label_batch,
         ):
             _, h, w = img.shape
 
             boxes, confidences, labels = weighted_boxes_fusion(
                 [
                     yolo_to_pascal(boxes, (1, 1)),
-                    # yolo_to_pascal(yolo_hflip(h_boxes), (1, 1)),
+                    yolo_to_pascal(yolo_hflip(h_boxes), (1, 1)),
                 ],
                 [
-                    confidences, 
-                    # h_confidences
+                    confidences,
+                    h_confidences
                 ],
                 [
-                    labels, 
-                    # h_labels
+                    labels,
+                    h_labels
                 ],
                 iou_thr=config.iou_threshold,
                 weights=weights,
