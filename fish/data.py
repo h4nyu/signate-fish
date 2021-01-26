@@ -61,8 +61,11 @@ def add_submission(
     submission: Submission, id: str, boxes: PascalBoxes, labels: Labels
 ) -> None:
     row = {}
-    row["Jumper School"] = boxes[labels == 0].to("cpu").tolist()
-    row["Breezer School"] = boxes[labels == 1].to("cpu").tolist()
+    for key, label in [("Jumper School", 0,), ("Breezer School", 1)]:
+        indices = labels == label
+        if(indices.sum() == 0):
+            continue
+        row[key] = boxes[indices].to("cpu").tolist()
     submission[f"{id}.jpg"] = row
 
 
