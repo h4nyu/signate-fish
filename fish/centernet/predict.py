@@ -93,10 +93,7 @@ def predict(device: str) -> None:
                 weights=weights,
                 skip_box_thr=config.to_boxes_threshold,
             )
-            filter_indices = confidences > config.to_boxes_threshold
-            confidences = confidences[filter_indices]
-            labels = labels[filter_indices]
-            boxes = PascalBoxes(torch.from_numpy(boxes)[filter_indices])
+            boxes = PascalBoxes(torch.from_numpy(boxes))
             row = rows[id]
             sequence_id = row["sequence_id"]
             frame_id = row["frame_id"]
