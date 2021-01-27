@@ -14,7 +14,14 @@ from object_detection.entities.box import (
     filter_size,
     resize,
 )
-from fish.data import read_test_rows, TestDataset, test_transforms, inv_normalize, LabeledDataset, pseudo_predict
+from fish.data import (
+    read_test_rows,
+    TestDataset,
+    test_transforms,
+    inv_normalize,
+    LabeledDataset,
+    pseudo_predict,
+)
 from fish.centernet import config
 from fish.centernet.train import model, model_loader, to_boxes, criterion
 from ensemble_boxes import weighted_boxes_fusion
@@ -115,7 +122,9 @@ def predict(device: str) -> None:
             boxes = boxes[filter_indices]
             labels = labels[filter_indices]
             plot = DetectionPlot(inv_normalize(img))
-            plot.draw_boxes(boxes=resize(boxes, (w, h)), confidences=confidences, labels=labels)
+            plot.draw_boxes(
+                boxes=resize(boxes, (w, h)), confidences=confidences, labels=labels
+            )
             plot.save(out_dir.joinpath(f"{id}.jpg"))
             print(id)
 

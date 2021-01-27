@@ -12,15 +12,18 @@ image_width = 1024 + 512
 image_height = int(image_width / aspect_ratio)
 scale = image_width / original_width
 num_classes = 2
-test_seq_ids = set([
-    13,
-    48,
-    105,
-    175,
-    121,
-])
+test_seq_ids = set(
+    [
+        13,
+        48,
+        88,
+        105,
+        175,
+        121,
+    ]
+)
 negative_seq_ids = set([0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 13])
-ignore_seq_ids = set([82, 83, 84])
+ignore_seq_ids = set([81, 82, 83, 84])
 
 # to_boxes
 to_box_limit = 20
@@ -30,3 +33,5 @@ n_splits = 8
 
 # metrics
 ap_iou = 0.3
+
+pos_neg = 1238 / 243

@@ -10,7 +10,7 @@ use_amp = True
 
 # data
 confidence_threshold = 0.03
-iou_threshold = 0.2
+iou_threshold = 0.1
 batch_size = 4
 
 # model
@@ -28,7 +28,7 @@ topk = 39
 box_weight = 1
 cls_weight = 1
 
-anchor_ratios = [2/3, 1.0, 3/2]
+anchor_ratios = [2 / 3, 1.0, 3 / 2]
 anchor_scales = [1.0, 1.44]
 num_anchors = len(anchor_ratios) * len(anchor_scales)
 anchor_size = 4

@@ -61,9 +61,15 @@ def add_submission(
     submission: Submission, id: str, boxes: PascalBoxes, labels: Labels
 ) -> None:
     row = {}
-    for key, label in [("Jumper School", 0,), ("Breezer School", 1)]:
+    for key, label in [
+        (
+            "Jumper School",
+            0,
+        ),
+        ("Breezer School", 1),
+    ]:
         indices = labels == label
-        if(indices.sum() == 0):
+        if indices.sum() == 0:
             continue
         row[key] = boxes[indices].to("cpu").tolist()
     submission[f"{id}.jpg"] = row
@@ -202,11 +208,14 @@ inv_normalize = Normalize(
 
 train_transforms = albm.Compose(
     [
-        A.OneOf([
-            A.Rotate(limit=(89, 91), p=0.5, border_mode=0),
-            A.Rotate(limit=(-91, -89), p=0.5, border_mode=0),
-            A.HorizontalFlip(p=0.5),
-        ], p=1.0),
+        A.OneOf(
+            [
+                A.Rotate(limit=(89, 91), p=0.5, border_mode=0),
+                A.Rotate(limit=(-91, -89), p=0.5, border_mode=0),
+                A.HorizontalFlip(p=0.5),
+            ],
+            p=1.0,
+        ),
         A.PadIfNeeded(
             min_height=config.original_height, min_width=config.original_width, p=1
         ),
@@ -356,18 +365,16 @@ def find_prev_frame(
         lambda x: next(x, None),
     )
 
+
 class NegativeDataset(Dataset):
     def __init__(
         self,
+        rows:List[Annotation],
         transforms: typing.Any,
         image_dir: str = "/store/images",
     ) -> None:
-        self.rows = pipe(
-            read_test_rows("/store").values(),
-            filter(lambda x: x['sequence_id'] in config.negative_seq_ids),
-            list
-        )
         self.transforms = transforms
+        self.rows = rows
         self.image_dir = Path(image_dir)
 
     def __getitem__(self, idx: int) -> TrainSample:

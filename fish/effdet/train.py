@@ -1,7 +1,7 @@
 from adabelief_pytorch import AdaBelief
 from tqdm import tqdm
 import torch
-from toolz.curried import keyfilter, filter, pipe, map, valfilter
+from toolz.curried import keyfilter, filter, pipe, map, valfilter, take
 from typing import Dict, Any
 from torch.utils.data import DataLoader, ConcatDataset
 from object_detection.models.backbones.effnet import (
@@ -81,10 +81,17 @@ criterion = Criterion(
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
+    test_annotations = read_train_rows("/store")
     api = StoreApi()
-    annotations = valfilter(lambda x: x['sequence_id'] not in config.ignore_seq_ids)(annotations)
-    train_rows = valfilter(lambda x: x['sequence_id'] not in config.test_seq_ids)(annotations)
-    test_rows = valfilter(lambda x: x['sequence_id'] in config.test_seq_ids)(annotations)
+    annotations = valfilter(lambda x: x["sequence_id"] not in config.ignore_seq_ids)(
+        annotations
+    )
+    train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
+        annotations
+    )
+    test_rows = valfilter(lambda x: x["sequence_id"] in config.test_seq_ids)(
+        annotations
+    )
     test_keys = set(test_rows.keys())
     train_keys = set(train_rows.keys())
     fixed_rows = api.filter()
@@ -97,13 +104,24 @@ def train(epochs: int) -> None:
     fixed_keys = set(x["id"] for x in fixed_rows)
     train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
     test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
+
+    train_neg_rows = list(test_annotations.values())[int(len(test_rows) // config.pos_neg):]
+    test_neg_rows = pipe(
+        test_annotations.values(),
+        filter(lambda x: x["sequence_id"] in config.negative_seq_ids),
+        list,
+    )[:int(len(test_rows) // config.pos_neg)]
+    print(len(test_neg_rows), len(test_rows))
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
                 rows=train_rows,
                 transforms=train_transforms,
             ),
-            NegativeDataset(transforms=train_transforms),
+            NegativeDataset(
+                rows=train_neg_rows,
+                transforms=train_transforms
+            ),
             LabeledDataset(
                 rows=train_fixed_rows,
                 transforms=train_transforms,
@@ -120,10 +138,10 @@ def train(epochs: int) -> None:
                 rows=test_rows,
                 transforms=test_transforms,
             ),
-            # LabeledDataset(
-            #     rows=test_fixed_rows,
-            #     transforms=test_transforms,
-            # ),
+            NegativeDataset(
+                rows=test_neg_rows,
+                transforms=test_transforms,
+            ),
         ]
     )
     train_loader = DataLoader(

@@ -81,14 +81,8 @@ def predict(device: str) -> None:
                     yolo_to_pascal(boxes, (1, 1)),
                     yolo_to_pascal(yolo_hflip(h_boxes), (1, 1)),
                 ],
-                [
-                    confidences,
-                    h_confidences
-                ],
-                [
-                    labels,
-                    h_labels
-                ],
+                [confidences, h_confidences],
+                [labels, h_labels],
                 iou_thr=config.iou_threshold,
                 weights=weights,
                 skip_box_thr=config.to_boxes_threshold,
@@ -98,11 +92,11 @@ def predict(device: str) -> None:
             sequence_id = row["sequence_id"]
             frame_id = row["frame_id"]
             plot = DetectionPlot(inv_normalize(img))
-            plot.draw_boxes(boxes=resize(boxes, (w, h)), confidences=confidences, labels=labels)
-            plot.save(out_dir.joinpath(f"{sequence_id}-{frame_id}-{id}.jpg"))
-            boxes = resize(
-                boxes, scale=(config.original_width, config.original_height)
+            plot.draw_boxes(
+                boxes=resize(boxes, (w, h)), confidences=confidences, labels=labels
             )
+            plot.save(out_dir.joinpath(f"{sequence_id}-{frame_id}-{id}.jpg"))
+            boxes = resize(boxes, scale=(config.original_width, config.original_height))
             add_submission(submission, id, boxes=boxes, labels=labels)
 
     with open(out_dir.joinpath("submission.json"), "w") as f:
