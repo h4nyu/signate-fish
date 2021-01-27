@@ -225,6 +225,7 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
+        score_meter = MeanMeter()
         metrics = MeanAveragePrecision(
             iou_threshold=0.3, num_classes=config.num_classes
         )
@@ -252,6 +253,8 @@ def train(epochs: int) -> None:
                     gt_boxes=yolo_to_pascal(gt_boxes, (w, h)),
                     gt_labels=gt_labels,
                 )
+                score_meter.update(metrics()[0])
+                metrics.reset()
 
         visualize(
             netout,
@@ -263,11 +266,10 @@ def train(epochs: int) -> None:
             image_batch,
             gt_hms,
         )
-        score, scores = metrics()
         logs["test_loss"] = loss_meter.get_value()
         logs["test_box"] = box_loss_meter.get_value()
         logs["test_label"] = label_loss_meter.get_value()
-        logs["score"] = score
+        logs["score"] = score_meter.get_value()
         for k, v in scores.items():
             logs[f"score-{k}"] = v
         model_loader.save_if_needed(

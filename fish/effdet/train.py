@@ -247,7 +247,6 @@ def train(epochs: int) -> None:
                 score_meter.update(metrics()[0])
                 metrics.reset()
 
-        score, scores = metrics()
         logs["test_loss"] = loss_meter.get_value()
         logs["test_box"] = box_loss_meter.get_value()
         logs["test_label"] = label_loss_meter.get_value()
