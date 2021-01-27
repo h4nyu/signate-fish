@@ -25,7 +25,7 @@ to_boxes_threshold = 0.1
 iou_threshold = 0.1
 to_boxes_kernel_size = 3
 
-pseudo_threshold = 0.15
+pseudo_threshold = 0.2
 
 # train
 use_amp = True

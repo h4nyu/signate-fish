@@ -35,20 +35,6 @@ Submission = Dict[str, Any]
 store = StoreApi()
 
 
-def annotate(id: str, boxes: PascalBoxes, labels: Labels) -> None:
-    payload_boxes: List[Box] = [
-        dict(
-            x0=float(b[0]),
-            y0=float(b[1]),
-            x1=float(b[2]),
-            y1=float(b[3]),
-            label=str(l),
-        )
-        for b, l in zip(boxes.tolist(), labels.tolist())
-    ]
-    store.annotate(id, payload_boxes)
-
-
 @torch.no_grad()
 def predict(device: str) -> None:
     rows = store.filter(state="Todo")

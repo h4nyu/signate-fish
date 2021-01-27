@@ -105,12 +105,14 @@ def train(epochs: int) -> None:
     train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
     test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
 
-    train_neg_rows = list(test_annotations.values())[int(len(test_rows) // config.pos_neg):]
+    train_neg_rows = list(test_annotations.values())[
+        int(len(test_rows) // config.pos_neg) :
+    ]
     test_neg_rows = pipe(
         test_annotations.values(),
         filter(lambda x: x["sequence_id"] in config.negative_seq_ids),
         list,
-    )[:int(len(test_rows) // config.pos_neg)]
+    )[: int(len(test_rows) // config.pos_neg)]
     print(len(test_neg_rows), len(test_rows))
     train_dataset: Any = ConcatDataset(
         [
@@ -118,10 +120,7 @@ def train(epochs: int) -> None:
                 rows=train_rows,
                 transforms=train_transforms,
             ),
-            NegativeDataset(
-                rows=train_neg_rows,
-                transforms=train_transforms
-            ),
+            NegativeDataset(rows=train_neg_rows, transforms=train_transforms),
             LabeledDataset(
                 rows=train_fixed_rows,
                 transforms=train_transforms,

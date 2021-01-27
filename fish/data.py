@@ -369,7 +369,7 @@ def find_prev_frame(
 class NegativeDataset(Dataset):
     def __init__(
         self,
-        rows:List[Annotation],
+        rows: List[Annotation],
         transforms: typing.Any,
         image_dir: str = "/store/images",
     ) -> None:
