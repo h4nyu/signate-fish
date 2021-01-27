@@ -252,16 +252,12 @@ def train(epochs: int) -> None:
         logs["test_box"] = box_loss_meter.get_value()
         logs["test_label"] = label_loss_meter.get_value()
         logs["score"] = score_meter.get_value()
-        for k, v in scores.items():
-            logs[f"score-{k}"] = v
-
         print(ids)
         visualize(
             image_batch,
             (box_batch, confidence_batch, label_batch),
             (gt_box_batch, gt_label_batch),
         )
-        score, scores = metrics()
         model_loader.save_if_needed(
             model,
             logs[model_loader.key],
