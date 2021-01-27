@@ -3,9 +3,8 @@ from fish.config import *
 from object_detection.model_loader import WatchMode
 from object_detection.models.mkmaps import GaussianMapMode
 
-out_dir = "store/centernet3"
 
-batch_size = 4
+batch_size = 7
 mk_map_mode: GaussianMapMode = "length"
 
 # model
@@ -15,7 +14,7 @@ cls_depth = 1
 box_depth = 1
 
 # criterion
-lr = 1e-4
+lr = 1e-3
 box_weight = 1.5
 heatmap_weight = 1.0
 sigma = 15
@@ -30,3 +29,5 @@ pseudo_threshold = 0.15
 
 # train
 use_amp = True
+
+out_dir = f"store/centernet-{channels}"

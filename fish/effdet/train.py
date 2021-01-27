@@ -82,6 +82,7 @@ criterion = Criterion(
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
     api = StoreApi()
+    annotations = valfilter(lambda x: x['sequence_id'] not in config.ignore_seq_ids)(annotations)
     train_rows = valfilter(lambda x: x['sequence_id'] not in config.test_seq_ids)(annotations)
     test_rows = valfilter(lambda x: x['sequence_id'] in config.test_seq_ids)(annotations)
     test_keys = set(test_rows.keys())
@@ -187,7 +188,7 @@ def train(epochs: int) -> None:
             logs["train_loss"] = loss_meter.get_value()
             logs["train_box"] = box_loss_meter.get_value()
             logs["train_label"] = label_loss_meter.get_value()
-            if i % 200 == 199:
+            if i % 100 == 99:
                 eval_step()
                 log()
 
@@ -197,6 +198,7 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
+        score_meter = MeanMeter()
         metrics = MeanAveragePrecision(
             iou_threshold=0.3, num_classes=config.num_classes
         )
@@ -224,12 +226,14 @@ def train(epochs: int) -> None:
                     gt_boxes=gt_boxes,
                     gt_labels=gt_labels,
                 )
+                score_meter.update(metrics()[0])
+                metrics.reset()
 
         score, scores = metrics()
         logs["test_loss"] = loss_meter.get_value()
         logs["test_box"] = box_loss_meter.get_value()
         logs["test_label"] = label_loss_meter.get_value()
-        logs["score"] = score
+        logs["score"] = score_meter.get_value()
         for k, v in scores.items():
             logs[f"score-{k}"] = v
 

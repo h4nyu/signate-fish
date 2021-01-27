@@ -202,10 +202,14 @@ inv_normalize = Normalize(
 
 train_transforms = albm.Compose(
     [
+        A.OneOf([
+            A.Rotate(limit=(89, 91), p=0.5, border_mode=0),
+            A.Rotate(limit=(-91, -89), p=0.5, border_mode=0),
+            A.HorizontalFlip(p=0.5),
+        ], p=1.0),
         A.PadIfNeeded(
             min_height=config.original_height, min_width=config.original_width, p=1
         ),
-        A.HorizontalFlip(p=0.5),
         A.RandomSizedCrop(
             (
                 config.original_height - config.original_height * 0.05,
@@ -213,6 +217,7 @@ train_transforms = albm.Compose(
             ),
             height=config.original_height,
             width=config.original_width,
+            p=0.7,
         ),
         A.OneOf(
             [

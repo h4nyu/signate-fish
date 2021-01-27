@@ -94,24 +94,25 @@ criterion = Criterion(
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
-    # api = StoreApi()
+    api = StoreApi()
+    annotations = valfilter(lambda x: x['sequence_id'] not in config.ignore_seq_ids)(annotations)
     train_rows = valfilter(lambda x: x['sequence_id'] not in config.test_seq_ids)(annotations)
     test_rows = valfilter(lambda x: x['sequence_id'] in config.test_seq_ids)(annotations)
     test_keys = set(test_rows.keys())
     train_keys = set(train_rows.keys())
-    # fixed_rows = api.filter()
-    # train_fixed_rows = pipe(
-    #     fixed_rows, filter(lambda x: x["id"] not in test_keys), list
-    # )
-    # for i in train_fixed_rows:
-    #     print(i["id"], len(i["boxes"]))
-    # test_fixed_rows = pipe(
-    #     fixed_rows, filter(lambda x: x["id"] not in train_keys), list
-    # )
+    fixed_rows = api.filter()
+    train_fixed_rows = pipe(
+        fixed_rows, filter(lambda x: x["id"] not in test_keys), list
+    )
+    for i in train_fixed_rows:
+        print(i["id"], len(i["boxes"]))
+    test_fixed_rows = pipe(
+        fixed_rows, filter(lambda x: x["id"] not in train_keys), list
+    )
 
-    # fixed_keys = set(x["id"] for x in fixed_rows)
-    # train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
-    # test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
+    fixed_keys = set(x["id"] for x in fixed_rows)
+    train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
+    test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
@@ -119,10 +120,10 @@ def train(epochs: int) -> None:
                 transforms=train_transforms,
             ),
             NegativeDataset(transforms=train_transforms),
-            # LabeledDataset(
-            #     rows=train_fixed_rows,
-            #     transforms=train_transforms,
-            # ),
+            LabeledDataset(
+                rows=train_fixed_rows,
+                transforms=train_transforms,
+            ),
             ResizeMixDataset(
                 rows=train_rows,
                 transforms=train_transforms,
