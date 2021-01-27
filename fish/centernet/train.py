@@ -270,8 +270,6 @@ def train(epochs: int) -> None:
         logs["test_box"] = box_loss_meter.get_value()
         logs["test_label"] = label_loss_meter.get_value()
         logs["score"] = score_meter.get_value()
-        for k, v in scores.items():
-            logs[f"score-{k}"] = v
         model_loader.save_if_needed(
             model,
             score,
