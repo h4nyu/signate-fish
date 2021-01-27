@@ -272,7 +272,7 @@ def train(epochs: int) -> None:
         logs["score"] = score_meter.get_value()
         model_loader.save_if_needed(
             model,
-            score,
+            logs[model_loader.key],
         )
 
     def log() -> None:
