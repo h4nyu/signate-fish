@@ -4,7 +4,7 @@ from object_detection.model_loader import WatchMode
 from object_detection.models.mkmaps import GaussianMapMode
 
 
-batch_size = 7
+batch_size = 4
 mk_map_mode: GaussianMapMode = "length"
 
 # model
