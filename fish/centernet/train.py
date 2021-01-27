@@ -94,6 +94,7 @@ criterion = Criterion(
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
+    test_annotations = read_train_rows("/store")
     api = StoreApi()
     annotations = valfilter(lambda x: x["sequence_id"] not in config.ignore_seq_ids)(
         annotations
@@ -110,22 +111,30 @@ def train(epochs: int) -> None:
     train_fixed_rows = pipe(
         fixed_rows, filter(lambda x: x["id"] not in test_keys), list
     )
-    for i in train_fixed_rows:
-        print(i["id"], len(i["boxes"]))
     test_fixed_rows = pipe(
         fixed_rows, filter(lambda x: x["id"] not in train_keys), list
     )
-
     fixed_keys = set(x["id"] for x in fixed_rows)
     train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
     test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
+
+    train_neg_rows = list(test_annotations.values())[int(len(test_rows) // config.pos_neg):]
+    test_neg_rows = pipe(
+        test_annotations.values(),
+        filter(lambda x: x["sequence_id"] in config.negative_seq_ids),
+        list,
+    )[:int(len(test_rows) // config.pos_neg)]
+    print(len(test_neg_rows), len(test_rows))
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
                 rows=train_rows,
                 transforms=train_transforms,
             ),
-            NegativeDataset(transforms=train_transforms),
+            NegativeDataset(
+                rows=train_neg_rows,
+                transforms=train_transforms
+            ),
             LabeledDataset(
                 rows=train_fixed_rows,
                 transforms=train_transforms,
@@ -142,6 +151,10 @@ def train(epochs: int) -> None:
                 rows=test_rows,
                 transforms=test_transforms,
             ),
+            NegativeDataset(
+                rows=test_neg_rows,
+                transforms=test_transforms,
+            ),
         ]
     )
     train_loader = DataLoader(
@@ -156,7 +169,8 @@ def train(epochs: int) -> None:
         collate_fn=collate_fn,
         batch_size=config.batch_size * 2,
         num_workers=config.batch_size * 2,
-        shuffle=False,
+        shuffle=True,
+        drop_last=True,
     )
     optimizer = AdaBelief(
         model.parameters(),
