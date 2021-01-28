@@ -32,6 +32,7 @@ from object_detection.model_loader import (
     ModelLoader,
     BestWatcher,
 )
+from fish.metrics import Metrics
 from object_detection.metrics import MeanPrecition
 from fish.data import (
     FileDataset,
@@ -253,9 +254,8 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
-        score_meter = MeanMeter()
-        metrics = MeanAveragePrecision(
-            iou_threshold=0.3, num_classes=config.num_classes
+        metrics = Metrics(
+            iou_threshold=0.3
         )
         for image_batch, gt_box_batch, gt_label_batch, ids, _ in tqdm(test_loader):
             image_batch = image_batch.to(device)
@@ -281,13 +281,11 @@ def train(epochs: int) -> None:
                     gt_boxes=gt_boxes,
                     gt_labels=gt_labels,
                 )
-                score_meter.update(metrics()[0])
-                metrics.reset()
 
         logs["test_loss"] = loss_meter.get_value()
         logs["test_box"] = box_loss_meter.get_value()
         logs["test_label"] = label_loss_meter.get_value()
-        logs["score"] = score_meter.get_value()
+        logs["score"] = metrics()
         print(ids)
         visualize(
             image_batch,

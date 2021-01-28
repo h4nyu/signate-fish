@@ -4,17 +4,13 @@ from object_detection.metrics.average_precision import AveragePrecision
 from object_detection.entities import PascalBoxes, Labels, Confidences
 
 
-class MeanAveragePrecision:
-    def __init__(
-        self, num_classes: int, iou_threshold: float, eps: float = 1e-8
-    ) -> None:
-        self.ap = AveragePrecision(iou_threshold, eps)
-        self.aps = {k: AveragePrecision(iou_threshold, eps) for k in range(num_classes)}
-        self.eps = eps
+class Metrics:
+    def __init__(self, iou_threshold: float, eps: float = 1e-8) -> None:
+        self.iou_threshold = iou_threshold
+        self.scores: List[float] = []
 
     def reset(self) -> None:
-        for v in self.aps.values():
-            v.reset()
+        self.scores = []
 
     @torch.no_grad()
     def add(
@@ -27,18 +23,22 @@ class MeanAveragePrecision:
     ) -> None:
         unique_gt_labels = set(np.unique(gt_labels.to("cpu").numpy()))
         unique_labels = set(np.unique(labels.to("cpu").numpy()))
-        if unique_gt_labels != unique_labels:
+        if len(unique_gt_labels) == len(unique_labels) == 0:
+            self.scores.append(1.0)
             return
 
-        for k in unique_gt_labels:
-            ap = self.aps[k]
+        category_scores = []
+        for k in unique_gt_labels | unique_labels:
+            ap = AveragePrecision(self.iou_threshold)
             ap.add(
                 boxes=PascalBoxes(boxes[labels == k]),
                 confidences=Confidences(confidences[labels == k]),
                 gt_boxes=PascalBoxes(gt_boxes[gt_labels == k]),
             )
+            category_scores.append(ap())
+        self.scores.append(np.array(category_scores).mean())
+        return
 
     @torch.no_grad()
-    def __call__(self) -> Tuple[float, Dict[int, float]]:
-        aps = {k: v() for k, v in self.aps.items()}
-        return np.fromiter(aps.values(), dtype=float).mean(), aps
+    def __call__(self) -> float:
+        return np.array(self.scores, dtype=float).mean()
