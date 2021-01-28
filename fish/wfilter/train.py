@@ -1,7 +1,7 @@
 from typing import List, Any, Tuple
 from adabelief_pytorch import AdaBelief
 import torch
-from torch import nn, Tensor
+from torch import nn
 from typing import Dict
 from toolz.curried import keyfilter, filter, pipe, map, valfilter
 from tqdm import tqdm
@@ -9,12 +9,12 @@ from torch.utils.data import DataLoader, ConcatDataset
 from torch.cuda.amp import GradScaler, autocast
 from object_detection.meters import MeanMeter
 from object_detection.models.centernet import (
-    CenterNet,
     Visualize,
     Criterion,
     ToBoxes,
 )
 from fish.store import StoreApi
+from fish.models import FilterCenterNet
 from object_detection.models.mkmaps import (
     MkGaussianMaps,
     MkCenterBoxMaps,
@@ -49,43 +49,19 @@ from fish.data import (
     NegativeDataset,
 )
 from fish.store import StoreApi
+from fish.centernet.train import collate_fn
 from object_detection.metrics import MeanPrecition
-from fish.centernet import config
+from fish.wfilter import config
 from logging import (
     getLogger,
 )
 
 logger = getLogger(config.out_dir)
 
-def collate_fn(
-    batch: List[Any],
-) -> Tuple[List[ImageId], ImageBatch, List[YoloBoxes], List[Labels], Tensor]:
-    images: List[Any] = []
-    id_batch: List[ImageId] = []
-    box_batch: List[YoloBoxes] = []
-    label_batch: List[Labels] = []
-    weight_batch: List[Tensor] = []
-
-    for id, img, boxes, labels, ws in batch:
-        images.append(img)
-        _, h, w = img.shape
-        box_batch.append(pascal_to_yolo(boxes, (w, h)))
-        id_batch.append(id)
-        label_batch.append(labels)
-        weight_batch.append(ws)
-    return (
-        id_batch,
-        ImageBatch(torch.stack(images)),
-        box_batch,
-        label_batch,
-        torch.stack(weight_batch)
-    )
-
 
 device = torch.device("cuda")
-backbone = EfficientNetBackbone(3, out_channels=config.channels, pretrained=True)
-model = CenterNet(
-    backbone=backbone,
+model = FilterCenterNet(
+    backbone_id=3,
     num_classes=config.num_classes,
     channels=config.channels,
     out_idx=config.out_idx,
@@ -180,6 +156,7 @@ def train(epochs: int) -> None:
             ),
         ]
     )
+
     train_loader = DataLoader(
         train_dataset,
         collate_fn=collate_fn,
@@ -216,11 +193,13 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
+        weight_loss_meter = MeanMeter()
         for i, (ids, image_batch, gt_box_batch, gt_label_batch, gt_weight_batch) in tqdm(
             enumerate(train_loader)
         ):
             model.train()
             image_batch = image_batch.to(device)
+            gt_weight_batch = gt_weight_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
             optimizer.zero_grad()
@@ -229,16 +208,19 @@ def train(epochs: int) -> None:
                 loss, label_loss, box_loss, _ = criterion(
                     image_batch, netout, gt_box_batch, gt_label_batch
                 )
-                loss = loss + mse(weight_batch, gt_weight_batch)
+                weight_loss = mse(weight_batch, gt_weight_batch)
+                loss = loss + weight_loss
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
             loss_meter.update(loss.item())
             box_loss_meter.update(box_loss.item())
             label_loss_meter.update(label_loss.item())
+            weight_loss_meter.update(weight_loss.item())
             logs["train_loss"] = loss_meter.get_value()
             logs["train_box"] = box_loss_meter.get_value()
             logs["train_label"] = label_loss_meter.get_value()
+            logs["train_weight"] = weight_loss_meter.get_value()
 
             if i % 100 == 99:
                 eval_step()
@@ -250,23 +232,28 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
+        weight_loss_meter = MeanMeter()
         score_meter = MeanMeter()
         metrics = MeanAveragePrecision(
             iou_threshold=0.3, num_classes=config.num_classes
         )
 
-        for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(test_loader):
+        for ids, image_batch, gt_box_batch, gt_label_batch, gt_weight_batch in tqdm(test_loader):
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
+            gt_weight_batch = gt_weight_batch.to(device)
             _, _, h, w = image_batch.shape
-            netout, _ = model(image_batch)
+            netout, weight_batch = model(image_batch)
             loss, label_loss, box_loss, gt_hms = criterion(
                 image_batch, netout, gt_box_batch, gt_label_batch
             )
+            weight_loss = mse(weight_batch, gt_weight_batch)
+            loss = loss + weight_loss
             loss_meter.update(loss.item())
             box_loss_meter.update(box_loss.item())
             label_loss_meter.update(label_loss.item())
+            weight_loss_meter.update(weight_loss.item())
             box_batch, confidence_batch, label_batch = to_boxes(netout)
             for boxes, gt_boxes, labels, gt_labels, confidences in zip(
                 box_batch, gt_box_batch, label_batch, gt_label_batch, confidence_batch
@@ -294,6 +281,7 @@ def train(epochs: int) -> None:
         logs["test_loss"] = loss_meter.get_value()
         logs["test_box"] = box_loss_meter.get_value()
         logs["test_label"] = label_loss_meter.get_value()
+        logs["test_weight"] = weight_loss_meter.get_value()
         logs["score"] = score_meter.get_value()
         model_loader.save_if_needed(
             model,

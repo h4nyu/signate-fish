@@ -141,7 +141,7 @@ def to_label_filter(labels: Labels, num_classes: int=config.num_classes) -> Tens
     if len(labels) == 0:
         return out
 
-    unique_labels = torch.unique(labels)
+    unique_labels = torch.unique(labels.long())
     out[unique_labels] = 1
     return out
 
@@ -340,7 +340,7 @@ class LabeledDataset(Dataset):
         self.image_dir = Path(image_dir)
         self.num_classes = num_classes
 
-    def __getitem__(self, idx: int) -> TrainSample:
+    def __getitem__(self, idx: int) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
         row = self.rows[idx]
         id = row["id"]
         path = self.image_dir.joinpath(id if "jpg" in id else f"{id}.jpg")
@@ -362,11 +362,14 @@ class LabeledDataset(Dataset):
         boxes = resize(boxes, (w, h))
         labels = [int(float(b["label"])) for b in row["boxes"]]
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
+        t_labels = Labels(torch.tensor(transed["labels"]))
+        lf = to_label_filter(t_labels)
         return (
             ImageId(id),
             Image(transed["image"]),
             PascalBoxes(torch.tensor(transed["bboxes"])),
-            Labels(torch.tensor(transed["labels"])),
+            t_labels,
+            lf
         )
 
     def __len__(self) -> int:
@@ -396,17 +399,20 @@ class NegativeDataset(Dataset):
         self.rows = rows
         self.image_dir = Path(image_dir)
 
-    def __getitem__(self, idx: int) -> TrainSample:
+    def __getitem__(self, idx: int) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
         row = self.rows[idx]
         id = row["id"]
         path = self.image_dir.joinpath(f"{id}.jpg")
         image = imread(path)
         transed = self.transforms(image=image, bboxes=[], labels=[])
+        t_labels = Labels(torch.tensor(transed["labels"]))
+        lf = to_label_filter(t_labels)
         return (
             ImageId(id),
             Image(transed["image"]),
             PascalBoxes(torch.tensor(transed["bboxes"])),
-            Labels(torch.tensor(transed["labels"])),
+            t_labels,
+            lf
         )
 
     def __len__(self) -> int:
@@ -423,16 +429,19 @@ class ResizeMixDataset(Dataset):
         self.indices = list(range(len(self.rows)))
         self.transforms = transforms
 
-    def __getitem__(self, idx: int) -> TrainSample:
+    def __getitem__(self, idx: int) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
         id, base = self.rows[idx]
         _, other = self.rows[random.choice(self.indices)]
         image, boxes, labels = resize_mix(annot_to_tuple(base), annot_to_tuple(other))
         transed = self.transforms(image=np.array(image), bboxes=boxes, labels=labels)
+        t_labels = Labels(torch.tensor(transed["labels"]))
+        lf = to_label_filter(t_labels)
         return (
             ImageId(id),
             Image(transed["image"]),
             PascalBoxes(torch.tensor(transed["bboxes"])),
-            Labels(torch.tensor(transed["labels"])),
+            t_labels,
+            lf
         )
 
     def __len__(self) -> int:
