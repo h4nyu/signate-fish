@@ -57,6 +57,7 @@ from logging import (
 
 logger = getLogger(config.out_dir)
 
+
 def collate_fn(
     batch: List[Any],
 ) -> Tuple[List[ImageId], ImageBatch, List[YoloBoxes], List[Labels], Tensor]:
@@ -78,7 +79,7 @@ def collate_fn(
         ImageBatch(torch.stack(images)),
         box_batch,
         label_batch,
-        torch.stack(weight_batch)
+        torch.stack(weight_batch),
     )
 
 
@@ -178,6 +179,10 @@ def train(epochs: int) -> None:
                 rows=test_neg_rows,
                 transforms=test_transforms,
             ),
+            LabeledDataset(
+                rows=test_fixed_rows,
+                transforms=test_transforms,
+            ),
         ]
     )
     train_loader = DataLoader(
@@ -210,22 +215,26 @@ def train(epochs: int) -> None:
     get_score = MeanPrecition(iou_thresholds=[0.3])
     logs: Dict[str, float] = {}
     scaler = GradScaler()
-    mse =  nn.MSELoss()
+    mse = nn.MSELoss()
 
     def train_step() -> None:
         loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
-        for i, (ids, image_batch, gt_box_batch, gt_label_batch, gt_weight_batch) in tqdm(
-            enumerate(train_loader)
-        ):
+        for i, (
+            ids,
+            image_batch,
+            gt_box_batch,
+            gt_label_batch,
+            gt_weight_batch,
+        ) in tqdm(enumerate(train_loader)):
             model.train()
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
             optimizer.zero_grad()
             with autocast(enabled=config.use_amp):
-                netout,weight_batch = model(image_batch)
+                netout, weight_batch = model(image_batch)
                 loss, label_loss, box_loss, _ = criterion(
                     image_batch, netout, gt_box_batch, gt_label_batch
                 )

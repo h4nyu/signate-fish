@@ -96,9 +96,12 @@ def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
     test_annotations = read_train_rows("/store")
     api = StoreApi()
-    annotations = valfilter(lambda x: x["sequence_id"] not in config.ignore_seq_ids)(
-        annotations
-    )
+    fixed_rows = api.filter()
+    fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
+    annotations = valfilter(
+        lambda x: x["sequence_id"] not in config.ignore_seq_ids
+        or x["id"] not in fixed_keys
+    )(annotations)
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
         annotations
     )
@@ -107,7 +110,6 @@ def train(epochs: int) -> None:
     )
     test_keys = set(test_rows.keys())
     train_keys = set(train_rows.keys())
-    fixed_rows = api.filter()
     train_fixed_rows = pipe(
         fixed_rows, filter(lambda x: x["id"] not in test_keys), list
     )
@@ -187,16 +189,20 @@ def train(epochs: int) -> None:
     get_score = MeanPrecition(iou_thresholds=[0.3])
     logs: Dict[str, float] = {}
     scaler = GradScaler()
-    mse =  nn.MSELoss()
+    mse = nn.MSELoss()
 
     def train_step() -> None:
         loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
         weight_loss_meter = MeanMeter()
-        for i, (ids, image_batch, gt_box_batch, gt_label_batch, gt_weight_batch) in tqdm(
-            enumerate(train_loader)
-        ):
+        for i, (
+            ids,
+            image_batch,
+            gt_box_batch,
+            gt_label_batch,
+            gt_weight_batch,
+        ) in tqdm(enumerate(train_loader)):
             model.train()
             image_batch = image_batch.to(device)
             gt_weight_batch = gt_weight_batch.to(device)
@@ -204,7 +210,7 @@ def train(epochs: int) -> None:
             gt_label_batch = [x.to(device) for x in gt_label_batch]
             optimizer.zero_grad()
             with autocast(enabled=config.use_amp):
-                netout,weight_batch = model(image_batch)
+                netout, weight_batch = model(image_batch)
                 loss, label_loss, box_loss, _ = criterion(
                     image_batch, netout, gt_box_batch, gt_label_batch
                 )
@@ -238,7 +244,9 @@ def train(epochs: int) -> None:
             iou_threshold=0.3, num_classes=config.num_classes
         )
 
-        for ids, image_batch, gt_box_batch, gt_label_batch, gt_weight_batch in tqdm(test_loader):
+        for ids, image_batch, gt_box_batch, gt_label_batch, gt_weight_batch in tqdm(
+            test_loader
+        ):
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
@@ -283,6 +291,7 @@ def train(epochs: int) -> None:
         logs["test_label"] = label_loss_meter.get_value()
         logs["test_weight"] = weight_loss_meter.get_value()
         logs["score"] = score_meter.get_value()
+        print(ids)
         model_loader.save_if_needed(
             model,
             logs[model_loader.key],

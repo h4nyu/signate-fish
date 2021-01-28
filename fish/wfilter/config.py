@@ -31,4 +31,3 @@ pseudo_threshold = 0.2
 use_amp = True
 
 out_dir = f"store/w-centernet-{channels}"
-

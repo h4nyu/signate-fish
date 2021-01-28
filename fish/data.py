@@ -136,7 +136,7 @@ def parse_label(value: str) -> typing.Optional[int]:
     return None
 
 
-def to_label_filter(labels: Labels, num_classes: int=config.num_classes) -> Tensor:
+def to_label_filter(labels: Labels, num_classes: int = config.num_classes) -> Tensor:
     out = torch.zeros((num_classes,))
     if len(labels) == 0:
         return out
@@ -307,7 +307,9 @@ class FileDataset(Dataset):
         self.rows = list(rows.items())
         self.transforms = transforms
 
-    def __getitem__(self, idx: int) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
+    def __getitem__(
+        self, idx: int
+    ) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
         id, annot = self.rows[idx]
         image = imread(annot["image_path"])
         boxes = annot["boxes"]
@@ -320,7 +322,7 @@ class FileDataset(Dataset):
             Image(transed["image"]),
             PascalBoxes(torch.tensor(transed["bboxes"])),
             t_labels,
-            lf
+            lf,
         )
 
     def __len__(self) -> int:
@@ -340,7 +342,9 @@ class LabeledDataset(Dataset):
         self.image_dir = Path(image_dir)
         self.num_classes = num_classes
 
-    def __getitem__(self, idx: int) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
+    def __getitem__(
+        self, idx: int
+    ) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
         row = self.rows[idx]
         id = row["id"]
         path = self.image_dir.joinpath(id if "jpg" in id else f"{id}.jpg")
@@ -369,7 +373,7 @@ class LabeledDataset(Dataset):
             Image(transed["image"]),
             PascalBoxes(torch.tensor(transed["bboxes"])),
             t_labels,
-            lf
+            lf,
         )
 
     def __len__(self) -> int:
@@ -399,7 +403,9 @@ class NegativeDataset(Dataset):
         self.rows = rows
         self.image_dir = Path(image_dir)
 
-    def __getitem__(self, idx: int) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
+    def __getitem__(
+        self, idx: int
+    ) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
         row = self.rows[idx]
         id = row["id"]
         path = self.image_dir.joinpath(f"{id}.jpg")
@@ -412,7 +418,7 @@ class NegativeDataset(Dataset):
             Image(transed["image"]),
             PascalBoxes(torch.tensor(transed["bboxes"])),
             t_labels,
-            lf
+            lf,
         )
 
     def __len__(self) -> int:
@@ -429,7 +435,9 @@ class ResizeMixDataset(Dataset):
         self.indices = list(range(len(self.rows)))
         self.transforms = transforms
 
-    def __getitem__(self, idx: int) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
+    def __getitem__(
+        self, idx: int
+    ) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
         id, base = self.rows[idx]
         _, other = self.rows[random.choice(self.indices)]
         image, boxes, labels = resize_mix(annot_to_tuple(base), annot_to_tuple(other))
@@ -441,7 +449,7 @@ class ResizeMixDataset(Dataset):
             Image(transed["image"]),
             PascalBoxes(torch.tensor(transed["bboxes"])),
             t_labels,
-            lf
+            lf,
         )
 
     def __len__(self) -> int:
