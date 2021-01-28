@@ -44,6 +44,7 @@ from fish.data import (
     train_transforms,
     test_transforms,
     read_train_rows,
+    read_test_rows,
     inv_normalize,
     ResizeMixDataset,
     NegativeDataset,
