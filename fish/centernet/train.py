@@ -119,11 +119,14 @@ criterion = Criterion(
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
-    test_annotations = read_train_rows("/store")
+    test_annotations = read_test_rows("/store")
     api = StoreApi()
-    annotations = valfilter(lambda x: x["sequence_id"] not in config.ignore_seq_ids)(
-        annotations
-    )
+    fixed_rows = api.filter()
+    fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
+    annotations = valfilter(
+        lambda x: x["sequence_id"] not in config.ignore_seq_ids
+        or x["id"] not in fixed_keys
+    )(annotations)
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
         annotations
     )
@@ -132,7 +135,6 @@ def train(epochs: int) -> None:
     )
     test_keys = set(test_rows.keys())
     train_keys = set(train_rows.keys())
-    fixed_rows = api.filter()
     train_fixed_rows = pipe(
         fixed_rows, filter(lambda x: x["id"] not in test_keys), list
     )
@@ -143,15 +145,15 @@ def train(epochs: int) -> None:
     train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
     test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
 
-    train_neg_rows = list(test_annotations.values())[
-        int(len(test_rows) // config.pos_neg) :
-    ]
-    test_neg_rows = pipe(
+    neg_rows = pipe(
         test_annotations.values(),
-        filter(lambda x: x["sequence_id"] in config.negative_seq_ids),
+        filter(
+            lambda x: x["sequence_id"] in config.negative_seq_ids and "test" in x["id"]
+        ),
         list,
-    )[: int(len(test_rows) // config.pos_neg)]
-    print(len(test_neg_rows), len(test_rows))
+    )
+    train_neg_rows = neg_rows
+    test_neg_rows = neg_rows[: int(len(test_rows) // config.pos_neg)]
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
