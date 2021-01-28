@@ -8,6 +8,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader, ConcatDataset
 from torch.cuda.amp import GradScaler, autocast
 from object_detection.meters import MeanMeter
+from fish.metrics import Metrics
 from object_detection.models.centernet import (
     CenterNet,
     Visualize,
@@ -126,7 +127,7 @@ def train(epochs: int) -> None:
     fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
     annotations = valfilter(
         lambda x: x["sequence_id"] not in config.ignore_seq_ids
-        or x["id"] not in fixed_keys
+        and x["id"] not in fixed_keys
     )(annotations)
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
         annotations
@@ -250,7 +251,7 @@ def train(epochs: int) -> None:
             logs["train_box"] = box_loss_meter.get_value()
             logs["train_label"] = label_loss_meter.get_value()
 
-            if i % 100 == 99:
+            if i % 200 == 199:
                 eval_step()
                 log()
 
@@ -260,9 +261,8 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
-        score_meter = MeanMeter()
-        metrics = MeanAveragePrecision(
-            iou_threshold=0.3, num_classes=config.num_classes
+        metrics = Metrics(
+            iou_threshold=0.3
         )
 
         for ids, image_batch, gt_box_batch, gt_label_batch, _ in tqdm(test_loader):
@@ -288,8 +288,6 @@ def train(epochs: int) -> None:
                     gt_boxes=yolo_to_pascal(gt_boxes, (w, h)),
                     gt_labels=gt_labels,
                 )
-                score_meter.update(metrics()[0])
-                metrics.reset()
         print(ids)
         visualize(
             netout,
@@ -304,7 +302,7 @@ def train(epochs: int) -> None:
         logs["test_loss"] = loss_meter.get_value()
         logs["test_box"] = box_loss_meter.get_value()
         logs["test_label"] = label_loss_meter.get_value()
-        logs["score"] = score_meter.get_value()
+        logs["score"] = metrics()
         model_loader.save_if_needed(
             model,
             logs[model_loader.key],

@@ -18,7 +18,15 @@ labels = pipe(
     groupby(lambda x: str(x)),
     valmap(lambda x: len(x)),
 )
-print(labels)
+print(f"{labels=}")
+
+box_count_summary = pipe(
+    train_rows.values(),
+    map(lambda x: len(x["labels"])),
+    groupby(lambda x: x),
+    valmap(len)
+)
+print(f"{box_count_summary=}")
 
 # train_boxes = pipe(train_rows.values(), map(lambda x: x["boxes"]), concat, list)
 # area = box_area(torch.tensor(train_boxes))

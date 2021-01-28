@@ -4,11 +4,11 @@ from object_detection.model_loader import WatchMode
 from object_detection.models.mkmaps import GaussianMapMode
 
 
-batch_size = 7
+batch_size = 3
 mk_map_mode: GaussianMapMode = "length"
 
 # model
-channels = 64
+channels = 32
 out_idx = 7
 cls_depth = 1
 box_depth = 1
@@ -17,11 +17,11 @@ box_depth = 1
 lr = 1e-3
 box_weight = 1.5
 heatmap_weight = 1.0
-sigma = 10
+sigma = 20
 metric: Tuple[str, WatchMode] = ("score", "max")
 
 # to_boxes
-to_boxes_threshold = 0.3
+to_boxes_threshold = 0.2
 iou_threshold = 0.2
 to_boxes_kernel_size = 3
 

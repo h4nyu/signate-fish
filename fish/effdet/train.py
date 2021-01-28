@@ -206,7 +206,6 @@ def train(epochs: int) -> None:
     visualize = Visualize(
         config.out_dir, "test", limit=config.batch_size * 2, transforms=inv_normalize
     )
-    get_score = MeanPrecition(iou_thresholds=[config.ap_iou])
     scaler = GradScaler()
     logs: Dict[str, float] = {}
 

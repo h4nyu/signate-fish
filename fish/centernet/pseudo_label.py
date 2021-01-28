@@ -22,6 +22,7 @@ from fish.data import (
     LabeledDataset,
     pseudo_predict,
 )
+from fish.metrics import Metrics
 from fish.centernet import config
 from fish.centernet.train import model, model_loader, to_boxes, criterion
 from ensemble_boxes import weighted_boxes_fusion
@@ -54,15 +55,15 @@ def predict(device: str) -> None:
     )
     weights = [1, 1]
     submission: Submission = {}
-    for ids, image_batch, gt_box_batch, gt_label_batch in tqdm.tqdm(loader):
+    for ids, image_batch, gt_box_batch, gt_label_batch, _ in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
         gt_box_batch = [x.to(device) for x in gt_box_batch]
         gt_label_batch = [x.to(device) for x in gt_label_batch]
 
-        h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
-            net(hflip(image_batch))
-        )
-        netout = net(image_batch)
+        # h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
+        #     net(hflip(image_batch))[0]
+        # )
+        netout = net(image_batch)[0]
         box_batch, confidence_batch, label_batch = to_boxes(netout)
         loss, _, _, _ = criterion(
             image_batch,
@@ -75,46 +76,65 @@ def predict(device: str) -> None:
             img,
             id,
             boxes,
-            h_boxes,
+            # h_boxes,
             confidences,
-            h_confidences,
+            # h_confidences,
             labels,
-            h_labels,
+            # h_labels,
+            gt_boxes,
+            gt_labels,
         ) in zip(
             image_batch,
             ids,
             box_batch,
-            h_box_batch,
+            # h_box_batch,
             confidence_batch,
-            h_confidence_batch,
+            # h_confidence_batch,
             label_batch,
-            h_label_batch,
+            # h_label_batch,
+            gt_box_batch,
+            gt_label_batch,
         ):
             _, h, w = img.shape
+
+            metrics = Metrics(
+                iou_threshold=0.3
+            )
+            metrics.add(
+                boxes=boxes,
+                confidences=confidences,
+                labels=labels,
+                gt_boxes=gt_boxes,
+                gt_labels=gt_labels,
+            )
 
             boxes, confidences, labels = weighted_boxes_fusion(
                 [
                     yolo_to_pascal(boxes, (1, 1)),
-                    yolo_to_pascal(yolo_hflip(h_boxes), (1, 1)),
+                    # yolo_to_pascal(yolo_hflip(h_boxes), (1, 1)),
                 ],
-                [confidences, h_confidences],
-                [labels, h_labels],
+                [confidences, 
+                    # h_confidences
+                    ],
+                [labels, 
+                    # h_labels
+                    ],
                 iou_thr=config.iou_threshold,
-                weights=weights,
+                # weights=weights,
                 skip_box_thr=config.to_boxes_threshold,
             )
             boxes = PascalBoxes(torch.from_numpy(boxes))
             filter_indices = confidences > config.pseudo_threshold
             boxes = boxes[filter_indices]
             labels = labels[filter_indices]
+
             plot = DetectionPlot(inv_normalize(img))
             plot.draw_boxes(
                 boxes=resize(boxes, (w, h)), confidences=confidences, labels=labels
             )
             plot.save(out_dir.joinpath(f"{id}.jpg"))
-            print(id)
-
-            pseudo_predict(store, id, boxes=boxes, labels=labels, loss=loss.item())
+            print(f"{id=},{metrics()=}")
+            pseudo_predict(store, id, boxes=boxes, labels=labels, loss=metrics())
 
 
 if __name__ == "__main__":
