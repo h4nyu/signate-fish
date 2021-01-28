@@ -1,18 +1,15 @@
 import torch
-from fish.models import FrameCenterNet
+from fish.models import FilterCenterNet
 from object_detection.entities import ImageBatch
-from object_detection.models.backbones.effnet import (
-    EfficientNetBackbone,
-)
 
 
-def test_frame_center_net() -> None:
+def test_filter_center_net() -> None:
     channels = 128
-
-    image_batch0 = ImageBatch(torch.rand(1, 3, 256, 256))
-    image_batch1 = ImageBatch(torch.rand(1, 3, 256, 256))
-    net = FrameCenterNet(
-        num_classes=2,
+    num_classes = 2
+    image_batch = ImageBatch(torch.rand(1, 3, 256, 256))
+    net = FilterCenterNet(
+        num_classes=num_classes,
         channels=channels,
     )
-    netout = net(image_batch0, image_batch1)
+    netout, weight = net(image_batch)
+    assert weight.shape == (1, num_classes)

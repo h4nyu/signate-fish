@@ -19,7 +19,7 @@ dataset = FileDataset(
     transforms=test_transforms,
 )
 for i in tqdm(range(len(dataset))):
-    id, image, boxes, labels = dataset[i]
+    id, image, boxes, labels, __ = dataset[i]
     _, h, w = image.shape
     row = train_rows[id]
     sequence_id = row["sequence_id"]

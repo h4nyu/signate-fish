@@ -200,7 +200,7 @@ def train(epochs: int) -> None:
             gt_label_batch = [x.to(device) for x in gt_label_batch]
             optimizer.zero_grad()
             with autocast(enabled=config.use_amp):
-                netout = model(image_batch)
+                netout, _ = model(image_batch)
                 loss, label_loss, box_loss, _ = criterion(
                     image_batch, netout, gt_box_batch, gt_label_batch
                 )
@@ -234,7 +234,7 @@ def train(epochs: int) -> None:
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
             _, _, h, w = image_batch.shape
-            netout = model(image_batch)
+            netout, _ = model(image_batch)
             loss, label_loss, box_loss, gt_hms = criterion(
                 image_batch, netout, gt_box_batch, gt_label_batch
             )

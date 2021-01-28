@@ -136,6 +136,16 @@ def parse_label(value: str) -> typing.Optional[int]:
     return None
 
 
+def to_label_filter(labels: Labels, num_classes: int=config.num_classes) -> Tensor:
+    out = torch.zeros((num_classes,))
+    if len(labels) == 0:
+        return out
+
+    unique_labels = torch.unique(labels)
+    out[unique_labels] = 1
+    return out
+
+
 def read_train_rows(dataset_dir: str) -> Annotations:
     annotations: Annotations = {}
     _dataset_dir = Path(dataset_dir)
@@ -292,21 +302,25 @@ class FileDataset(Dataset):
         self,
         rows: Annotations,
         transforms: typing.Any,
+        num_classes: int = config.num_classes,
     ) -> None:
         self.rows = list(rows.items())
         self.transforms = transforms
 
-    def __getitem__(self, idx: int) -> TrainSample:
+    def __getitem__(self, idx: int) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
         id, annot = self.rows[idx]
         image = imread(annot["image_path"])
         boxes = annot["boxes"]
         labels = annot["labels"]
         transed = self.transforms(image=image, bboxes=boxes, labels=labels)
+        t_labels = Labels(torch.tensor(transed["labels"]))
+        lf = to_label_filter(t_labels)
         return (
             ImageId(id),
             Image(transed["image"]),
             PascalBoxes(torch.tensor(transed["bboxes"])),
-            Labels(torch.tensor(transed["labels"])),
+            t_labels,
+            lf
         )
 
     def __len__(self) -> int:
@@ -315,11 +329,16 @@ class FileDataset(Dataset):
 
 class LabeledDataset(Dataset):
     def __init__(
-        self, rows: Rows, transforms: typing.Any, image_dir: str = "/store/images"
+        self,
+        rows: Rows,
+        transforms: typing.Any,
+        image_dir: str = "/store/images",
+        num_classes: int = config.num_classes,
     ) -> None:
         self.rows = rows
         self.transforms = transforms
         self.image_dir = Path(image_dir)
+        self.num_classes = num_classes
 
     def __getitem__(self, idx: int) -> TrainSample:
         row = self.rows[idx]

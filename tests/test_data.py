@@ -14,6 +14,10 @@ from fish.data import (
     annot_to_tuple,
     ResizeMixDataset,
     test_transforms,
+    to_label_filter,
+)
+from object_detection.entities import (
+    Labels,
 )
 from albumentations.pytorch.transforms import ToTensorV2
 from toolz.curried import filter, pipe
@@ -52,7 +56,7 @@ def test_dataset() -> None:
 
     dataset = FileDataset(rows=annotations, transforms=train_transforms)
     for i in range(10):
-        id, image, boxes, labels = dataset[10]
+        id, image, boxes, labels, _ = dataset[10]
         plot = DetectionPlot(inv_normalize(image))
         plot.draw_boxes(boxes=boxes, labels=labels)
         plot.save(f"store/test-plot-{id}-{i}.png")
@@ -65,7 +69,7 @@ def test_anchors() -> None:
     anchors = Anchors(size=anchor_size)
     fpn_level = 7
     for i in range(1):
-        id, image, boxes, labels = dataset[5]
+        id, image, boxes, labels, _ = dataset[5]
         dummy = ImageBatch(torch.zeros(1, *image.shape))
         anchor_box_level0 = anchors(dummy, 2 ** 7)
         anchor_box_level1 = anchors(dummy, 2 ** 6)
@@ -92,17 +96,6 @@ def test_anchors() -> None:
 
 def test_frame_dataset() -> None:
     annotations = read_train_rows("/store")
-
-    dataset = FrameDataset(rows=annotations, transforms=train_transforms)
-    for i in range(10):
-        id, image0, image1, boxes, labels = dataset[5]
-        plot = DetectionPlot(inv_normalize(image0))
-        plot.draw_boxes(boxes=boxes, labels=labels)
-        plot.save(f"store/test-plot-{id}-0-{i}.png")
-
-        plot = DetectionPlot(inv_normalize(image1))
-        plot.draw_boxes(boxes=boxes, labels=labels)
-        plot.save(f"store/test-plot-{id}-1-{i}.png")
 
 
 def test_labeled_dataset() -> None:
@@ -137,3 +130,17 @@ def test_find_prev_frame() -> None:
 
     res = find_prev_frame(rows, sequence_id=5, frame_id=0)
     assert res is None
+
+
+def test_to_label_filter() -> None:
+    labels = Labels(
+        torch.tensor(
+            [
+                0,
+                0,
+                0,
+            ]
+        )
+    )
+    res = to_label_filter(labels, num_classes=2)
+    print(res)

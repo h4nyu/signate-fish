@@ -1,28 +1,32 @@
 import torch
+from typing import *
 from torch import nn, Tensor
-from object_detection.models.centernet import CenterNet, NetOutput
-from object_detection.models.backbones.resnet import ResNetBackbone
+from object_detection.models.centernet import CenterNet, NetOutput, Head
+from object_detection.models.backbones.effnet import (
+    EfficientNetBackbone,
+)
+from object_detection.models.modules import (
+    MaxPool2dStaticSamePadding,
+    SeparableConvBR2d,
+)
 from object_detection.entities import ImageBatch
-import torchvision.models as models
+from fish import config
 
 
-class FrameCenterNet(nn.Module):
+class FilterCenterNet(nn.Module):
     def __init__(
         self,
         channels: int,
-        num_classes: int,
         box_depth: int = 1,
         cls_depth: int = 1,
         fpn_depth: int = 1,
         out_idx: int = 4,
+        backbone_id: int = 3,
+        num_classes: int = config.num_classes,
     ) -> None:
         super().__init__()
-        self.conv = nn.Conv2d(
-            in_channels=6,
-            out_channels=3,
-            kernel_size=1,
-        )
-        backbone = ResNetBackbone("resnet50", out_channels=channels)
+        self.num_classes = num_classes
+        backbone = EfficientNetBackbone(3, out_channels=channels, pretrained=True)
         self.net = CenterNet(
             channels=channels,
             num_classes=num_classes,
@@ -32,8 +36,18 @@ class FrameCenterNet(nn.Module):
             fpn_depth=fpn_depth,
             out_idx=out_idx,
         )
+        self.filter_head = nn.Sequential(
+            SeparableConvBR2d(in_channels=channels),
+            MaxPool2dStaticSamePadding(3, 2),
+            SeparableConvBR2d(in_channels=channels, out_channels=channels * 2),
+            MaxPool2dStaticSamePadding(3, 2),
+            SeparableConvBR2d(in_channels=channels * 2, out_channels=num_classes),
+            nn.AdaptiveMaxPool2d(1),
+            nn.Sigmoid(),
+        )
 
-    def __call__(self, image0: ImageBatch, image1: ImageBatch) -> NetOutput:
-        dualImage = torch.cat([image0, image1], dim=1)
-        image = self.conv(dualImage)
-        return self.net(image)
+    def __call__(self, x: ImageBatch) -> Tuple[NetOutput, Tensor]:
+        (heat_maps, box_maps, anchor), fpn = self.net(x)
+        fh = self.filter_head(fpn[-1])
+        heat_maps = fh * heat_maps
+        return (heat_maps, box_maps, anchor), fh.view(-1, self.num_classes)
