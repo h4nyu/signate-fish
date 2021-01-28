@@ -88,6 +88,7 @@ criterion = Criterion(
     cls_weight=config.cls_weight,
 )
 
+
 def collate_fn(
     batch: List[Any],
 ) -> Tuple[ImageBatch, List[PascalBoxes], List[Labels], List[ImageId], Tensor]:
@@ -110,7 +111,6 @@ def collate_fn(
         id_batch,
         torch.stack(weight_batch),
     )
-
 
 
 def train(epochs: int) -> None:
@@ -218,6 +218,7 @@ def train(epochs: int) -> None:
             gt_box_batch,
             gt_label_batch,
             _,
+            _,
         ) in tqdm(enumerate(train_loader)):
             model.train()
             image_batch = image_batch.to(device)
@@ -256,7 +257,7 @@ def train(epochs: int) -> None:
         metrics = MeanAveragePrecision(
             iou_threshold=0.3, num_classes=config.num_classes
         )
-        for image_batch, gt_box_batch, gt_label_batch, ids in tqdm(test_loader):
+        for image_batch, gt_box_batch, gt_label_batch, ids, _ in tqdm(test_loader):
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]

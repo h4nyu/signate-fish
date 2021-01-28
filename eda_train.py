@@ -12,7 +12,12 @@ train_seq = pipe(test_rows.values(), map(lambda x: x["sequence_id"]), set)
 test_seq = pipe(train_rows.values(), map(lambda x: x["sequence_id"]), set)
 
 
-labels = pipe(train_rows.values(), map(lambda x: set(x["labels"])), groupby(lambda x: str(x)), valmap(lambda x: len(x)))
+labels = pipe(
+    train_rows.values(),
+    map(lambda x: set(x["labels"])),
+    groupby(lambda x: str(x)),
+    valmap(lambda x: len(x)),
+)
 print(labels)
 
 # train_boxes = pipe(train_rows.values(), map(lambda x: x["boxes"]), concat, list)
