@@ -123,11 +123,13 @@ def train(epochs: int) -> None:
 
     neg_rows = pipe(
         test_annotations.values(),
-        filter(lambda x: x["sequence_id"] in config.negative_seq_ids and "test" in x["id"]),
+        filter(
+            lambda x: x["sequence_id"] in config.negative_seq_ids and "test" in x["id"]
+        ),
         list,
     )
     train_neg_rows = neg_rows
-    test_neg_rows = neg_rows[:int(len(test_rows) // config.pos_neg)]
+    test_neg_rows = neg_rows[: int(len(test_rows) // config.pos_neg)]
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(

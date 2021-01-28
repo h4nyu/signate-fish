@@ -215,7 +215,6 @@ def train(epochs: int) -> None:
     get_score = MeanPrecition(iou_thresholds=[0.3])
     logs: Dict[str, float] = {}
     scaler = GradScaler()
-    mse = nn.MSELoss()
 
     def train_step() -> None:
         loss_meter = MeanMeter()
@@ -226,7 +225,7 @@ def train(epochs: int) -> None:
             image_batch,
             gt_box_batch,
             gt_label_batch,
-            gt_weight_batch,
+            _,
         ) in tqdm(enumerate(train_loader)):
             model.train()
             image_batch = image_batch.to(device)
@@ -234,11 +233,10 @@ def train(epochs: int) -> None:
             gt_label_batch = [x.to(device) for x in gt_label_batch]
             optimizer.zero_grad()
             with autocast(enabled=config.use_amp):
-                netout, weight_batch = model(image_batch)
+                netout, _ = model(image_batch)
                 loss, label_loss, box_loss, _ = criterion(
                     image_batch, netout, gt_box_batch, gt_label_batch
                 )
-                loss = loss + mse(weight_batch, gt_weight_batch)
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
@@ -264,7 +262,7 @@ def train(epochs: int) -> None:
             iou_threshold=0.3, num_classes=config.num_classes
         )
 
-        for ids, image_batch, gt_box_batch, gt_label_batch in tqdm(test_loader):
+        for ids, image_batch, gt_box_batch, gt_label_batch, _ in tqdm(test_loader):
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]
             gt_label_batch = [x.to(device) for x in gt_label_batch]
