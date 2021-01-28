@@ -290,7 +290,7 @@ def train(epochs: int) -> None:
                 )
                 score_meter.update(metrics()[0])
                 metrics.reset()
-
+        print(ids)
         visualize(
             netout,
             box_batch,
