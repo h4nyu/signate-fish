@@ -1,18 +1,27 @@
 from adabelief_pytorch import AdaBelief
 from tqdm import tqdm
+from typing import *
 import torch
+from torch import Tensor
 from toolz.curried import keyfilter, filter, pipe, map, valfilter, take
 from typing import Dict, Any
 from torch.utils.data import DataLoader, ConcatDataset
 from object_detection.models.backbones.effnet import (
     EfficientNetBackbone,
 )
+from object_detection.entities import ImageId, ImageBatch
+from object_detection.entities.box import (
+    yolo_to_pascal,
+    pascal_to_yolo,
+    PascalBoxes,
+    Labels,
+    YoloBoxes,
+)
 import torch_optimizer as optim
 from torch.cuda.amp import GradScaler, autocast
 from object_detection.meters import MeanMeter
 from object_detection.metrics import MeanAveragePrecision
 from object_detection.models.effidet import (
-    collate_fn,
     EfficientDet,
     Criterion,
     Visualize,
@@ -32,6 +41,7 @@ from fish.data import (
     train_transforms,
     test_transforms,
     read_train_rows,
+    read_test_rows,
     inv_normalize,
     ResizeMixDataset,
 )
@@ -78,14 +88,41 @@ criterion = Criterion(
     cls_weight=config.cls_weight,
 )
 
+def collate_fn(
+    batch: List[Any],
+) -> Tuple[ImageBatch, List[PascalBoxes], List[Labels], List[ImageId], Tensor]:
+    images: List[Any] = []
+    id_batch: List[ImageId] = []
+    box_batch: List[PascalBoxes] = []
+    label_batch: List[Labels] = []
+    weight_batch: List[Tensor] = []
+    for id, img, boxes, labels, ws in batch:
+        c, h, w = img.shape
+        images.append(img)
+        box_batch.append(boxes)
+        id_batch.append(id)
+        label_batch.append(labels)
+        weight_batch.append(ws)
+    return (
+        ImageBatch(torch.stack(images)),
+        box_batch,
+        label_batch,
+        id_batch,
+        torch.stack(weight_batch),
+    )
+
+
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
-    test_annotations = read_train_rows("/store")
+    test_annotations = read_test_rows("/store")
     api = StoreApi()
-    annotations = valfilter(lambda x: x["sequence_id"] not in config.ignore_seq_ids)(
-        annotations
-    )
+    fixed_rows = api.filter()
+    fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
+    annotations = valfilter(
+        lambda x: x["sequence_id"] not in config.ignore_seq_ids
+        or x["id"] not in fixed_keys
+    )(annotations)
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
         annotations
     )
@@ -94,7 +131,6 @@ def train(epochs: int) -> None:
     )
     test_keys = set(test_rows.keys())
     train_keys = set(train_rows.keys())
-    fixed_rows = api.filter()
     train_fixed_rows = pipe(
         fixed_rows, filter(lambda x: x["id"] not in test_keys), list
     )
@@ -105,15 +141,15 @@ def train(epochs: int) -> None:
     train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
     test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
 
-    train_neg_rows = list(test_annotations.values())[
-        int(len(test_rows) // config.pos_neg) :
-    ]
-    test_neg_rows = pipe(
+    neg_rows = pipe(
         test_annotations.values(),
-        filter(lambda x: x["sequence_id"] in config.negative_seq_ids),
+        filter(
+            lambda x: x["sequence_id"] in config.negative_seq_ids and "test" in x["id"]
+        ),
         list,
-    )[: int(len(test_rows) // config.pos_neg)]
-    print(len(test_neg_rows), len(test_rows))
+    )
+    train_neg_rows = neg_rows
+    test_neg_rows = neg_rows[: int(len(test_rows) // config.pos_neg)]
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
