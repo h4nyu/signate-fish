@@ -17,12 +17,12 @@ box_depth = 1
 lr = 1e-3
 box_weight = 1.5
 heatmap_weight = 1.0
-sigma = 15
+sigma = 10
 metric: Tuple[str, WatchMode] = ("score", "max")
 
 # to_boxes
-to_boxes_threshold = 0.2
-iou_threshold = 0.1
+to_boxes_threshold = 0.3
+iou_threshold = 0.2
 to_boxes_kernel_size = 3
 
 pseudo_threshold = 0.2
