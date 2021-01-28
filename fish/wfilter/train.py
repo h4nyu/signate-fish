@@ -44,6 +44,7 @@ from fish.data import (
     train_transforms,
     test_transforms,
     read_train_rows,
+    read_test_rows,
     inv_normalize,
     ResizeMixDataset,
     NegativeDataset,
@@ -94,7 +95,7 @@ criterion = Criterion(
 
 def train(epochs: int) -> None:
     annotations = read_train_rows("/store")
-    test_annotations = read_train_rows("/store")
+    test_annotations = read_test_rows("/store")
     api = StoreApi()
     fixed_rows = api.filter()
     fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
@@ -120,15 +121,13 @@ def train(epochs: int) -> None:
     train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
     test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
 
-    train_neg_rows = list(test_annotations.values())[
-        int(len(test_rows) // config.pos_neg) :
-    ]
-    test_neg_rows = pipe(
+    neg_rows = pipe(
         test_annotations.values(),
-        filter(lambda x: x["sequence_id"] in config.negative_seq_ids),
+        filter(lambda x: x["sequence_id"] in config.negative_seq_ids and "test" in x["id"]),
         list,
-    )[: int(len(test_rows) // config.pos_neg)]
-    print(len(test_neg_rows), len(test_rows))
+    )
+    train_neg_rows = neg_rows
+    test_neg_rows = neg_rows[:int(len(test_rows) // config.pos_neg)]
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
