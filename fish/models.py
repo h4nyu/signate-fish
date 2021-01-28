@@ -8,6 +8,7 @@ from object_detection.models.backbones.effnet import (
 from object_detection.models.modules import (
     MaxPool2dStaticSamePadding,
     SeparableConvBR2d,
+    MemoryEfficientSwish,
 )
 from object_detection.entities import ImageBatch
 from fish import config
@@ -38,8 +39,10 @@ class FilterCenterNet(nn.Module):
         )
         self.filter_head = nn.Sequential(
             SeparableConvBR2d(in_channels=channels),
+            MemoryEfficientSwish(),
             MaxPool2dStaticSamePadding(3, 2),
             SeparableConvBR2d(in_channels=channels, out_channels=channels * 2),
+            MemoryEfficientSwish(),
             MaxPool2dStaticSamePadding(3, 2),
             SeparableConvBR2d(in_channels=channels * 2, out_channels=num_classes),
             nn.AdaptiveMaxPool2d(1),
