@@ -122,7 +122,7 @@ def train(epochs: int) -> None:
     fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
     annotations = valfilter(
         lambda x: x["sequence_id"] not in config.ignore_seq_ids
-        or x["id"] not in fixed_keys
+        and x["id"] not in fixed_keys
     )(annotations)
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
         annotations

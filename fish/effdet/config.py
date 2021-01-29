@@ -31,6 +31,6 @@ cls_weight = 2
 anchor_ratios = [2 / 3, 1.0, 3 / 2]
 anchor_scales = [1.0, 1.44]
 num_anchors = len(anchor_ratios) * len(anchor_scales)
-anchor_size = 3
+anchor_size = 8
 
 out_dir = f"/store/efficientdet-{num_anchors}-{channels}"
