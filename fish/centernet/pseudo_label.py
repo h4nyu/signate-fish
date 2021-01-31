@@ -39,7 +39,7 @@ store = StoreApi()
 @torch.no_grad()
 def predict(device: str) -> None:
     rows = store.filter(state="Todo")
-    rows = pipe(rows, filter(lambda x: "test" in x["id"]), list)
+    rows = pipe(rows, list)
     out_dir = Path("/store/pseudo")
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -59,10 +59,9 @@ def predict(device: str) -> None:
         image_batch = image_batch.to(device)
         gt_box_batch = [x.to(device) for x in gt_box_batch]
         gt_label_batch = [x.to(device) for x in gt_label_batch]
-
-        # h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
-        #     net(hflip(image_batch))[0]
-        # )
+        h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
+            net(hflip(image_batch))[0]
+        )
         netout = net(image_batch)[0]
         box_batch, confidence_batch, label_batch = to_boxes(netout)
         loss, _, _, _ = criterion(
@@ -76,30 +75,28 @@ def predict(device: str) -> None:
             img,
             id,
             boxes,
-            # h_boxes,
+            h_boxes,
             confidences,
-            # h_confidences,
+            h_confidences,
             labels,
-            # h_labels,
+            h_labels,
             gt_boxes,
             gt_labels,
         ) in zip(
             image_batch,
             ids,
             box_batch,
-            # h_box_batch,
+            h_box_batch,
             confidence_batch,
-            # h_confidence_batch,
+            h_confidence_batch,
             label_batch,
-            # h_label_batch,
+            h_label_batch,
             gt_box_batch,
             gt_label_batch,
         ):
             _, h, w = img.shape
 
-            metrics = Metrics(
-                iou_threshold=0.3
-            )
+            metrics = Metrics(iou_threshold=0.3)
             metrics.add(
                 boxes=boxes,
                 confidences=confidences,
@@ -111,16 +108,12 @@ def predict(device: str) -> None:
             boxes, confidences, labels = weighted_boxes_fusion(
                 [
                     yolo_to_pascal(boxes, (1, 1)),
-                    # yolo_to_pascal(yolo_hflip(h_boxes), (1, 1)),
+                    yolo_to_pascal(yolo_hflip(h_boxes), (1, 1)),
                 ],
-                [confidences, 
-                    # h_confidences
-                    ],
-                [labels, 
-                    # h_labels
-                    ],
+                [confidences, h_confidences],
+                [labels, h_labels],
                 iou_thr=config.iou_threshold,
-                # weights=weights,
+                weights=weights,
                 skip_box_thr=config.to_boxes_threshold,
             )
             boxes = PascalBoxes(torch.from_numpy(boxes))

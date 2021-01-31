@@ -1,11 +1,16 @@
 import numpy as np, torch
+from typing import *
 from typing import Tuple, List, Dict
-from object_detection.metrics.average_precision import AveragePrecision
+from torchvision.ops.boxes import box_iou
+from object_detection.metrics.average_precision import auc
 from object_detection.entities import PascalBoxes, Labels, Confidences
+from fish import config
 
 
 class Metrics:
-    def __init__(self, iou_threshold: float, eps: float = 1e-8) -> None:
+    def __init__(
+        self, iou_threshold: float = config.metrics_iou_threshold, eps: float = 1e-8
+    ) -> None:
         self.iou_threshold = iou_threshold
         self.scores: List[float] = []
 
@@ -16,28 +21,38 @@ class Metrics:
     def add(
         self,
         boxes: PascalBoxes,
-        confidences: Confidences,
         labels: Labels,
         gt_boxes: PascalBoxes,
         gt_labels: Labels,
-    ) -> None:
+        confidences: Optional[Confidences] = None,
+    ) -> float:
         unique_gt_labels = set(np.unique(gt_labels.to("cpu").numpy()))
-        unique_labels = set(np.unique(labels.to("cpu").numpy()))
-        if len(unique_gt_labels) == len(unique_labels) == 0:
-            self.scores.append(1.0)
-            return
-
-        category_scores = []
-        for k in unique_gt_labels | unique_labels:
-            ap = AveragePrecision(self.iou_threshold)
-            ap.add(
-                boxes=PascalBoxes(boxes[labels == k]),
-                confidences=Confidences(confidences[labels == k]),
-                gt_boxes=PascalBoxes(gt_boxes[gt_labels == k]),
-            )
-            category_scores.append(ap())
-        self.scores.append(np.array(category_scores).mean())
-        return
+        if len(unique_gt_labels) == 0:
+            self.scores.append(0.0)
+            return 0.0
+        scores = np.zeros(len(unique_gt_labels))
+        for i, k in enumerate(unique_gt_labels):
+            c_boxes = boxes[labels == k]
+            c_gt_boxes = gt_boxes[gt_labels == k]
+            if(len(c_boxes)== 0 or len(gt_boxes) == 0):
+                continue
+            iou_m = box_iou(c_boxes, c_gt_boxes) > self.iou_threshold
+            detected_indecies, matched_gt_box_indices = iou_m.max(dim=1)
+            detected_boxes = c_boxes[detected_indecies]
+            matched_gt_box_indices=matched_gt_box_indices[detected_indecies]
+            tp = np.zeros(len(detected_boxes))
+            matched:Set[int] = set()
+            for box_id, gt_box_id in enumerate(matched_gt_box_indices.to("cpu").numpy()):
+                if(gt_box_id not in matched):
+                    tp[box_id] = 1
+                    matched.add(gt_box_id)
+            tpc = tp.cumsum()
+            precision = tpc / np.arange(1, len(tp) + 1)
+            div = np.ones(len(tp)) * min(len(detected_boxes), len(c_boxes))
+            scores[i] = (precision / div).sum()
+        score = scores.mean()
+        self.scores.append(score)
+        return score
 
     @torch.no_grad()
     def __call__(self) -> float:
