@@ -36,7 +36,6 @@ from fish.metrics import Metrics
 from object_detection.metrics import MeanPrecition
 from fish.data import (
     FileDataset,
-    NegativeDataset,
     LabeledDataset,
     kfold,
     train_transforms,
@@ -121,7 +120,7 @@ def train(epochs: int) -> None:
     fixed_rows = api.filter()
     fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
     annotations = valfilter(
-        lambda x: x["sequence_id"] not in config.ignore_seq_ids
+        lambda x: len(x["boxes"]) != 0
         or x["id"] not in fixed_keys
     )(annotations)
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
@@ -177,7 +176,7 @@ def train(epochs: int) -> None:
         test_dataset,
         collate_fn=collate_fn,
         batch_size=config.batch_size * 2,
-        num_workers=config.batch_size,
+        num_workers=config.batch_size * 2,
         shuffle=True,
         drop_last=True,
     )
