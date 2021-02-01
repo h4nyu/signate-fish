@@ -118,6 +118,7 @@ def train(epochs: int) -> None:
     test_annotations = read_test_rows("/store")
     api = StoreApi()
     fixed_rows = api.filter()
+    fixed_rows = pipe(fixed_rows, filter(lambda x: len(x['boxes']) > 0), list)
     fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
     annotations = valfilter(
         lambda x: len(x["boxes"]) != 0
