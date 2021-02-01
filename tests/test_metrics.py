@@ -14,9 +14,9 @@ def test_default() -> None:
             ]
         )
     )
-    labels = Labels(torch.tensor([0, 0, 1]))
+    labels = Labels(torch.tensor([0, 0, 0]))
     gt_boxes = PascalBoxes(torch.tensor([[0, 0, 10, 10], [5, 5, 10, 10]]))
-    gt_labels = Labels(torch.tensor([0, 0]))
+    gt_labels = Labels(torch.tensor([0, 1]))
     score = metrics.add(
         boxes=boxes,
         labels=labels,

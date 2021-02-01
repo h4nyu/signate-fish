@@ -45,16 +45,13 @@ def predict(device: str) -> None:
         drop_last=False,
     )
     weights = [1, 1]
-    # weights = [1]
     submission: Submission = {}
     for ids, image_batch in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
-
         h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
-            net(hflip(image_batch))
+            net(hflip(image_batch))[0]
         )
-        box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
-
+        box_batch, confidence_batch, label_batch = to_boxes(net(image_batch)[0])
         for (
             img,
             id,
@@ -87,6 +84,9 @@ def predict(device: str) -> None:
                 weights=weights,
                 skip_box_thr=config.to_boxes_threshold,
             )
+            boxes = boxes[:config.to_box_limit]
+            confidences = confidences[:config.to_box_limit]
+            labels = labels[:config.to_box_limit]
             boxes = PascalBoxes(torch.from_numpy(boxes))
             row = rows[id]
             sequence_id = row["sequence_id"]
