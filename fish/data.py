@@ -218,12 +218,11 @@ inv_normalize = Normalize(
 
 train_transforms = albm.Compose(
     [
-        A.HorizontalFlip(p=0.5),
-        A.VerticalFlip(p=0.5),
         A.OneOf(
             [
-                A.Rotate(limit=(89, 91), p=0.5, border_mode=0),
-                A.Rotate(limit=(-91, -89), p=0.5, border_mode=0),
+                A.Rotate(limit=(88, 92), p=0.5, border_mode=0),
+                A.Rotate(limit=(-92, -88), p=0.5, border_mode=0),
+                A.HorizontalFlip(p=0.5),
             ],
             p=1.0,
         ),
@@ -239,7 +238,6 @@ train_transforms = albm.Compose(
             width=config.original_width,
             p=0.8,
         ),
-        A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.9),
         A.OneOf(
             [
                 A.Blur(blur_limit=17, p=1.0),
@@ -249,6 +247,8 @@ train_transforms = albm.Compose(
             ],
             p=0.4,
         ),
+        A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.9),
+        A.HueSaturationValue(p=0.3),
         A.Cutout(
             max_w_size=32,
             max_h_size=32,

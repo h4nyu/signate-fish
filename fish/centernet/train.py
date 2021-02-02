@@ -86,7 +86,7 @@ def collate_fn(
 
 
 device = torch.device("cuda")
-backbone = EfficientNetBackbone(3, out_channels=config.channels, pretrained=True)
+backbone = EfficientNetBackbone(config.backbone_id, out_channels=config.channels, pretrained=True)
 model = CenterNet(
     backbone=backbone,
     num_classes=config.num_classes,
@@ -151,11 +151,11 @@ def train(epochs: int) -> None:
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
-                rows=train_rows,
+                rows=annotations,
                 transforms=train_transforms,
             ),
             LabeledDataset(
-                rows=train_fixed_rows,
+                rows=fixed_rows,
                 transforms=train_transforms,
             ),
             ResizeMixDataset(
@@ -166,12 +166,8 @@ def train(epochs: int) -> None:
     )
     test_dataset: Any = ConcatDataset(
         [
-            FileDataset(
-                rows=test_rows,
-                transforms=test_transforms,
-            ),
             LabeledDataset(
-                rows=test_fixed_rows,
+                rows=fixed_rows,
                 transforms=test_transforms,
             ),
         ]
