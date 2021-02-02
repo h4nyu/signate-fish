@@ -124,9 +124,10 @@ def train(epochs: int) -> None:
     test_annotations = read_test_rows("/store")
     api = StoreApi()
     fixed_rows = api.filter()
+    fixed_rows = pipe(fixed_rows, filter(lambda x: len(x['boxes']) > 0), list)
     fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
     annotations = valfilter(
-        lambda x: x["sequence_id"] not in config.ignore_seq_ids
+        lambda x: len(x['boxes']) > 0
         and x["id"] not in fixed_keys
     )(annotations)
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
@@ -147,22 +148,12 @@ def train(epochs: int) -> None:
     train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
     test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
 
-    neg_rows = pipe(
-        test_annotations.values(),
-        filter(
-            lambda x: x["sequence_id"] in config.negative_seq_ids and "test" in x["id"]
-        ),
-        list,
-    )
-    train_neg_rows = neg_rows
-    test_neg_rows = neg_rows[: int(len(test_rows) // config.pos_neg)]
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
                 rows=train_rows,
                 transforms=train_transforms,
             ),
-            NegativeDataset(rows=train_neg_rows, transforms=train_transforms),
             LabeledDataset(
                 rows=train_fixed_rows,
                 transforms=train_transforms,
@@ -177,10 +168,6 @@ def train(epochs: int) -> None:
         [
             FileDataset(
                 rows=test_rows,
-                transforms=test_transforms,
-            ),
-            NegativeDataset(
-                rows=test_neg_rows,
                 transforms=test_transforms,
             ),
             LabeledDataset(
@@ -213,7 +200,7 @@ def train(epochs: int) -> None:
         rectify=True,
     )
     visualize = Visualize(
-        config.out_dir, "test", limit=config.batch_size*2, transforms=inv_normalize
+        config.out_dir, "test", limit=config.batch_size * 2, transforms=inv_normalize
     )
 
     get_score = MeanPrecition(iou_thresholds=[0.3])
@@ -251,7 +238,7 @@ def train(epochs: int) -> None:
             logs["train_box"] = box_loss_meter.get_value()
             logs["train_label"] = label_loss_meter.get_value()
 
-            if i % 200 == 199:
+            if i % 200 == 0:
                 eval_step()
                 log()
 
@@ -261,9 +248,7 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
-        metrics = Metrics(
-            iou_threshold=0.3
-        )
+        metrics = Metrics(iou_threshold=0.3)
 
         for ids, image_batch, gt_box_batch, gt_label_batch, _ in tqdm(test_loader):
             image_batch = image_batch.to(device)

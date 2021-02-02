@@ -24,7 +24,7 @@ box_count_summary = pipe(
     train_rows.values(),
     map(lambda x: len(x["labels"])),
     groupby(lambda x: x),
-    valmap(len)
+    valmap(len),
 )
 print(f"{box_count_summary=}")
 

@@ -36,7 +36,6 @@ from fish.metrics import Metrics
 from object_detection.metrics import MeanPrecition
 from fish.data import (
     FileDataset,
-    NegativeDataset,
     LabeledDataset,
     kfold,
     train_transforms,
@@ -119,10 +118,11 @@ def train(epochs: int) -> None:
     test_annotations = read_test_rows("/store")
     api = StoreApi()
     fixed_rows = api.filter()
+    fixed_rows = pipe(fixed_rows, filter(lambda x: len(x['boxes']) > 0), list)
     fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
     annotations = valfilter(
-        lambda x: x["sequence_id"] not in config.ignore_seq_ids
-        and x["id"] not in fixed_keys
+        lambda x: len(x["boxes"]) != 0
+        or x["id"] not in fixed_keys
     )(annotations)
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
         annotations
@@ -142,22 +142,12 @@ def train(epochs: int) -> None:
     train_rows = keyfilter(lambda x: x not in fixed_keys, train_rows)
     test_rows = keyfilter(lambda x: x not in fixed_keys, test_rows)
 
-    neg_rows = pipe(
-        test_annotations.values(),
-        filter(
-            lambda x: x["sequence_id"] in config.negative_seq_ids and "test" in x["id"]
-        ),
-        list,
-    )
-    train_neg_rows = neg_rows
-    test_neg_rows = neg_rows[: int(len(test_rows) // config.pos_neg)]
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
                 rows=train_rows,
                 transforms=train_transforms,
             ),
-            NegativeDataset(rows=train_neg_rows, transforms=train_transforms),
             LabeledDataset(
                 rows=train_fixed_rows,
                 transforms=train_transforms,
@@ -174,10 +164,6 @@ def train(epochs: int) -> None:
                 rows=test_rows,
                 transforms=test_transforms,
             ),
-            NegativeDataset(
-                rows=test_neg_rows,
-                transforms=test_transforms,
-            ),
         ]
     )
     train_loader = DataLoader(
@@ -191,7 +177,7 @@ def train(epochs: int) -> None:
         test_dataset,
         collate_fn=collate_fn,
         batch_size=config.batch_size * 2,
-        num_workers=config.batch_size,
+        num_workers=config.batch_size * 2,
         shuffle=True,
         drop_last=True,
     )
@@ -253,9 +239,7 @@ def train(epochs: int) -> None:
         loss_meter = MeanMeter()
         box_loss_meter = MeanMeter()
         label_loss_meter = MeanMeter()
-        metrics = Metrics(
-            iou_threshold=0.3
-        )
+        metrics = Metrics(iou_threshold=0.3)
         for image_batch, gt_box_batch, gt_label_batch, ids, _ in tqdm(test_loader):
             image_batch = image_batch.to(device)
             gt_box_batch = [x.to(device) for x in gt_box_batch]

@@ -8,8 +8,8 @@ batch_size = 3
 mk_map_mode: GaussianMapMode = "length"
 
 # model
-channels = 32
-out_idx = 7
+channels = 128
+out_idx = 6
 cls_depth = 1
 box_depth = 1
 
@@ -21,8 +21,8 @@ sigma = 20
 metric: Tuple[str, WatchMode] = ("score", "max")
 
 # to_boxes
-to_boxes_threshold = 0.2
-iou_threshold = 0.2
+to_boxes_threshold = 0.001
+iou_threshold = 0.4
 to_boxes_kernel_size = 3
 
 pseudo_threshold = 0.2
