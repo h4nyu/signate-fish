@@ -8,8 +8,7 @@ min_box_area = 200
 normalize_mean = (0.485, 0.456, 0.406)
 normalize_std = (0.485, 0.456, 0.406)
 # image_width = 1024 + 512
-image_width = 1024 + 1024
-image_height = int(image_width / aspect_ratio)
+
 scale = image_width / original_width
 num_classes = 2
 test_seq_ids = set(

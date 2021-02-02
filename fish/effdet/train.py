@@ -181,13 +181,11 @@ def train(epochs: int) -> None:
         shuffle=True,
         drop_last=True,
     )
-    optimizer = AdaBelief(
+    optimizer = optim.RAdam(
         model.parameters(),
         lr=config.lr,
         eps=1e-8,
         betas=(0.9, 0.999),
-        weight_decouple=False,
-        rectify=True,
     )
     visualize = Visualize(
         config.out_dir, "test", limit=config.batch_size * 2, transforms=inv_normalize
