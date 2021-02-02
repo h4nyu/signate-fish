@@ -11,13 +11,13 @@ use_amp = True
 # data
 confidence_threshold = 0.001
 iou_threshold = 0.45
-batch_size = 4
+batch_size = 5
 
 # model
-channels = 64
+channels = 32
 box_depth = 1
 fpn_depth = 1
-lr = 5e-4
+lr = 1e-3
 out_ids: List[int] = [5, 6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
@@ -25,7 +25,7 @@ pretrained = True
 
 # criterion
 topk = 19
-box_weight = 5
+box_weight = 1
 cls_weight = 1
 
 anchor_ratios = [2/3, 1.0, 3/2]

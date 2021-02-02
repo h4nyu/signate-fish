@@ -121,7 +121,7 @@ def train(epochs: int) -> None:
     fixed_rows = pipe(fixed_rows, filter(lambda x: len(x['boxes']) > 0), list)
     fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
     annotations = valfilter(
-        lambda x: len(x["boxes"]) != 0
+        lambda x: len(x["boxes"]) > 0
         or x["id"] not in fixed_keys
     )(annotations)
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
@@ -227,7 +227,7 @@ def train(epochs: int) -> None:
             logs["train_loss"] = loss_meter.get_value()
             logs["train_box"] = box_loss_meter.get_value()
             logs["train_label"] = label_loss_meter.get_value()
-            if i % 100 == 99:
+            if i % 100 == 0:
                 eval_step()
                 log()
 
