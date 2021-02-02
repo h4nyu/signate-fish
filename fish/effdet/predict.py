@@ -54,44 +54,47 @@ def predict(device: str) -> None:
         image_batch = image_batch.to(device)
         _, _, h, w = image_batch.shape
         box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
-        # h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
-        #     net(hflip(image_batch))
-        # )
+        h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
+            net(hflip(image_batch))
+        )
         for (
             img,
             id,
             boxes,
-            # h_boxes,
+            h_boxes,
             confidences,
-            # h_confidences,
+            h_confidences,
             labels,
-            # h_labels,
+            h_labels,
         ) in zip(
             image_batch,
             ids,
             box_batch,
-            # h_box_batch,
+            h_box_batch,
             confidence_batch,
-            # h_confidence_batch,
+            h_confidence_batch,
             label_batch,
-            # h_label_batch,
+            h_label_batch,
         ):
             m_boxes, m_confidences, m_labels = weighted_boxes_fusion(
                 [
                     resize(boxes, (1 / w, 1 / h)),
-                    # box_hflip(resize(h_boxes, (1 / w, 1 / h)), (1, 1)),
+                    box_hflip(resize(h_boxes, (1 / w, 1 / h)), (1, 1)),
                 ],
                 [
                     confidences,
-                    # h_confidences
+                    h_confidences
                 ],
                 [
                     labels,
-                    # h_labels
+                    h_labels
                 ],
                 iou_thr=config.iou_threshold,
                 weights=weights,
             )
+            m_boxes = m_boxes[:config.to_box_limit]
+            m_confidences = m_confidences[:config.to_box_limit]
+            m_labels = m_labels[:config.to_box_limit]
             m_boxes = resize(PascalBoxes(torch.from_numpy(m_boxes)), (w, h))
             print(len(m_boxes))
 
