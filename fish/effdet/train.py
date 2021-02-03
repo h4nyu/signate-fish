@@ -60,7 +60,7 @@ anchors = Anchors(
     ratios=config.anchor_ratios,
     scales=config.anchor_scales,
 )
-backbone = EfficientNetBackbone(3, out_channels=config.channels, pretrained=True)
+backbone = EfficientNetBackbone(config.backbone_id, out_channels=config.channels, pretrained=True)
 model = EfficientDet(
     num_classes=config.num_classes,
     out_ids=config.out_ids,
@@ -145,23 +145,23 @@ def train(epochs: int) -> None:
     train_dataset: Any = ConcatDataset(
         [
             FileDataset(
-                rows=train_rows,
+                rows=annotations,
                 transforms=train_transforms,
             ),
             LabeledDataset(
-                rows=train_fixed_rows,
+                rows=fixed_rows,
                 transforms=train_transforms,
             ),
             ResizeMixDataset(
-                rows=train_rows,
+                rows=annotations,
                 transforms=train_transforms,
             ),
         ]
     )
     test_dataset: Any = ConcatDataset(
         [
-            FileDataset(
-                rows=test_rows,
+            LabeledDataset(
+                rows=fixed_rows,
                 transforms=test_transforms,
             ),
         ]
