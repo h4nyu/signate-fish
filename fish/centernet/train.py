@@ -159,7 +159,7 @@ def train(epochs: int) -> None:
                 transforms=train_transforms,
             ),
             ResizeMixDataset(
-                rows=train_rows,
+                rows=annotations,
                 transforms=train_transforms,
             ),
         ]
