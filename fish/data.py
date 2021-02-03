@@ -71,7 +71,7 @@ def add_submission(
         indices = labels == label
         if indices.sum() == 0:
             continue
-        row[key] = boxes[indices].to("cpu").tolist()
+        row[key] = boxes[indices][:config.to_box_limit].to("cpu").tolist()
     submission[f"{id}.jpg"] = row
 
 

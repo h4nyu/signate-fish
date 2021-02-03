@@ -84,9 +84,6 @@ def predict(device: str) -> None:
                 weights=weights,
                 skip_box_thr=config.to_boxes_threshold,
             )
-            boxes = boxes[:config.to_box_limit]
-            confidences = confidences[:config.to_box_limit]
-            labels = labels[:config.to_box_limit]
             boxes = PascalBoxes(torch.from_numpy(boxes))
             row = rows[id]
             sequence_id = row["sequence_id"]
