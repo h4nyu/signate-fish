@@ -8,14 +8,14 @@ batch_size = 2
 mk_map_mode: GaussianMapMode = "length"
 
 # model
-backbone_id = 5
-channels = 128
-out_idx = 6
+backbone_id = 6
+channels = 64
+out_idx = 7
 cls_depth = 1
 box_depth = 1
 
 # criterion
-lr = 1e-4
+lr = 1e-3
 box_weight = 1.0
 heatmap_weight = 1.0
 sigma = 20
