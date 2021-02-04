@@ -60,7 +60,7 @@ def predict(device: str) -> None:
         collate_fn=collate_fn,
     )
     weights = [2, 1]
-    for image_batch, gt_box_batch, gt_label_batch, ids in tqdm.tqdm(loader):
+    for image_batch, gt_box_batch, gt_label_batch, ids, _ in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
         gt_box_batch = [x.to(device) for x in gt_box_batch]
         gt_label_batch = [x.to(device) for x in gt_label_batch]
@@ -119,7 +119,7 @@ def predict(device: str) -> None:
             m_boxes = PascalBoxes(torch.from_numpy(m_boxes)[indices])
             m_labels = Labels(torch.from_numpy(m_labels)[indices])
             m_confidences = Confidences(m_confidences[indices])
-            # pseudo_predict(store, id, boxes=m_boxes, labels=m_labels, loss=loss.item())
+            pseudo_predict(store, id, boxes=m_boxes, labels=m_labels, loss=loss.item())
             print(id)
             plot = DetectionPlot(inv_normalize(img))
             plot.draw_boxes(

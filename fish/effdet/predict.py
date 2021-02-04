@@ -92,12 +92,8 @@ def predict(device: str) -> None:
                 iou_thr=config.iou_threshold,
                 weights=weights,
             )
-            m_boxes = m_boxes[:config.to_box_limit]
-            m_confidences = m_confidences[:config.to_box_limit]
-            m_labels = m_labels[:config.to_box_limit]
             m_boxes = resize(PascalBoxes(torch.from_numpy(m_boxes)), (w, h))
             print(len(m_boxes))
-
             plot = DetectionPlot(inv_normalize(img))
             plot.draw_boxes(boxes=m_boxes, labels=m_labels, confidences=m_confidences)
             row = rows[id]
