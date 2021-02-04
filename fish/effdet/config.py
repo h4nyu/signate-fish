@@ -14,8 +14,8 @@ iou_threshold = 0.45
 batch_size = 2
 
 # model
-backbone_id = 7
-channels = 64
+backbone_id = 6
+channels = 128
 box_depth = 1
 fpn_depth = 1
 lr = 1e-3
@@ -25,7 +25,7 @@ metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
 
 # criterion
-topk = 13
+topk = 20
 box_weight = 2
 cls_weight = 1
 
