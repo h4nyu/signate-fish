@@ -15,7 +15,7 @@ batch_size = 2
 
 # model
 backbone_id = 6
-channels = 128
+channels = 96
 box_depth = 1
 fpn_depth = 1
 lr = 1e-3
