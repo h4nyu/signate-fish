@@ -14,11 +14,11 @@ iou_threshold = 0.45
 batch_size = 2
 
 # model
-backbone_id = 6
+backbone_id = 7
 channels = 64
 box_depth = 1
 fpn_depth = 1
-lr = 5e-4
+lr = 1e-3
 out_ids: List[int] = [6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
