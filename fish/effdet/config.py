@@ -18,7 +18,7 @@ backbone_id = 6
 channels = 96
 box_depth = 1
 fpn_depth = 1
-lr = 1e-3
+lr = 5e-4
 out_ids: List[int] = [6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
