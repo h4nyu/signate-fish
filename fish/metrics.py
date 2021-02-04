@@ -9,10 +9,11 @@ from fish import config
 
 class Metrics:
     def __init__(
-        self, iou_threshold: float = config.metrics_iou_threshold, eps: float = 1e-8
+        self, iou_threshold: float = config.metrics_iou_threshold, eps: float = 1e-8, limit:int=20
     ) -> None:
         self.iou_threshold = iou_threshold
         self.scores: List[float] = []
+        self.limit = limit
 
     def reset(self) -> None:
         self.scores = []
@@ -35,7 +36,7 @@ class Metrics:
             c_gt_boxes = gt_boxes[gt_labels == k]
             n_gt_box = len(c_gt_boxes)
             n_box = len(c_boxes)
-            count = min(n_gt_box, n_box)
+            count = min(n_gt_box, n_box, self.limit)
             if(count == 0):
                 continue
             iou_m = box_iou(c_boxes, c_gt_boxes) > self.iou_threshold
