@@ -238,17 +238,28 @@ train_transforms = albm.Compose(
             width=config.original_width,
             p=0.8,
         ),
+        A.OneOf([
+            A.IAAAdditiveGaussianNoise(),
+            A.GaussNoise(),
+        ], p=0.2),
         A.OneOf(
             [
-                A.Blur(blur_limit=17, p=1.0),
-                A.MedianBlur(blur_limit=17, p=1.0),
-                A.MotionBlur(blur_limit=13, p=1.0),
-                A.MotionBlur(blur_limit=15, p=1.0),
+                A.Blur(blur_limit=17, p=0.5),
+                A.MedianBlur(blur_limit=17, p=0.5),
+                A.MotionBlur(blur_limit=13, p=0.5),
+                A.MotionBlur(blur_limit=15, p=0.5),
             ],
             p=0.4,
         ),
-        A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.9),
-        A.HueSaturationValue(p=0.3),
+        A.OneOf([
+                A.CLAHE(clip_limit=2),
+                A.IAASharpen(),
+                A.IAAEmboss(),
+                A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2),
+            ],
+            p=0.3
+        ),
+        A.HueSaturationValue(p=0.3, hue_shift_limit=15, sat_shift_limit=20, val_shift_limit=15,),
         A.Cutout(
             max_w_size=32,
             max_h_size=32,
