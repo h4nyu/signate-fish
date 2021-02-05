@@ -14,8 +14,8 @@ iou_threshold = 0.45
 batch_size = 2
 
 # model
-backbone_id = 7
-channels = 64
+backbone_id = 6
+channels = 96
 box_depth = 1
 fpn_depth = 1
 lr = 1e-3
@@ -32,6 +32,6 @@ cls_weight = 1
 anchor_ratios = [1.0]
 anchor_scales = [1.0]
 num_anchors = len(anchor_ratios) * len(anchor_scales)
-anchor_size = 2
+anchor_size = 3
 
 out_dir = f"/store/efficientdet-{backbone_id}-{num_anchors}-{channels}"
