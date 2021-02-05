@@ -71,7 +71,7 @@ def add_submission(
         indices = labels == label
         if indices.sum() == 0:
             continue
-        row[key] = boxes[indices][:config.to_box_limit].to("cpu").tolist()
+        row[key] = boxes[indices][: config.to_box_limit].to("cpu").tolist()
     submission[f"{id}.jpg"] = row
 
 
@@ -222,11 +222,10 @@ train_transforms = albm.Compose(
             [
                 A.Rotate(limit=(88, 92), p=0.5, border_mode=0),
                 A.Rotate(limit=(-92, -88), p=0.5, border_mode=0),
+                A.HorizontalFlip(p=0.5),
             ],
             p=1.0,
         ),
-        A.HorizontalFlip(p=0.5),
-        A.VerticalFlip(p=0.5),
         A.PadIfNeeded(
             min_height=config.original_height, min_width=config.original_width, p=1
         ),

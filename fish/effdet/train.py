@@ -60,7 +60,9 @@ anchors = Anchors(
     ratios=config.anchor_ratios,
     scales=config.anchor_scales,
 )
-backbone = EfficientNetBackbone(config.backbone_id, out_channels=config.channels, pretrained=True)
+backbone = EfficientNetBackbone(
+    config.backbone_id, out_channels=config.channels, pretrained=True
+)
 model = EfficientDet(
     num_classes=config.num_classes,
     out_ids=config.out_ids,
@@ -79,7 +81,7 @@ model_loader = ModelLoader(
 to_boxes = ToBoxes(
     confidence_threshold=config.confidence_threshold,
     iou_threshold=config.iou_threshold,
-    limit=config.to_box_limit * 2,
+    limit=config.to_box_limit * 10,
 )
 
 criterion = Criterion(
@@ -118,12 +120,11 @@ def train(epochs: int) -> None:
     test_annotations = read_test_rows("/store")
     api = StoreApi()
     fixed_rows = api.filter()
-    fixed_rows = pipe(fixed_rows, filter(lambda x: len(x['boxes']) > 0), list)
+    fixed_rows = pipe(fixed_rows, filter(lambda x: len(x["boxes"]) > 0), list)
     fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
-    annotations = valfilter(
-        lambda x: len(x["boxes"]) > 0
-        or x["id"] not in fixed_keys
-    )(annotations)
+    annotations = valfilter(lambda x: len(x["boxes"]) > 0 or x["id"] not in fixed_keys)(
+        annotations
+    )
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
         annotations
     )

@@ -86,7 +86,9 @@ def collate_fn(
 
 
 device = torch.device("cuda")
-backbone = EfficientNetBackbone(config.backbone_id, out_channels=config.channels, pretrained=True)
+backbone = EfficientNetBackbone(
+    config.backbone_id, out_channels=config.channels, pretrained=True
+)
 model = CenterNet(
     backbone=backbone,
     num_classes=config.num_classes,
@@ -124,11 +126,10 @@ def train(epochs: int) -> None:
     test_annotations = read_test_rows("/store")
     api = StoreApi()
     fixed_rows = api.filter()
-    fixed_rows = pipe(fixed_rows, filter(lambda x: len(x['boxes']) > 0), list)
+    fixed_rows = pipe(fixed_rows, filter(lambda x: len(x["boxes"]) > 0), list)
     fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
     annotations = valfilter(
-        lambda x: len(x['boxes']) > 0
-        and x["id"] not in fixed_keys
+        lambda x: len(x["boxes"]) > 0 and x["id"] not in fixed_keys
     )(annotations)
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
         annotations
