@@ -6,7 +6,7 @@ from skimage.io import imread
 from toolz.curried import map, pipe, keyfilter, valfilter, filter, sorted
 from io import BytesIO
 import albumentations as A
-from torchvision.ops.boxes import box_iou, box_area
+from torchvision.ops.boxes import box_iou, box_area, clip_boxes_to_image
 from albumentations.pytorch.transforms import ToTensorV2
 from torchvision.transforms import Normalize
 from PIL import Image as PILImage
@@ -107,7 +107,7 @@ def resize_mix(
 
     other_img = other_img.resize((resized_w, resized_h))
     base_img.paste(other_img, (start_x, start_y))
-    boxes = torch.cat([other_boxes, base_boxes], dim=0)
+    boxes = clip_boxes_to_image(torch.cat([other_boxes, base_boxes], dim=0), (base_h, base_w))
     labels = torch.cat([base_labels, other_labels], dim=0)
     return base_img, PascalBoxes(boxes), Labels(labels)
 
