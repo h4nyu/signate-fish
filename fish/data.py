@@ -226,28 +226,15 @@ train_transforms = albm.Compose(
             ],
             p=1.0,
         ),
-        A.PadIfNeeded(
-            min_height=config.original_height, min_width=config.original_width, p=1
-        ),
-        A.RandomSizedCrop(
-            (
-                config.original_height - config.original_height * 0.05,
-                config.original_height,
-            ),
-            height=config.original_height,
-            width=config.original_width,
-            p=0.8,
-        ),
         A.OneOf([
             A.IAAAdditiveGaussianNoise(),
             A.GaussNoise(),
         ], p=0.2),
         A.OneOf(
             [
-                A.Blur(blur_limit=17, p=0.5),
-                A.MedianBlur(blur_limit=17, p=0.5),
+                A.Blur(blur_limit=7, p=0.5),
+                A.MotionBlur(blur_limit=7, p=0.5),
                 A.MotionBlur(blur_limit=13, p=0.5),
-                A.MotionBlur(blur_limit=15, p=0.5),
             ],
             p=0.4,
         ),
@@ -264,8 +251,10 @@ train_transforms = albm.Compose(
             max_w_size=32,
             max_h_size=32,
         ),
-        A.LongestMaxSize(
-            max_size=config.image_width,
+        A.RandomSizedBBoxSafeCrop(
+            height=config.image_height,
+            width=config.image_width,
+            p=1.0,
         ),
         A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
