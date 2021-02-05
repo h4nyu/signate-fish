@@ -419,7 +419,8 @@ class ResizeMixDataset(Dataset):
     ) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
         id, base = self.rows[idx]
         _, other = self.rows[random.choice(self.indices)]
-        image, boxes, labels = resize_mix(annot_to_tuple(base), annot_to_tuple(other))
+        scale = random.uniform(0.6, 0.8)
+        image, boxes, labels = resize_mix(annot_to_tuple(base), annot_to_tuple(other), scale=scale)
         transed = self.transforms(image=np.array(image), bboxes=boxes, labels=labels)
         t_labels = Labels(torch.tensor(transed["labels"]))
         lf = to_label_filter(t_labels)
