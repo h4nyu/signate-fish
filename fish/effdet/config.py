@@ -14,11 +14,11 @@ iou_threshold = 0.45
 batch_size = 2
 
 # model
-backbone_id = 6
+backbone_id = 7
 channels = 64
 box_depth = 1
 fpn_depth = 1
-lr = 1e-4
+lr = 1e-3
 out_ids: List[int] = [6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
@@ -32,6 +32,6 @@ cls_weight = 1
 anchor_ratios = [1.0]
 anchor_scales = [1.0]
 num_anchors = len(anchor_ratios) * len(anchor_scales)
-anchor_size = 3
+anchor_size = 2
 
 out_dir = f"/store/efficientdet-{backbone_id}-{num_anchors}-{channels}"

@@ -43,7 +43,7 @@ store = StoreApi()
 
 @torch.no_grad()
 def predict(device: str) -> None:
-    rows = store.filter(state="Done")
+    rows = store.filter(state="Todo")
     rows = pipe(rows, filter(lambda x: "test" in x["id"]), list)
     out_dir = Path("/store/pseudo")
     if out_dir.exists():
