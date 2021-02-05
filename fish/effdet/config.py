@@ -32,6 +32,6 @@ cls_weight = 1
 anchor_ratios = [1.0]
 anchor_scales = [1.0]
 num_anchors = len(anchor_ratios) * len(anchor_scales)
-anchor_size = 2
+anchor_size = 1
 
 out_dir = f"/store/efficientdet-{backbone_id}-{num_anchors}-{channels}"
