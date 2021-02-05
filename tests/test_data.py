@@ -44,7 +44,7 @@ def test_resize_mix() -> None:
 def test_resize_mix_dataset() -> None:
     annotations = read_train_rows("/store")
     dataset = ResizeMixDataset(rows=annotations, transforms=train_transforms)
-    for i in range(3):
+    for i in range(5):
         id, image, boxes, labels, _ = dataset[i]
         plot = DetectionPlot(inv_normalize(image))
         plot.draw_boxes(boxes=boxes, labels=labels)
