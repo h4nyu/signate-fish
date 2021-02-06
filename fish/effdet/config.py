@@ -10,7 +10,7 @@ pseudo_iou_threshold = 0.35
 use_amp = True
 
 # data
-confidence_threshold = 0.001
+confidence_threshold = 0.01
 iou_threshold = 0.3
 batch_size = 2
 
@@ -19,7 +19,7 @@ backbone_id = 6
 channels = 96
 box_depth = 1
 fpn_depth = 1
-lr = 5e-4
+lr = 1e-4
 out_ids: List[int] = [5, 6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
@@ -29,7 +29,7 @@ pretrained = True
 # criterion
 topk = 13
 box_weight = 1
-cls_weight = 1.5
+cls_weight = 1
 
 anchor_ratios = [1.0]
 anchor_scales = [1.0]
