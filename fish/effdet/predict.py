@@ -87,9 +87,8 @@ def predict(device: str) -> None:
                 weights=weights,
             )
             m_boxes = resize(PascalBoxes(torch.from_numpy(m_boxes)), (w, h))
-            print(len(m_boxes))
             plot = DetectionPlot(inv_normalize(img))
-            plot.draw_boxes(boxes=m_boxes, labels=m_labels, confidences=m_confidences)
+            plot.draw_boxes(boxes=PascalBoxes(m_boxes[:config.to_box_limit]), labels=Labels(m_labels[:config.to_box_limit]), confidences=m_confidences)
             row = rows[id]
             sequence_id = row["sequence_id"]
             frame_id = row["frame_id"]

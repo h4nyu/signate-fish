@@ -69,6 +69,7 @@ def add_submission(
         ("Breezer School", 1),
     ]:
         indices = labels == label
+        print(indices.sum())
         if indices.sum() == 0:
             continue
         row[key] = boxes[indices][: config.to_box_limit].to("cpu").tolist()

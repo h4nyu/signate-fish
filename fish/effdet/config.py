@@ -4,13 +4,14 @@ from fish.config import *
 
 
 pseudo_threshold = 0.05
+pseudo_iou_threshold = 0.35
 
 # train
 use_amp = True
 
 # data
 confidence_threshold = 0.001
-iou_threshold = 0.45
+iou_threshold = 0.3
 batch_size = 2
 
 # model
@@ -24,8 +25,9 @@ out_ids: List[int] = [6, 7]
 metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
 
+
 # criterion
-topk = 30
+topk = 13
 box_weight = 1
 cls_weight = 1.5
 

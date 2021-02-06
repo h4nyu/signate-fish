@@ -111,7 +111,7 @@ def predict(device: str) -> None:
                 ],
                 [confidences, h_confidences],
                 [labels, h_labels],
-                iou_thr=config.iou_threshold,
+                iou_thr=config.pseudo_iou_threshold,
                 weights=weights,
             )
             m_confidences = torch.from_numpy(m_confidences)
