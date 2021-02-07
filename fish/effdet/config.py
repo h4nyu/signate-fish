@@ -35,6 +35,6 @@ pre_box_limit = 10000
 anchor_ratios = [1.0]
 anchor_scales = [1.0]
 num_anchors = len(anchor_ratios) * len(anchor_scales)
-anchor_size = 2
+anchor_size = 3
 
 out_dir = f"/store/efficientdet-{backbone_id}-{num_anchors}-{channels}-{''.join([str(i) for i in out_ids])}"
