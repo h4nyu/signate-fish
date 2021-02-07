@@ -37,8 +37,9 @@ logger = getLogger(config.out_dir)
 @torch.no_grad()
 def predict(device: str) -> None:
     rows = read_test_rows("/store")
-    out_dir = Path("/store/submission")
-    shutil.rmtree(out_dir)
+    out_dir = Path(config.out_dir).joinpath("submission")
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
     dataset = TestDataset(rows=rows, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
@@ -48,7 +49,7 @@ def predict(device: str) -> None:
         shuffle=False,
         drop_last=False,
     )
-    weights = [1, 1]
+    weights = [2, 1]
     submission: Submission = {}
     for ids, image_batch in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)

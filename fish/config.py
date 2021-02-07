@@ -27,6 +27,7 @@ ignore_seq_ids = set([81, 82, 83, 84])
 
 # to_boxes
 to_box_limit = 20
+iou_threshold = 0.6
 
 # fold
 n_splits = 8

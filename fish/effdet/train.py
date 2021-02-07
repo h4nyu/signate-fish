@@ -81,7 +81,7 @@ model_loader = ModelLoader(
 to_boxes = ToBoxes(
     confidence_threshold=config.confidence_threshold,
     iou_threshold=config.iou_threshold,
-    limit=config.to_box_limit * 100,
+    limit=config.pre_box_limit,
 )
 
 criterion = Criterion(
@@ -165,6 +165,10 @@ def train(epochs: int) -> None:
                 rows=fixed_rows,
                 transforms=test_transforms,
             ),
+            FileDataset(
+                rows=test_rows,
+                transforms=test_transforms,
+            ),
         ]
     )
     train_loader = DataLoader(
@@ -177,8 +181,8 @@ def train(epochs: int) -> None:
     test_loader = DataLoader(
         test_dataset,
         collate_fn=collate_fn,
-        batch_size=config.batch_size * 2,
-        num_workers=config.batch_size * 2,
+        batch_size=config.batch_size * 3,
+        num_workers=config.batch_size * 3,
         shuffle=True,
         drop_last=True,
     )
@@ -228,7 +232,7 @@ def train(epochs: int) -> None:
             logs["train_loss"] = loss_meter.get_value()
             logs["train_box"] = box_loss_meter.get_value()
             logs["train_label"] = label_loss_meter.get_value()
-            if i % 100 == 0:
+            if i % 100 == 99:
                 eval_step()
                 log()
 

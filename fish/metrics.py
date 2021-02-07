@@ -30,9 +30,10 @@ class Metrics:
         gt_labels: Labels,
         confidences: Optional[Confidences] = None,
     ) -> float:
-        unique_labels = set(np.unique(labels.to("cpu").numpy())) | set(
-            np.unique(gt_labels.to("cpu").numpy())
-        )
+        unique_gt_labels = set(np.unique(gt_labels.to("cpu").numpy()))
+        if len(unique_gt_labels) == 0:
+            return 0.0
+        unique_labels = set(np.unique(labels.to("cpu").numpy())) | unique_gt_labels
         if len(unique_labels) == 0:
             return 0.0
         scores = np.zeros(len(unique_labels))

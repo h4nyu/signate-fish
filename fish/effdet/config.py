@@ -10,8 +10,6 @@ pseudo_iou_threshold = 0.35
 use_amp = True
 
 # data
-confidence_threshold = 0.00
-iou_threshold = 0.3
 batch_size = 2
 
 # model
@@ -19,8 +17,8 @@ backbone_id = 6
 channels = 96
 box_depth = 1
 fpn_depth = 1
-lr = 1e-4
-out_ids: List[int] = [5, 6, 7]
+lr = 5e-4
+out_ids: List[int] = [6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
@@ -30,10 +28,13 @@ pretrained = True
 topk = 13
 box_weight = 1.0
 cls_weight = 1.0
+confidence_threshold = 0.025
+iou_threshold = 0.3
+pre_box_limit = 10000
 
 anchor_ratios = [1.0]
 anchor_scales = [1.0]
 num_anchors = len(anchor_ratios) * len(anchor_scales)
-anchor_size = 3
+anchor_size = 2
 
 out_dir = f"/store/efficientdet-{backbone_id}-{num_anchors}-{channels}-{''.join([str(i) for i in out_ids])}"

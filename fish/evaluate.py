@@ -21,13 +21,6 @@ from fish.data import (
     kfold,
     inv_normalize,
 )
-from object_detection.entities.box import (
-    PascalBoxes,
-    Confidences,
-    Labels,
-    resize,
-    box_hflip,
-)
 from fish.effdet import config
 from fish.effdet.train import model, model_loader, to_boxes, collate_fn
 from ensemble_boxes import weighted_boxes_fusion
@@ -42,18 +35,18 @@ logger = getLogger(__name__)
 
 @torch.no_grad()
 def predict(device: str) -> None:
-    rows = read_train_rows("/store")
+    annotations = read_train_rows("/store")
     out_dir = Path(config.out_dir).joinpath("evaluate")
     if out_dir.exists():
         shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
-    dataset = FileDataset(rows=rows, transforms=test_transforms)
+    dataset = FileDataset(rows=annotations, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
     loader = DataLoader(
         dataset,
         collate_fn=collate_fn,
-        batch_size=config.batch_size * 4,
-        num_workers=config.batch_size * 4,
+        batch_size=config.batch_size,
+        num_workers=config.batch_size,
         shuffle=False,
         drop_last=False,
     )
@@ -65,35 +58,42 @@ def predict(device: str) -> None:
         gt_box_batch = [x.to(device) for x in gt_box_batch]
         gt_label_batch = [x.to(device) for x in gt_label_batch]
         box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
-        for (
-            id,
-            img,
-            boxes,
-            confidences,
-            labels,
-            gt_boxes,
-            gt_labels,
-        ) in zip(
+        for id, img, boxes, gt_boxes, labels, gt_labels, confidences in zip(
             ids,
             image_batch,
             box_batch,
-            confidence_batch,
-            label_batch,
             gt_box_batch,
+            label_batch,
             gt_label_batch,
+            confidence_batch,
         ):
-
             metrics.add(
-                boxes=boxes,
+                boxes=yolo_to_pascal(boxes, (w, h)),
                 confidences=confidences,
                 labels=labels,
-                gt_boxes=gt_boxes,
+                gt_boxes=yolo_to_pascal(gt_boxes, (w, h)),
                 gt_labels=gt_labels,
             )
-        print(metrics())
-
-    score = metrics()
-    logger.info(f"{score=}")
+            _boxes = yolo_to_pascal(boxes, (1, 1))
+            _boxes, confidences, labels = weighted_boxes_fusion(
+                [
+                    _boxes,
+                ],
+                [confidences],
+                [labels],
+                iou_thr=config.iou_threshold,
+                weights=weights,
+                skip_box_thr=config.to_boxes_threshold,
+            )
+            _boxes = resize(PascalBoxes(torch.from_numpy(_boxes)), (w, h))
+            plot = DetectionPlot(inv_normalize(img))
+            plot.draw_boxes(boxes=_boxes, labels=labels, confidences=confidences)
+            plot.draw_boxes(
+                boxes=yolo_to_pascal(gt_boxes, (w, h)), labels=gt_labels, color="red"
+            )
+            plot.save(out_dir.joinpath(f"{id}.jpg"))
+    score, scores = metrics()
+    logger.info(f"{score=}, {scores=}")
 
 
 if __name__ == "__main__":

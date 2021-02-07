@@ -222,7 +222,14 @@ inv_normalize = Normalize(
 train_transforms = albm.Compose(
     [
         A.IAAPerspective(scale=(0.01, 0.1), p=1.0),
-        A.HorizontalFlip(p=0.5),
+        A.OneOf(
+            [
+                A.Rotate(limit=(90, 90), p=0.5, border_mode=0),
+                A.Rotate(limit=(-90, -90), p=0.5, border_mode=0),
+                A.HorizontalFlip(p=0.5),
+            ],
+            p=1.0,
+        ),
         A.Rotate(limit=(-5, 5), p=1.0, border_mode=0),
         A.OneOf(
             [
