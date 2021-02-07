@@ -10,7 +10,7 @@ pseudo_iou_threshold = 0.35
 use_amp = True
 
 # data
-confidence_threshold = 0.01
+confidence_threshold = 0.00
 iou_threshold = 0.3
 batch_size = 2
 
@@ -28,8 +28,8 @@ pretrained = True
 
 # criterion
 topk = 13
-box_weight = 1
-cls_weight = 1
+box_weight = 1.0
+cls_weight = 1.0
 
 anchor_ratios = [1.0]
 anchor_scales = [1.0]

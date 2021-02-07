@@ -81,7 +81,7 @@ model_loader = ModelLoader(
 to_boxes = ToBoxes(
     confidence_threshold=config.confidence_threshold,
     iou_threshold=config.iou_threshold,
-    limit=config.to_box_limit * 8,
+    limit=config.to_box_limit * 100,
 )
 
 criterion = Criterion(
