@@ -10,14 +10,14 @@ pseudo_iou_threshold = 0.35
 use_amp = True
 
 # data
-batch_size = 2
+batch_size = 6
 
 # model
 backbone_id = 7
 channels = 64
 box_depth = 1
 fpn_depth = 1
-lr = 1e-4
+lr = 5e-3
 out_ids: List[int] = [6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
@@ -37,4 +37,4 @@ anchor_scales = [1.0]
 num_anchors = len(anchor_ratios) * len(anchor_scales)
 anchor_size = 1
 
-out_dir = f"/store/efficientdet-{backbone_id}-{num_anchors}-{channels}-{''.join([str(i) for i in out_ids])}"
+out_dir = f"/store/efficientdet-{backbone_id}-{num_anchors}-{channels}-{''.join([str(i) for i in out_ids])}-{image_width}"
