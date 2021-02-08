@@ -33,7 +33,7 @@ iou_threshold = 0.31
 pre_box_limit = 10000
 
 anchor_ratios = [1.0]
-anchor_scales = [1.0]
+anchor_scales = [1.0, 1.44]
 num_anchors = len(anchor_ratios) * len(anchor_scales)
 anchor_size = 1
 
