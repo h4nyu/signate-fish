@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict, Any, List
 from torch.utils.data import DataLoader
 from object_detection.utils import DetectionPlot
-from object_detection.metrics import MeanAveragePrecision
+from fish.metrics import Metrics
 from object_detection.entities.box import (
     yolo_to_pascal,
     yolo_vflip,
@@ -43,7 +43,7 @@ store = StoreApi()
 
 @torch.no_grad()
 def predict(device: str) -> None:
-    rows = store.filter(state="Todo")
+    rows = store.filter(state="Done")
     rows = pipe(rows, filter(lambda x: "test" in x["id"]), list)
     out_dir = Path("/store/pseudo")
     if out_dir.exists():
@@ -101,9 +101,7 @@ def predict(device: str) -> None:
             gt_label_batch,
         ):
 
-            metrics = MeanAveragePrecision(
-                iou_threshold=0.3, num_classes=config.num_classes
-            )
+            metrics = Metrics(iou_threshold=config.metrics_iou_threshold)
             m_boxes, m_confidences, m_labels = weighted_boxes_fusion(
                 [
                     resize(boxes, (1 / w, 1 / h)),
@@ -111,15 +109,25 @@ def predict(device: str) -> None:
                 ],
                 [confidences, h_confidences],
                 [labels, h_labels],
-                iou_thr=config.iou_threshold,
+                iou_thr=config.pseudo_iou_threshold,
                 weights=weights,
             )
+
             m_confidences = torch.from_numpy(m_confidences)
             indices = m_confidences > config.pseudo_threshold
             m_boxes = PascalBoxes(torch.from_numpy(m_boxes)[indices])
             m_labels = Labels(torch.from_numpy(m_labels)[indices])
             m_confidences = Confidences(m_confidences[indices])
-            pseudo_predict(store, id, boxes=m_boxes, labels=m_labels, loss=loss.item())
+
+            metrics.add(
+                boxes=resize(m_boxes, (w, h)),
+                confidences=m_confidences,
+                labels=m_labels,
+                gt_boxes=gt_boxes.to('cpu'),
+                gt_labels=gt_labels.to('cpu'),
+            )
+            print(metrics())
+            pseudo_predict(store, id, boxes=m_boxes, labels=m_labels, loss=metrics())
             print(id)
             plot = DetectionPlot(inv_normalize(img))
             plot.draw_boxes(

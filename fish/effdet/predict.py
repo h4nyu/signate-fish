@@ -37,8 +37,9 @@ logger = getLogger(config.out_dir)
 @torch.no_grad()
 def predict(device: str) -> None:
     rows = read_test_rows("/store")
-    out_dir = Path("/store/submission")
-    shutil.rmtree(out_dir)
+    out_dir = Path(config.out_dir).joinpath("submission")
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
     dataset = TestDataset(rows=rows, transforms=test_transforms)
     net = model_loader.load_if_needed(model).to(device).eval()
@@ -48,7 +49,7 @@ def predict(device: str) -> None:
         shuffle=False,
         drop_last=False,
     )
-    weights = [1, 1]
+    weights = [2, 1]
     submission: Submission = {}
     for ids, image_batch in tqdm.tqdm(loader):
         image_batch = image_batch.to(device)
@@ -87,9 +88,12 @@ def predict(device: str) -> None:
                 weights=weights,
             )
             m_boxes = resize(PascalBoxes(torch.from_numpy(m_boxes)), (w, h))
-            print(len(m_boxes))
             plot = DetectionPlot(inv_normalize(img))
-            plot.draw_boxes(boxes=m_boxes, labels=m_labels, confidences=m_confidences)
+            plot.draw_boxes(
+                boxes=PascalBoxes(m_boxes[: config.to_box_limit]),
+                labels=Labels(m_labels[: config.to_box_limit]),
+                confidences=m_confidences,
+            )
             row = rows[id]
             sequence_id = row["sequence_id"]
             frame_id = row["frame_id"]

@@ -69,6 +69,7 @@ def add_submission(
         ("Breezer School", 1),
     ]:
         indices = labels == label
+        print(indices.sum())
         if indices.sum() == 0:
             continue
         row[key] = boxes[indices][: config.to_box_limit].to("cpu").tolist()
@@ -107,7 +108,9 @@ def resize_mix(
 
     other_img = other_img.resize((resized_w, resized_h))
     base_img.paste(other_img, (start_x, start_y))
-    boxes = clip_boxes_to_image(torch.cat([other_boxes, base_boxes], dim=0), (base_h, base_w))
+    boxes = clip_boxes_to_image(
+        torch.cat([other_boxes, base_boxes], dim=0), (base_h, base_w)
+    )
     labels = torch.cat([base_labels, other_labels], dim=0)
     return base_img, PascalBoxes(boxes), Labels(labels)
 
@@ -218,43 +221,52 @@ inv_normalize = Normalize(
 
 train_transforms = albm.Compose(
     [
+        A.IAAPerspective(scale=(0.01, 0.1), p=1.0),
         A.OneOf(
             [
-                A.Rotate(limit=(88, 92), p=0.5, border_mode=0),
-                A.Rotate(limit=(-92, -88), p=0.5, border_mode=0),
+                A.Rotate(limit=(90, 90), p=0.5, border_mode=0),
+                A.Rotate(limit=(-90, -90), p=0.5, border_mode=0),
                 A.HorizontalFlip(p=0.5),
             ],
             p=1.0,
         ),
-        A.PadIfNeeded(
-            min_height=config.original_height, min_width=config.original_width, p=1
-        ),
-        A.RandomSizedCrop(
-            (
-                config.original_height - config.original_height * 0.05,
-                config.original_height,
-            ),
-            height=config.original_height,
-            width=config.original_width,
-            p=0.8,
+        A.Rotate(limit=(-5, 5), p=1.0, border_mode=0),
+        A.OneOf(
+            [
+                A.IAAAdditiveGaussianNoise(),
+                A.GaussNoise(),
+            ],
+            p=0.2,
         ),
         A.OneOf(
             [
-                A.Blur(blur_limit=17, p=1.0),
-                A.MedianBlur(blur_limit=17, p=1.0),
-                A.MotionBlur(blur_limit=13, p=1.0),
-                A.MotionBlur(blur_limit=15, p=1.0),
+                A.Blur(blur_limit=7, p=0.5),
+                A.MotionBlur(blur_limit=7, p=0.5),
+                A.MotionBlur(blur_limit=13, p=0.5),
             ],
             p=0.4,
         ),
-        A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.9),
-        A.HueSaturationValue(p=0.3),
+        A.OneOf(
+            [
+                A.CLAHE(clip_limit=2),
+                A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2),
+            ],
+            p=0.3,
+        ),
+        A.HueSaturationValue(
+            p=0.3,
+            hue_shift_limit=15,
+            sat_shift_limit=20,
+            val_shift_limit=15,
+        ),
         A.Cutout(
             max_w_size=32,
             max_h_size=32,
         ),
-        A.LongestMaxSize(
-            max_size=config.image_width,
+        A.RandomSizedBBoxSafeCrop(
+            height=config.image_height,
+            width=config.image_width,
+            p=1.0,
         ),
         A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
@@ -420,7 +432,9 @@ class ResizeMixDataset(Dataset):
         id, base = self.rows[idx]
         _, other = self.rows[random.choice(self.indices)]
         scale = random.uniform(0.5, 0.7)
-        image, boxes, labels = resize_mix(annot_to_tuple(base), annot_to_tuple(other), scale=scale)
+        image, boxes, labels = resize_mix(
+            annot_to_tuple(base), annot_to_tuple(other), scale=scale
+        )
         transed = self.transforms(image=np.array(image), bboxes=boxes, labels=labels)
         t_labels = Labels(torch.tensor(transed["labels"]))
         lf = to_label_filter(t_labels)

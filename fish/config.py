@@ -9,6 +9,7 @@ normalize_mean = (0.485, 0.456, 0.406)
 normalize_std = (0.485, 0.456, 0.406)
 
 image_width = 1024 + 512
+image_height = int(image_width / aspect_ratio)
 scale = image_width / original_width
 num_classes = 2
 test_seq_ids = set(
@@ -26,6 +27,7 @@ ignore_seq_ids = set([81, 82, 83, 84])
 
 # to_boxes
 to_box_limit = 20
+iou_threshold = 0.6
 
 # fold
 n_splits = 8
