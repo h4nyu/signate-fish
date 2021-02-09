@@ -155,10 +155,10 @@ def train(epochs: int) -> None:
                 rows=fixed_rows,
                 transforms=train_transforms,
             ),
-            # ResizeMixDataset(
-            #     rows=annotations,
-            #     transforms=train_transforms,
-            # ),
+            ResizeMixDataset(
+                rows=annotations,
+                transforms=train_transforms,
+            ),
         ]
     )
     test_dataset: Any = ConcatDataset(
