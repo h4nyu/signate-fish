@@ -147,10 +147,10 @@ def train(epochs: int) -> None:
 
     train_dataset: Any = ConcatDataset(
         [
-            # FileDataset(
-            #     rows=annotations,
-            #     transforms=train_transforms,
-            # ),
+            FileDataset(
+                rows=annotations,
+                transforms=train_transforms,
+            ),
             LabeledDataset(
                 rows=fixed_rows,
                 transforms=train_transforms,
@@ -165,6 +165,10 @@ def train(epochs: int) -> None:
         [
             LabeledDataset(
                 rows=fixed_rows,
+                transforms=test_transforms,
+            ),
+            FileDataset(
+                rows=test_rows,
                 transforms=test_transforms,
             ),
         ]
