@@ -273,7 +273,6 @@ inv_normalize = Normalize(
 
 train_transforms = albm.Compose(
     [
-        # A.IAAPerspective(scale=(0.01, 0.1), p=1.0),
         A.OneOf(
             [
                 A.Rotate(limit=(90, 90), p=0.5, border_mode=0),
@@ -325,11 +324,10 @@ train_transforms = albm.Compose(
             max_w_size=48,
             max_h_size=48,
         ),
-        A.RandomSizedBBoxSafeCrop(
-            height=config.image_height,
-            width=config.image_width,
-            p=1.0,
-        ),
+        # A.RandomSizedBBoxSafeCrop(
+        #     p=1.0,
+        # ),
+        A.Resize(height=config.image_height, width=config.image_width, p=1.0),
         A.Normalize(mean=config.normalize_mean, std=config.normalize_std),
         ToTensorV2(),
     ],
