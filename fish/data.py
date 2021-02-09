@@ -19,6 +19,7 @@ from object_detection.entities import (
     PascalBoxes,
     Labels,
     box_in_area,
+    Confidences,
 )
 from object_detection.entities.box import filter_size, resize, shift, Nummber
 import albumentations as albm
@@ -78,23 +79,27 @@ def add_submission(
 def filter_limit(
     boxes:PascalBoxes,
     labels:Labels,
+    confidences: Confidences,
     limit:int=config.to_box_limit,
-) -> Tuple[PascalBoxes, Labels]:
+) -> Tuple[PascalBoxes, Labels, Confidences]:
     unique_labels = torch.unique(labels)
     box_list = []
     label_list = []
+    conf_list = []
     for c in unique_labels:
         c_indecies = labels == c
         c_boxes = boxes[c_indecies][:limit]
         c_labels = labels[c_indecies][:limit]
+        c_confidences = confidences[c_indecies][:limit]
         box_list.append(c_boxes)
         label_list.append(c_labels)
-    return PascalBoxes(torch.cat(box_list)), Labels(torch.cat(label_list))
+        conf_list.append(c_confidences)
+    return PascalBoxes(torch.cat(box_list)), Labels(torch.cat(label_list)), Confidences(torch.cat(conf_list))
 
 def sort_by_size(
     boxes:PascalBoxes,
     labels:Labels,
-    topk:int=5,
+    topk:int=3,
 ) -> Tuple[PascalBoxes, Labels]:
     unique_labels = torch.unique(labels)
     box_list = []
@@ -472,7 +477,7 @@ class ResizeMixDataset(Dataset):
     ) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
         id, base = self.rows[idx]
         _, other = self.rows[random.choice(self.indices)]
-        scale = random.uniform(0.5, 0.7)
+        scale = random.uniform(0.6, 0.8)
         image, boxes, labels = resize_mix(
             annot_to_tuple(base), annot_to_tuple(other), scale=scale
         )

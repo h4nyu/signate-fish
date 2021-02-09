@@ -54,8 +54,8 @@ def predict(device: str) -> None:
     loader = DataLoader(
         dataset,
         collate_fn=collate_fn,
-        batch_size=config.batch_size * 4,
-        num_workers=config.batch_size * 4,
+        batch_size=1,
+        num_workers=1,
         shuffle=False,
         drop_last=False,
     )
@@ -84,9 +84,8 @@ def predict(device: str) -> None:
             gt_box_batch,
             gt_label_batch,
         ):
-            boxes, labels = filter_limit(boxes, labels)
-            boxes, labels = sort_by_size(boxes, labels)
-
+            boxes, labels, confidences = filter_limit(boxes, labels, confidences)
+            # boxes, labels = sort_by_size(boxes, labels)
             metrics.add(
                 boxes=boxes,
                 confidences=confidences,

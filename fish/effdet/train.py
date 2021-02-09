@@ -44,6 +44,8 @@ from fish.data import (
     read_test_rows,
     inv_normalize,
     ResizeMixDataset,
+    filter_limit,
+    sort_by_size,
 )
 from fish.store import StoreApi
 from fish.effdet import config
@@ -145,28 +147,24 @@ def train(epochs: int) -> None:
 
     train_dataset: Any = ConcatDataset(
         [
-            FileDataset(
-                rows=annotations,
-                transforms=train_transforms,
-            ),
+            # FileDataset(
+            #     rows=annotations,
+            #     transforms=train_transforms,
+            # ),
             LabeledDataset(
                 rows=fixed_rows,
                 transforms=train_transforms,
             ),
-            ResizeMixDataset(
-                rows=annotations,
-                transforms=train_transforms,
-            ),
+            # ResizeMixDataset(
+            #     rows=annotations,
+            #     transforms=train_transforms,
+            # ),
         ]
     )
     test_dataset: Any = ConcatDataset(
         [
             LabeledDataset(
                 rows=fixed_rows,
-                transforms=test_transforms,
-            ),
-            FileDataset(
-                rows=test_rows,
                 transforms=test_transforms,
             ),
         ]
@@ -260,6 +258,7 @@ def train(epochs: int) -> None:
             for boxes, gt_boxes, labels, gt_labels, confidences in zip(
                 box_batch, gt_box_batch, label_batch, gt_label_batch, confidence_batch
             ):
+                boxes, labels, confidences = filter_limit(boxes, labels, confidences)
                 metrics.add(
                     boxes=boxes,
                     confidences=confidences,
