@@ -17,7 +17,7 @@ backbone_id = 7
 channels = 64
 box_depth = 1
 fpn_depth = 1
-lr = 1e-3
+lr = 5e-5
 out_ids: List[int] = [6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
@@ -27,14 +27,14 @@ pretrained = True
 # criterion
 topk = 30
 box_weight = 1
-cls_weight = 2
+cls_weight = 2.5
 confidence_threshold = 0.001
 iou_threshold = 0.31
-pre_box_limit = 10000
+pre_box_limit = 1000
 
 anchor_ratios = [1.0]
 anchor_scales = [1.0]
 num_anchors = len(anchor_ratios) * len(anchor_scales)
-anchor_size = 1
+anchor_size = 2
 
 out_dir = f"/store/efficientdet-{backbone_id}-{num_anchors}-{channels}-{''.join([str(i) for i in out_ids])}-{image_width}"
