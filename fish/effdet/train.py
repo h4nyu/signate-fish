@@ -124,9 +124,11 @@ def train(epochs: int) -> None:
     fixed_rows = api.filter()
     fixed_rows = pipe(fixed_rows, filter(lambda x: len(x["boxes"]) > 0), list)
     fixed_keys = pipe(fixed_rows, map(lambda x: x["id"]), set)
-    annotations = valfilter(lambda x: len(x["boxes"]) > 0 or x["id"] not in fixed_keys)(
-        annotations
-    )
+    annotations = valfilter(
+        lambda x: len(x["boxes"]) > 0
+        and x["id"] not in fixed_keys
+        and x["sequence_id"] not in config.ignore_seq_ids
+    )(annotations)
     train_rows = valfilter(lambda x: x["sequence_id"] not in config.test_seq_ids)(
         annotations
     )

@@ -79,9 +79,6 @@ def predict(device: str) -> None:
             label_batch,
             h_label_batch,
         ):
-
-            boxes, labels, confidences = filter_limit(boxes, labels, confidences,)
-            h_boxes, h_labels, h_confidences = filter_limit(h_boxes, h_labels, h_confidences)
             m_boxes, m_confidences, m_labels = weighted_boxes_fusion(
                 [
                     resize(boxes, (1 / w, 1 / h)),
@@ -95,7 +92,9 @@ def predict(device: str) -> None:
             m_boxes = PascalBoxes(torch.from_numpy(m_boxes))
             m_labels = Labels(torch.from_numpy(m_labels))
             m_confidences = Confidences(torch.from_numpy(m_confidences))
-            m_boxes, m_labels, m_confidences = filter_limit(m_boxes, m_labels, m_confidences)
+            m_boxes, m_labels, m_confidences = filter_limit(
+                m_boxes, m_labels, m_confidences
+            )
             m_boxes = resize(m_boxes, (w, h))
             plot = DetectionPlot(inv_normalize(img))
             plot.draw_boxes(

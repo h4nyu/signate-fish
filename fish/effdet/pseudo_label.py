@@ -123,8 +123,8 @@ def predict(device: str) -> None:
                 boxes=resize(m_boxes, (w, h)),
                 confidences=m_confidences,
                 labels=m_labels,
-                gt_boxes=gt_boxes.to('cpu'),
-                gt_labels=gt_labels.to('cpu'),
+                gt_boxes=gt_boxes.to("cpu"),
+                gt_labels=gt_labels.to("cpu"),
             )
             print(metrics())
             pseudo_predict(store, id, boxes=m_boxes, labels=m_labels, loss=metrics())

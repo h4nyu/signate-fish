@@ -76,11 +76,12 @@ def add_submission(
         row[key] = boxes[indices][: config.to_box_limit].to("cpu").tolist()
     submission[f"{id}.jpg"] = row
 
+
 def filter_limit(
-    boxes:PascalBoxes,
-    labels:Labels,
+    boxes: PascalBoxes,
+    labels: Labels,
     confidences: Confidences,
-    limit:int=config.to_box_limit,
+    limit: int = config.to_box_limit,
 ) -> Tuple[PascalBoxes, Labels, Confidences]:
     unique_labels = torch.unique(labels)
     box_list = []
@@ -94,12 +95,17 @@ def filter_limit(
         box_list.append(c_boxes)
         label_list.append(c_labels)
         conf_list.append(c_confidences)
-    return PascalBoxes(torch.cat(box_list)), Labels(torch.cat(label_list)), Confidences(torch.cat(conf_list))
+    return (
+        PascalBoxes(torch.cat(box_list)),
+        Labels(torch.cat(label_list)),
+        Confidences(torch.cat(conf_list)),
+    )
+
 
 def sort_by_size(
-    boxes:PascalBoxes,
-    labels:Labels,
-    topk:int=3,
+    boxes: PascalBoxes,
+    labels: Labels,
+    topk: int = 3,
 ) -> Tuple[PascalBoxes, Labels]:
     unique_labels = torch.unique(labels)
     box_list = []
@@ -267,7 +273,7 @@ inv_normalize = Normalize(
 
 train_transforms = albm.Compose(
     [
-        A.IAAPerspective(scale=(0.01, 0.1), p=1.0),
+        # A.IAAPerspective(scale=(0.01, 0.1), p=1.0),
         A.OneOf(
             [
                 A.Rotate(limit=(90, 90), p=0.5, border_mode=0),
@@ -276,7 +282,7 @@ train_transforms = albm.Compose(
             ],
             p=1.0,
         ),
-        A.Rotate(limit=(-5, 5), p=1.0, border_mode=0),
+        A.Rotate(limit=(-10, 10), p=1.0, border_mode=0),
         A.OneOf(
             [
                 A.IAAAdditiveGaussianNoise(),
@@ -296,18 +302,28 @@ train_transforms = albm.Compose(
             [
                 A.CLAHE(clip_limit=2),
                 A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2),
+                A.RandomGamma(),
             ],
-            p=0.3,
+            p=0.9,
         ),
-        A.HueSaturationValue(
-            p=0.3,
-            hue_shift_limit=15,
-            sat_shift_limit=20,
-            val_shift_limit=15,
+        A.OneOf(
+            [
+                A.HueSaturationValue(
+                    hue_shift_limit=15,
+                    sat_shift_limit=20,
+                    val_shift_limit=15,
+                ),
+                A.RGBShift(
+                    r_shift_limit=10,
+                    g_shift_limit=10,
+                    b_shift_limit=30,
+                ),
+            ],
+            p=0.9,
         ),
         A.Cutout(
-            max_w_size=32,
-            max_h_size=32,
+            max_w_size=48,
+            max_h_size=48,
         ),
         A.RandomSizedBBoxSafeCrop(
             height=config.image_height,
@@ -477,7 +493,7 @@ class ResizeMixDataset(Dataset):
     ) -> Tuple[ImageId, Image, PascalBoxes, Labels, Tensor]:
         id, base = self.rows[idx]
         _, other = self.rows[random.choice(self.indices)]
-        scale = random.uniform(0.6, 0.8)
+        scale = random.uniform(0.6, 0.9)
         image, boxes, labels = resize_mix(
             annot_to_tuple(base), annot_to_tuple(other), scale=scale
         )

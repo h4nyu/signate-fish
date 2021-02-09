@@ -147,6 +147,7 @@ def test_to_label_filter() -> None:
     res = to_label_filter(labels, num_classes=2)
     print(res)
 
+
 def test_sort_by_size() -> None:
     boxes = PascalBoxes(
         torch.tensor(

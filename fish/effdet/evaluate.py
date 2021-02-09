@@ -67,15 +67,7 @@ def predict(device: str) -> None:
         gt_box_batch = [x.to(device) for x in gt_box_batch]
         gt_label_batch = [x.to(device) for x in gt_label_batch]
         box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
-        for (
-            id,
-            img,
-            boxes,
-            confidences,
-            labels,
-            gt_boxes,
-            gt_labels,
-        ) in zip(
+        for (id, img, boxes, confidences, labels, gt_boxes, gt_labels,) in zip(
             ids,
             image_batch,
             box_batch,
@@ -85,7 +77,6 @@ def predict(device: str) -> None:
             gt_label_batch,
         ):
             boxes, labels, confidences = filter_limit(boxes, labels, confidences)
-            # boxes, labels = sort_by_size(boxes, labels)
             metrics.add(
                 boxes=boxes,
                 confidences=confidences,
