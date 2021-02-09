@@ -94,6 +94,7 @@ def filter_limit(
 def sort_by_size(
     boxes:PascalBoxes,
     labels:Labels,
+    topk:int=5,
 ) -> Tuple[PascalBoxes, Labels]:
     unique_labels = torch.unique(labels)
     box_list = []
@@ -103,10 +104,14 @@ def sort_by_size(
         c_indecies = labels == c
         c_boxes = boxes[c_indecies]
         c_labels = labels[c_indecies]
-        c_areas = areas[c_indecies]
+        c_l_boxes = c_boxes[:topk]
+        c_r_boxes = c_boxes[topk:]
+        c_l_labels = c_labels[:topk]
+        c_r_labels = c_labels[topk:]
+        c_areas = areas[c_indecies][:topk]
         sort_indices = torch.argsort(c_areas, descending=True)
-        box_list.append(c_boxes[sort_indices])
-        label_list.append(c_labels[sort_indices])
+        box_list.append(torch.cat([c_l_boxes[sort_indices], c_r_boxes]))
+        label_list.append(torch.cat([c_l_labels[sort_indices], c_r_labels]))
     return PascalBoxes(torch.cat(box_list)), Labels(torch.cat(label_list))
 
     # print(unique_labels)

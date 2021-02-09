@@ -172,5 +172,5 @@ def test_sort_by_size() -> None:
             ]
         )
     )
-    res = sort_by_size(boxes, labels)
+    res = sort_by_size(boxes, labels, 2)
     print(res)
