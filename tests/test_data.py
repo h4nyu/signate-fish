@@ -15,6 +15,7 @@ from fish.data import (
     ResizeMixDataset,
     test_transforms,
     to_label_filter,
+    sort_by_size,
 )
 from object_detection.entities import (
     Labels,
@@ -144,4 +145,32 @@ def test_to_label_filter() -> None:
         )
     )
     res = to_label_filter(labels, num_classes=2)
+    print(res)
+
+def test_sort_by_size() -> None:
+    boxes = PascalBoxes(
+        torch.tensor(
+            [
+                [0, 0, 10, 10],
+                [0, 0, 20, 20],
+                [0, 0, 30, 30],
+                [0, 0, 10, 10],
+                [0, 0, 20, 20],
+                [0, 0, 30, 30],
+            ]
+        )
+    )
+    labels = Labels(
+        torch.tensor(
+            [
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+            ]
+        )
+    )
+    res = sort_by_size(boxes, labels)
     print(res)

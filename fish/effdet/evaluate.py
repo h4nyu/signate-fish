@@ -20,6 +20,8 @@ from fish.data import (
     test_transforms,
     kfold,
     inv_normalize,
+    filter_limit,
+    sort_by_size,
 )
 from object_detection.entities.box import (
     PascalBoxes,
@@ -82,6 +84,8 @@ def predict(device: str) -> None:
             gt_box_batch,
             gt_label_batch,
         ):
+            boxes, labels = filter_limit(boxes, labels)
+            boxes, labels = sort_by_size(boxes, labels)
 
             metrics.add(
                 boxes=boxes,

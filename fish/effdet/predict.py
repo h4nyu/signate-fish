@@ -21,6 +21,8 @@ from fish.data import (
     test_transforms,
     TestDataset,
     Submission,
+    filter_limit,
+    sort_by_size,
 )
 from fish.effdet import config
 from fish.effdet.train import model, model_loader, to_boxes, collate_fn
@@ -87,7 +89,12 @@ def predict(device: str) -> None:
                 iou_thr=config.iou_threshold,
                 weights=weights,
             )
-            m_boxes = resize(PascalBoxes(torch.from_numpy(m_boxes)), (w, h))
+            m_boxes = PascalBoxes(torch.from_numpy(m_boxes))
+            m_labels = Labels(torch.from_numpy(m_labels))
+            m_boxes, m_labels = filter_limit(m_boxes, m_labels)
+            m_boxes, m_labels = sort_by_size(m_boxes, m_labels)
+
+            m_boxes = resize(m_boxes, (w, h))
             plot = DetectionPlot(inv_normalize(img))
             plot.draw_boxes(
                 boxes=PascalBoxes(m_boxes[: config.to_box_limit]),

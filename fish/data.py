@@ -75,6 +75,42 @@ def add_submission(
         row[key] = boxes[indices][: config.to_box_limit].to("cpu").tolist()
     submission[f"{id}.jpg"] = row
 
+def filter_limit(
+    boxes:PascalBoxes,
+    labels:Labels,
+    limit:int=config.to_box_limit,
+) -> Tuple[PascalBoxes, Labels]:
+    unique_labels = torch.unique(labels)
+    box_list = []
+    label_list = []
+    for c in unique_labels:
+        c_indecies = labels == c
+        c_boxes = boxes[c_indecies][:limit]
+        c_labels = labels[c_indecies][:limit]
+        box_list.append(c_boxes)
+        label_list.append(c_labels)
+    return PascalBoxes(torch.cat(box_list)), Labels(torch.cat(label_list))
+
+def sort_by_size(
+    boxes:PascalBoxes,
+    labels:Labels,
+) -> Tuple[PascalBoxes, Labels]:
+    unique_labels = torch.unique(labels)
+    box_list = []
+    label_list = []
+    areas = box_area(boxes)
+    for c in unique_labels:
+        c_indecies = labels == c
+        c_boxes = boxes[c_indecies]
+        c_labels = labels[c_indecies]
+        c_areas = areas[c_indecies]
+        sort_indices = torch.argsort(c_areas, descending=True)
+        box_list.append(c_boxes[sort_indices])
+        label_list.append(c_labels[sort_indices])
+    return PascalBoxes(torch.cat(box_list)), Labels(torch.cat(label_list))
+
+    # print(unique_labels)
+
 
 def annot_to_tuple(row: Annotation) -> Tuple[Any, PascalBoxes, Labels]:
     img = PILImage.open(row["image_path"])
