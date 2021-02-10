@@ -17,7 +17,7 @@ backbone_id = 7
 channels = 64
 box_depth = 1
 fpn_depth = 1
-lr = 2e-4
+lr = 1e-4
 out_ids: List[int] = [5, 6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
@@ -26,9 +26,9 @@ pretrained = True
 # criterion
 topk = 50
 box_weight = 1
-cls_weight = 2
+cls_weight = 3
 confidence_threshold = 0.0001
-iou_threshold = 0.29
+iou_threshold = 0.31
 pre_box_limit = 10000
 
 anchor_ratios = [1.0]

@@ -79,6 +79,14 @@ def predict(device: str) -> None:
             label_batch,
             h_label_batch,
         ):
+            boxes, labels, confidences = filter_limit(
+                boxes,
+                labels,
+                confidences,
+            )
+            h_boxes, h_labels, h_confidences = filter_limit(
+                h_boxes, h_labels, h_confidences
+            )
             m_boxes, m_confidences, m_labels = weighted_boxes_fusion(
                 [
                     resize(boxes, (1 / w, 1 / h)),

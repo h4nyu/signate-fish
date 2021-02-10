@@ -236,7 +236,7 @@ def train(epochs: int) -> None:
             logs["train_loss"] = loss_meter.get_value()
             logs["train_box"] = box_loss_meter.get_value()
             logs["train_label"] = label_loss_meter.get_value()
-            if i % 100 == 99:
+            if i % 200 == 199:
                 eval_step()
                 log()
 

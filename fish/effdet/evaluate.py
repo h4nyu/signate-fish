@@ -67,20 +67,51 @@ def predict(device: str) -> None:
         gt_box_batch = [x.to(device) for x in gt_box_batch]
         gt_label_batch = [x.to(device) for x in gt_label_batch]
         box_batch, confidence_batch, label_batch = to_boxes(net(image_batch))
-        for (id, img, boxes, confidences, labels, gt_boxes, gt_labels,) in zip(
+        h_box_batch, h_confidence_batch, h_label_batch = to_boxes(
+            net(hflip(image_batch))
+        )
+        for (
+            id,
+            img,
+            boxes,
+            confidences,
+            labels,
+            h_boxes,
+            h_confidences,
+            h_labels,
+            gt_boxes,
+            gt_labels,
+        ) in zip(
             ids,
             image_batch,
             box_batch,
             confidence_batch,
             label_batch,
+            h_box_batch,
+            h_confidence_batch,
+            h_label_batch,
             gt_box_batch,
             gt_label_batch,
         ):
-            boxes, labels, confidences = filter_limit(boxes, labels, confidences)
+            boxes, labels, confidences = filter_limit(boxes, labels, confidences,)
+            h_boxes, h_labels, h_confidences = filter_limit(h_boxes, h_labels, h_confidences)
+            m_boxes, m_confidences, m_labels = weighted_boxes_fusion(
+                [
+                    resize(boxes, (1 / w, 1 / h)),
+                    box_hflip(resize(h_boxes, (1 / w, 1 / h)), (1, 1)),
+                ],
+                [confidences, h_confidences],
+                [labels, h_labels],
+                iou_thr=config.iou_threshold,
+                weights=weights,
+            )
+            m_boxes = PascalBoxes(torch.from_numpy(m_boxes).to(device))
+            m_labels = Labels(torch.from_numpy(m_labels).to(device))
+            m_confidences = Confidences(torch.from_numpy(m_confidences).to(device))
             metrics.add(
-                boxes=boxes,
-                confidences=confidences,
-                labels=labels,
+                boxes=resize(m_boxes, (w, h)),
+                confidences=m_confidences,
+                labels=m_labels,
                 gt_boxes=gt_boxes,
                 gt_labels=gt_labels,
             )
