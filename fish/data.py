@@ -328,6 +328,8 @@ train_transforms = albm.Compose(
             [
                 A.Resize(height=config.image_height, width=config.image_width, p=1.0),
                 A.RandomSizedBBoxSafeCrop(
+                    height=config.image_height,
+                    width=config.image_width,
                     p=1.0,
                 ),
             ],
