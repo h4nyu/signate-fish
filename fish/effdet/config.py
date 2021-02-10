@@ -18,7 +18,7 @@ channels = 64
 box_depth = 1
 fpn_depth = 1
 lr = 1e-4
-out_ids: List[int] = [5, 6, 7]
+out_ids: List[int] = [6, 7]
 
 metric: Tuple[str, WatchMode] = ("score", "max")
 pretrained = True
