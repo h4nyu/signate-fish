@@ -11,7 +11,9 @@ import Sidebar from "@sivic/web/components/Sidebar";
 const history = createHashHistory();
 const MainPage = lazy(() => import("@sivic/web/pages/MainPage"));
 const WorkspacePage = lazy(() => import("@sivic/web/pages/WorkspacePage"));
-const WorkspaceCreatePage = lazy(() => import("@sivic/web/pages/WorkspaceCreatePage"));
+const WorkspaceCreatePage = lazy(
+  () => import("@sivic/web/pages/WorkspaceCreatePage")
+);
 const ImagePage = lazy(() => import("@sivic/web/pages/ImagePage"));
 
 export default function App() {
@@ -25,14 +27,26 @@ export default function App() {
         <Loading />
         <Toast />
         <PageLayout
-          header={<Header/>}
-          sidebar={<Sidebar/>}
+          header={<Header />}
+          sidebar={<Sidebar />}
           content={
             <Suspense fallback={<div>Loading...</div>}>
               <Route exact path={"/workspace"} component={MainPage} />
-              <Route exact path={"/workspace/id/:id"} component={WorkspacePage} />
-              <Route exact path={"/workspace/create"} component={WorkspaceCreatePage} />
-              <Route exact path={"/workspace/id/:id/image-id/:imageId"} component={ImagePage} />
+              <Route
+                exact
+                path={"/workspace/id/:id"}
+                component={WorkspacePage}
+              />
+              <Route
+                exact
+                path={"/workspace/create"}
+                component={WorkspaceCreatePage}
+              />
+              <Route
+                exact
+                path={"/workspace/id/:id/image-id/:imageId"}
+                component={ImagePage}
+              />
             </Suspense>
           }
         />

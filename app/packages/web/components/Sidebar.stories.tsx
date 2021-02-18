@@ -7,7 +7,13 @@ const history = createHashHistory();
 export default {
   title: "Sidebar",
   component: Sidebar,
-  decorators: [(Story) => <Router history={history}><Story/></Router>]
+  decorators: [
+    (Story) => (
+      <Router history={history}>
+        <Story />
+      </Router>
+    ),
+  ],
 };
 
-export const Primary = (args) =>( <Sidebar/> )
+export const Primary = (args) => <Sidebar />;

@@ -3,15 +3,12 @@ import { observer } from "mobx-react-lite";
 import { Map } from "immutable";
 import FileUpload from "@charpoints/web/components/FileUpload";
 import store from "@sivic/web/store";
-import {
-  useParams
-} from "react-router-dom";
-import ImageTable from "@sivic/web/components/ImageTable"
-
+import { useParams } from "react-router-dom";
+import ImageTable from "@sivic/web/components/ImageTable";
 
 const Content = observer(() => {
-  let { id } = useParams<{id:string}>();
-  const { workspaceForm, imageProcess } = store
+  const { id } = useParams<{ id: string }>();
+  const { workspaceForm, imageProcess } = store;
   const { save } = store.workspaceForm;
   const { workspaces } = store.data.state;
   const { init } = store.data;
@@ -25,25 +22,26 @@ const Content = observer(() => {
         height: "100%",
       }}
     >
-      <div className="field" 
-        style={{ 
+      <div
+        className="field"
+        style={{
           gridRow: "1",
           height: "100%",
         }}
       >
         <label className="label">Name</label>
-        <div className="control" >
-          <input 
-            className="input" 
-            type="text" 
-            value={store.workspaceForm.state.name} 
-            onChange={e => store.workspaceForm.setName(e.target.value)}
+        <div className="control">
+          <input
+            className="input"
+            type="text"
+            value={store.workspaceForm.state.name}
+            onChange={(e) => store.workspaceForm.setName(e.target.value)}
           />
         </div>
       </div>
-      <div 
+      <div
         style={{
-          gridRow: "2"
+          gridRow: "2",
         }}
       >
         <label className="label">Image List</label>
@@ -53,9 +51,9 @@ const Content = observer(() => {
           onDelete={workspaceForm.imageForm.deleteImage}
         />
       </div>
-      <div 
+      <div
         style={{
-          gridRow: "3"
+          gridRow: "3",
         }}
       >
         <FileUpload

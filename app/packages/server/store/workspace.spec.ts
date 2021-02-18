@@ -1,5 +1,5 @@
-import { Store } from "@sivic/server"; 
-import fs from "fs"; 
+import { Store } from "@sivic/server";
+import fs from "fs";
 import { Workspace } from "@sivic/core/workspace";
 
 const rootStore = Store();
@@ -12,7 +12,7 @@ describe("workspace", () => {
   const store = rootStore.workspace;
   let row = {
     ...Workspace(),
-    imageIds: ['a', 'b']
+    imageIds: ["a", "b"],
   };
 
   beforeAll(async () => {
@@ -30,8 +30,8 @@ describe("workspace", () => {
     }
     row = {
       ...row,
-      name: "update"
-    }
+      name: "update",
+    };
     const update = await store.update(row);
     if (update instanceof Error) {
       throw update;

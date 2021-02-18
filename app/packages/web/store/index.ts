@@ -7,9 +7,9 @@ import { Map, List } from "immutable";
 import { createHashHistory } from "history";
 import { Workspace } from "@sivic/core/workspace";
 import { Image } from "@sivic/core/image";
-import WorkspaceForm from "@sivic/web/store/WorkspaceForm"
-import ImageForm from "@sivic/web/store/ImageForm"
-import ImageProcess from "@sivic/web/store/ImageProcess"
+import WorkspaceForm from "@sivic/web/store/WorkspaceForm";
+import ImageForm from "@sivic/web/store/ImageForm";
+import ImageProcess from "@sivic/web/store/ImageProcess";
 
 configure({
   enforceActions: "never",
@@ -23,7 +23,7 @@ export enum Level {
   Warning,
   Error,
 }
-export type LoadingFn =  <T>(fn: () => Promise<T>) => Promise<T>;
+export type LoadingFn = <T>(fn: () => Promise<T>) => Promise<T>;
 
 export type History = {
   push: (name: string) => void;
@@ -45,7 +45,7 @@ export const RootStore = (): RootStore => {
   const api = RootApi();
   const loading = LoadingStore();
   const toast = ToastStore();
-  const data = DataStore({ api, loading:loading.loading, toast });
+  const data = DataStore({ api, loading: loading.loading, toast });
   const history = createHashHistory();
 
   const init = async () => {
@@ -55,35 +55,35 @@ export const RootStore = (): RootStore => {
 
   const imageForm = ImageForm({
     api,
-    loading:loading.loading,
+    loading: loading.loading,
     toast,
-    onSave: async (workspaceId:string) => {
-      workspaceForm.init(workspaceId)
-    }
-  })
+    onSave: async (workspaceId: string) => {
+      workspaceForm.init(workspaceId);
+    },
+  });
   const imageProcess = ImageProcess({
     api,
-    loading:loading.loading,
+    loading: loading.loading,
     toast,
     onInit: (workspaceId, imageId) => {
-      history.push(`/workspace/id/${workspaceId}/image-id/${imageId}`)
-    }
-  })
+      history.push(`/workspace/id/${workspaceId}/image-id/${imageId}`);
+    },
+  });
   const workspaceForm = WorkspaceForm({
     api,
-    loading:loading.loading,
+    loading: loading.loading,
     toast,
     imageForm,
     onInit: (workspace) => {
-      history.push(`/workspace/id/${workspace.id}`)
+      history.push(`/workspace/id/${workspace.id}`);
     },
     onSave: (workspace) => {
-      data.fetchWorkspace(workspace.id)
+      data.fetchWorkspace(workspace.id);
     },
-    onDelete: (id:string) => {
-      data.init()
-    }
-  })
+    onDelete: (id: string) => {
+      data.init();
+    },
+  });
 
   return {
     api,

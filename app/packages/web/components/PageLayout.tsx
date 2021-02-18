@@ -7,14 +7,16 @@ export const PageLayout = (props: {
   const { header, content, sidebar } = props;
 
   return (
-    <div style={{ 
-      height: "100vh", 
-      display: "grid", 
-      gridTemplateRows: "auto 1fr",
-      gridTemplateColumns: "auto 1fr",
-    }}>
+    <div
+      style={{
+        height: "100vh",
+        display: "grid",
+        gridTemplateRows: "auto 1fr",
+        gridTemplateColumns: "auto 1fr",
+      }}
+    >
       <div
-        style={{ 
+        style={{
           gridRow: "1",
           gridColumn: "1 / span 2",
         }}
@@ -22,19 +24,19 @@ export const PageLayout = (props: {
         {header}
       </div>
       <div
-        style={{ 
+        style={{
           gridRow: "2",
           gridColumn: "2",
-          overflow: "auto"
+          overflow: "auto",
         }}
       >
         {content}
       </div>
       <div
-        style={{ 
+        style={{
           gridRow: "2",
           gridColumn: "1",
-          overflow: "auto"
+          overflow: "auto",
         }}
       >
         {sidebar}
@@ -43,4 +45,3 @@ export const PageLayout = (props: {
   );
 };
 export default PageLayout;
-

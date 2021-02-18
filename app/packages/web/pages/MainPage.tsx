@@ -11,14 +11,14 @@ const Content = observer(() => {
     <div
       className="box"
       style={{
-        height:"100%",
+        height: "100%",
         overflow: "scroll",
       }}
     >
       <WorkspaceTable
-        workspaces={workspaces.toList().toJS()} 
-        onClick={store.workspaceForm.init} 
-        onDelete={store.workspaceForm.delete} 
+        workspaces={workspaces.toList().toJS()}
+        onClick={store.workspaceForm.init}
+        onDelete={store.workspaceForm.delete}
       />
     </div>
   );

@@ -5,27 +5,27 @@ import { ToastStore } from "./toast";
 import { LoadingStore } from "./loading";
 import { RootApi } from "@sivic/api";
 import { Workspace } from "@sivic/core/workspace";
-import { saveAs } from 'file-saver';
+import { saveAs } from "file-saver";
 import { MemoryRouter } from "react-router";
 import { take, flow, sortBy, map } from "lodash/fp";
 import { parseISO } from "date-fns";
-import { Level } from "@sivic/web/store"
+import { Level } from "@sivic/web/store";
 import { readAsBase64, b64toBlob } from "@charpoints/web/utils";
 import { Image } from "@sivic/core/image";
 
 export type State = {
-  workspace?:Workspace
+  workspace?: Workspace;
   images: Image[];
 };
 
 export type ImageForm = {
   state: State;
-  init: (workspace:Workspace) => Promise<void>;
-  uploadFiles: (files:File[]) => Promise<void>;
-  deleteImage: (imageId:string) => Promise<void|Error>;
+  init: (workspace: Workspace) => Promise<void>;
+  uploadFiles: (files: File[]) => Promise<void>;
+  deleteImage: (imageId: string) => Promise<void | Error>;
 };
 
-const State = ():State => {
+const State = (): State => {
   return {
     images: [],
   };
@@ -35,49 +35,52 @@ export const ImageForm = (args: {
   api: RootApi;
   loading: <T>(fn: () => Promise<T>) => Promise<T>;
   toast: ToastStore;
-  onSave?: (workspaceId:string) => void
+  onSave?: (workspaceId: string) => void;
 }): ImageForm => {
   const { api, loading, toast, onSave } = args;
   const state = observable(State());
-
   const fetch = async () => {
-    const { workspace } = state
-    if(workspace === undefined){
-      return
+    const { workspace } = state;
+    if (workspace === undefined) {
+      return;
     }
-    const { imageIds } = workspace
-    const images:Image[] = []
-    for(const id of imageIds){
-      const image = await api.image.find({id})
-      if(image instanceof Error){ continue }
-      images.push(image)
+    const { imageIds } = workspace;
+    const images: Image[] = [];
+    for (const id of imageIds) {
+      const image = await api.image.find({ id });
+      if (image instanceof Error) {
+        continue;
+      }
+      images.push(image);
     }
-    state.images = images
-  }
+    state.images = images;
+  };
 
-  const init = async (workspace:Workspace) => {
-    state.workspace = workspace
-    await fetch()
-  }
+  const init = async (workspace: Workspace) => {
+    state.workspace = workspace;
+    await fetch();
+  };
 
-  const deleteImage = async (imageId:string) => {
-    const workspaceId = state.workspace?.id
-    if(workspaceId === undefined) {return}
-    let err = await api.image.delete({
-      id:imageId,
-    })
-    if(err instanceof Error) {
-      toast.error(err)
-      return err
+  const deleteImage = async (imageId: string) => {
+    const workspaceId = state.workspace?.id;
+    if (workspaceId === undefined) {
+      return;
     }
-    onSave && onSave(workspaceId)
-  }
+    const err = await api.image.delete({
+      id: imageId,
+    });
+    if (err instanceof Error) {
+      toast.error(err);
+      return err;
+    }
+    onSave && onSave(workspaceId);
+  };
 
   const uploadFiles = async (files: File[]) => {
     const ids: string[] = [];
-    const workspaceId = state.workspace?.id
-    if(workspaceId === undefined){
-      return
+    const workspaceId = state.workspace?.id;
+    if (workspaceId === undefined) {
+      return;
     }
     await loading(async () => {
       for (const f of files) {
@@ -90,14 +93,18 @@ export const ImageForm = (args: {
           toast.error(data);
           continue;
         }
-        const imageId = await api.image.create({ data, name:f.name, workspaceId});
+        const imageId = await api.image.create({
+          data,
+          name: f.name,
+          workspaceId,
+        });
         if (imageId instanceof Error) {
           toast.error(imageId);
           continue;
         }
       }
     });
-    onSave && onSave(workspaceId)
+    onSave && onSave(workspaceId);
   };
 
   return {
@@ -105,6 +112,6 @@ export const ImageForm = (args: {
     init,
     deleteImage,
     uploadFiles,
-  }
+  };
 };
-export default ImageForm 
+export default ImageForm;

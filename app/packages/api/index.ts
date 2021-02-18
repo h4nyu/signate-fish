@@ -13,7 +13,7 @@ export function toError(err: any): Error {
 
 export type RootApi = {
   setUrl: (url: string) => void;
-  getImageStoreUrl: () => Promise<string|Error>;
+  getImageStoreUrl: () => Promise<string | Error>;
   workspace: WorkspaceApi;
   image: ImageApi;
 };

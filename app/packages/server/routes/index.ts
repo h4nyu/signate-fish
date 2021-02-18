@@ -3,7 +3,7 @@ import { Lock, Store } from "@sivic/core";
 import path from "path";
 import { WorkspaceRoutes } from "./workspace";
 import { ImageRoutes } from "./image";
-import { DetectBoxes } from "@sivic/server/store/detect"
+import { DetectBoxes } from "@sivic/server/store/detect";
 import fastifyStatic from "fastify-static";
 
 const urlRoutes: FastifyPlugin<{ prefix: string }> = function (
@@ -17,14 +17,13 @@ const urlRoutes: FastifyPlugin<{ prefix: string }> = function (
   done();
 };
 
-
 export const App = (args: { store: Store; lock: Lock }) => {
   const { store, lock } = args;
   const app = fastify({
     bodyLimit: 10048576,
     logger: true,
   });
-  const detectBoxes = DetectBoxes(process.env.DETECT_BOXES_URL || "")
+  const detectBoxes = DetectBoxes(process.env.DETECT_BOXES_URL || "");
   const prefix = path.join("/", process.env.PREFIX || "", "/api/v1");
   app.register(urlRoutes, { prefix });
   app.register(fastifyStatic, {

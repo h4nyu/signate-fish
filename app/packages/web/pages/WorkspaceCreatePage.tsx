@@ -18,28 +18,32 @@ const Content = observer(() => {
         height: "100%",
       }}
     >
-      <div className="field" 
-        style={{ 
+      <div
+        className="field"
+        style={{
           gridRow: "1",
           height: "100%",
         }}
       >
         <label className="label">Name</label>
-        <div className="control" >
-          <input 
-            className="input" 
-            type="text" 
-            value={store.workspaceForm.state.name} 
-            onChange={e => store.workspaceForm.setName(e.target.value)}
+        <div className="control">
+          <input
+            className="input"
+            type="text"
+            value={store.workspaceForm.state.name}
+            onChange={(e) => store.workspaceForm.setName(e.target.value)}
           />
         </div>
       </div>
-      <div 
+      <div
         style={{
-          gridRow: "2"
+          gridRow: "2",
         }}
       >
-        <div className="button is-info" onClick={() => save()}> Save </div>
+        <div className="button is-info" onClick={() => save()}>
+          {" "}
+          Save{" "}
+        </div>
       </div>
     </div>
   );

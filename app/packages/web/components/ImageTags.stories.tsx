@@ -5,11 +5,11 @@ import { Image as ChartImage } from "@charpoints/core/image";
 const charImage = ChartImage();
 const image = {
   ...charImage,
-  tag: "Target"
-}
+  tag: "Target",
+};
 export default {
   title: "ImageTags",
   component: ImageTags,
 };
 
-export const Primary = (args) =>( <ImageTags {...args} image={image}/> )
+export const Primary = (args) => <ImageTags {...args} image={image} />;

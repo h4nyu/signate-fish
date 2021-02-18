@@ -4,10 +4,8 @@ import { Workspaces } from ".";
 import { ToastStore } from "./toast";
 import { LoadingStore } from "./loading";
 import { RootApi } from "@sivic/api";
-import {
-  Workspace,
-} from "@sivic/core/workspace";
-import { saveAs } from 'file-saver';
+import { Workspace } from "@sivic/core/workspace";
+import { saveAs } from "file-saver";
 import { MemoryRouter } from "react-router";
 import { take, flow, sortBy, map } from "lodash/fp";
 import { parseISO } from "date-fns";
@@ -19,10 +17,10 @@ export type State = {
 export type DataStore = {
   state: State;
   init: () => Promise<void>;
-  fetchWorkspace:(id: string) => Promise<void>
+  fetchWorkspace: (id: string) => Promise<void>;
 };
 
-const State = ():State => {
+const State = (): State => {
   return {
     workspaces: List(),
   };
@@ -42,21 +40,20 @@ export const DataStore = (args: {
       if (rows instanceof Error) {
         return;
       }
-      state.workspaces = List(rows)
-    })
+      state.workspaces = List(rows);
+    });
   };
 
-  const fetchWorkspace = async (id:string): Promise<void> => {
+  const fetchWorkspace = async (id: string): Promise<void> => {
     await loading(async () => {
-      const row = await api.workspace.find({id});
+      const row = await api.workspace.find({ id });
       if (row instanceof Error) {
         return;
       }
-      state.workspaces = state.workspaces.filter(x => x.id !== id)
-      state.workspaces = state.workspaces.push(row)
-    })
+      state.workspaces = state.workspaces.filter((x) => x.id !== id);
+      state.workspaces = state.workspaces.push(row);
+    });
   };
-
 
   const init = async () => {
     await loading(async () => {
@@ -64,10 +61,9 @@ export const DataStore = (args: {
     });
   };
 
-
   return {
     state,
     init,
-    fetchWorkspace
+    fetchWorkspace,
   };
 };

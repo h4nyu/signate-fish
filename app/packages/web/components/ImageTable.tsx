@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { List } from "immutable";
 
 import { Image } from "@sivic/core/image";
@@ -7,16 +7,9 @@ import TableHeader from "@sivic/web/components/TableHeader";
 import DeleteBtn from "@sivic/web/components/DeleteBtn";
 import ImageTags from "@sivic/web/components/ImageTags";
 
-const columns = [
-  "Name",
-  "Tag",
-  "Create",
-  "Action",
-];
+const columns = ["Name", "Tag", "Create", "Action"];
 
-const filterColumns = [
-  "Name",
-];
+const filterColumns = ["Name"];
 
 export const WorkspaceTable = (props: {
   images: Image[];
@@ -27,22 +20,24 @@ export const WorkspaceTable = (props: {
   const { images, onClick, onDelete, onTagClick } = props;
   const [sort, setSort] = React.useState<[string, boolean]>(["Name", true]);
   const [sortColumn, asc] = sort;
-  let rows = List(images).map(x => {
-    return {
-      ...x,
-      Name: x.name,
-      Create:x.createdAt,
-      onClick: () => onClick && onClick(x.id),
-      onDelete: () => onDelete && onDelete(x.id),
-      onTagClick: () => onTagClick && onTagClick(x.id),
-    }
-  }).sortBy((x) => x[sortColumn]);
-   if (asc) {
-     rows = rows.reverse();
-   }
+  let rows = List(images)
+    .map((x) => {
+      return {
+        ...x,
+        Name: x.name,
+        Create: x.createdAt,
+        onClick: () => onClick && onClick(x.id),
+        onDelete: () => onDelete && onDelete(x.id),
+        onTagClick: () => onTagClick && onTagClick(x.id),
+      };
+    })
+    .sortBy((x) => x[sortColumn]);
+  if (asc) {
+    rows = rows.reverse();
+  }
 
   return (
-    <div style={{width:"100%"}}>
+    <div style={{ width: "100%" }}>
       <table className="table is-fullwidth">
         <TableHeader
           columns={columns}
@@ -51,20 +46,28 @@ export const WorkspaceTable = (props: {
           sort={sort}
         />
         <tbody>
-          {rows
-            .map((x, i) => {
-              return (
-                <tr
-                  key={i}
-                  style={{ cursor: onClick ? "pointer" : "" }}
-                >
-                  <td> <a onClick={x.onClick}> {x.name} </a> </td>
-                  <td> <ImageTags image={x} onClick={x.onTagClick} /> </td>
-                  <td> <DateView value={x.createdAt} /> </td>
-                  <td> <DeleteBtn onClick={x.onDelete} /> </td>
-                </tr>
-              );
-            })}
+          {rows.map((x, i) => {
+            return (
+              <tr key={i} style={{ cursor: onClick ? "pointer" : "" }}>
+                <td>
+                  {" "}
+                  <a onClick={x.onClick}> {x.name} </a>{" "}
+                </td>
+                <td>
+                  {" "}
+                  <ImageTags image={x} onClick={x.onTagClick} />{" "}
+                </td>
+                <td>
+                  {" "}
+                  <DateView value={x.createdAt} />{" "}
+                </td>
+                <td>
+                  {" "}
+                  <DeleteBtn onClick={x.onDelete} />{" "}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

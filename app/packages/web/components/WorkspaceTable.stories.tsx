@@ -8,4 +8,6 @@ export default {
 };
 
 const workspaces = [{ ...Workspace() }];
-export const Primary = (args) => <WorkspaceTable {...args} workspaces={workspaces} />;
+export const Primary = (args) => (
+  <WorkspaceTable {...args} workspaces={workspaces} />
+);

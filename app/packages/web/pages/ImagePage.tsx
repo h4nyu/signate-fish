@@ -6,7 +6,7 @@ import store from "@sivic/web/store";
 
 const Content = observer(() => {
   const { imageProcess } = store;
-  const { image } = imageProcess.state
+  const { image } = imageProcess.state;
   const { init } = store.data;
   return (
     <div
@@ -18,9 +18,7 @@ const Content = observer(() => {
         height: "100%",
       }}
     >
-      {
-        image && image.data && <ImageView imageData={image.data} size={512}/>
-      }
+      {image && image.data && <ImageView imageData={image.data} size={512} />}
     </div>
   );
 });

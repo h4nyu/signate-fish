@@ -4,11 +4,7 @@ import { first } from "lodash";
 import { Workspace } from "@sivic/core/workspace";
 import { WorkspaceStore } from "@sivic/core";
 
-const COLUMNS = [
-  "id",
-  "name",
-  "created_at",
-] as const
+const COLUMNS = ["id", "name", "created_at"] as const;
 export const Store = (sql: Sql<any>): WorkspaceStore => {
   const to = (r: Row): Workspace => {
     return {
@@ -40,8 +36,8 @@ export const Store = (sql: Sql<any>): WorkspaceStore => {
       if (row === undefined) {
         return;
       }
-      const workspaceImages = await sql`SELECT * FROM workspace_images WHERE workspace_id = ${row.id}`
-      row.imageIds = workspaceImages.map(x => x.image_id)
+      const workspaceImages = await sql`SELECT * FROM workspace_images WHERE workspace_id = ${row.id}`;
+      row.imageIds = workspaceImages.map((x) => x.image_id);
       return row;
     } catch (err) {
       return err;
@@ -54,11 +50,7 @@ export const Store = (sql: Sql<any>): WorkspaceStore => {
     try {
       const { ids } = payload;
       let rows = [];
-      const columns = [
-        "id",
-        "name",
-        "created_at",
-      ];
+      const columns = ["id", "name", "created_at"];
       if (ids !== undefined && ids.length > 0) {
         rows = await sql`SELECT ${sql(
           columns
@@ -66,14 +58,16 @@ export const Store = (sql: Sql<any>): WorkspaceStore => {
       } else {
         rows = await sql`SELECT ${sql(columns)} FROM workspaces`;
       }
-      if(rows.length === 0){
-        return []
+      if (rows.length === 0) {
+        return [];
       }
-      const workspaces = rows.map(to)
-      const workspaceIds = workspaces.map(x => x.id)
-      const workspaceImages = await sql`SELECT * FROM workspace_images WHERE workspace_id IN (${workspaceIds})`
-      for(const workspace of workspaces){
-        workspace.imageIds = workspaceImages.filter(x => x.workspace_id === workspace.id).map(x => x.image_id)
+      const workspaces = rows.map(to);
+      const workspaceIds = workspaces.map((x) => x.id);
+      const workspaceImages = await sql`SELECT * FROM workspace_images WHERE workspace_id IN (${workspaceIds})`;
+      for (const workspace of workspaces) {
+        workspace.imageIds = workspaceImages
+          .filter((x) => x.workspace_id === workspace.id)
+          .map((x) => x.image_id);
       }
       return workspaces;
     } catch (err) {
@@ -83,24 +77,23 @@ export const Store = (sql: Sql<any>): WorkspaceStore => {
   const insert = async (payload: Workspace): Promise<void | Error> => {
     try {
       await sql`
-      INSERT INTO workspaces ${sql(
-        from(payload),...COLUMNS
-      )}`;
+      INSERT INTO workspaces ${sql(from(payload), ...COLUMNS)}`;
     } catch (err) {
       return err;
     }
   };
   const update = async (payload: Workspace): Promise<void | Error> => {
     try {
-      await sql`UPDATE workspaces SET ${sql(from(payload),...COLUMNS)} WHERE id = ${payload.id}`;
-    }catch (err) {
+      await sql`UPDATE workspaces SET ${sql(
+        from(payload),
+        ...COLUMNS
+      )} WHERE id = ${payload.id}`;
+    } catch (err) {
       return err;
     }
   };
 
-  const delete_ = async (payload: {
-    id?: string;
-  }) => {
+  const delete_ = async (payload: { id?: string }) => {
     try {
       const { id } = payload;
       if (id !== undefined) {

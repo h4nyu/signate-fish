@@ -34,13 +34,13 @@ export const ToastStore = (): ToastStore => {
       level,
     };
   };
-  const error = (e:Error) => {
+  const error = (e: Error) => {
     state.message = {
       id: uuid(),
       message: e.message,
-      level: Level.Error
-    }
-  }
+      level: Level.Error,
+    };
+  };
   return {
     state,
     show,
