@@ -1,6 +1,6 @@
 import { observable, computed } from "mobx";
 import { Map, List } from "immutable";
-import { Workspaces } from ".";
+import { Workspaces, Images } from "@sivic/web/store";
 import { ToastStore } from "./toast";
 import { LoadingStore } from "./loading";
 import { RootApi } from "@sivic/api";
@@ -11,23 +11,24 @@ import { take, flow, sortBy, map } from "lodash/fp";
 import { parseISO } from "date-fns";
 import { Level } from "@sivic/web/store";
 import { readAsBase64, b64toBlob } from "@charpoints/web/utils";
-import { Image } from "@sivic/core/image";
+import { Image, ImageTag } from "@sivic/core/image";
 
 export type State = {
   workspace?: Workspace;
-  images: Image[];
+  images: Images;
 };
 
 export type ImageForm = {
   state: State;
   init: (workspace: Workspace) => Promise<void>;
+  updateTag: (imageId: string, tag:ImageTag) => void;
   uploadFiles: (files: File[]) => Promise<void>;
   deleteImage: (imageId: string) => Promise<void | Error>;
 };
 
 const State = (): State => {
   return {
-    images: [],
+    images: Map(),
   };
 };
 
@@ -59,6 +60,9 @@ export const ImageForm = (args: {
   const init = async (workspace: Workspace) => {
     state.workspace = workspace;
     await fetch();
+  };
+
+  const updateTag = async (imageId: string, tag:ImageTag) => {
   };
 
   const deleteImage = async (imageId: string) => {
@@ -112,6 +116,7 @@ export const ImageForm = (args: {
     init,
     deleteImage,
     uploadFiles,
+    updateTag,
   };
 };
 export default ImageForm;

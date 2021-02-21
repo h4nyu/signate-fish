@@ -16,7 +16,7 @@ configure({
 });
 
 export type Workspaces = List<Workspace>;
-export type Images = List<Image>;
+export type Images = Map<string, Image>;
 export enum Level {
   Info,
   Success,
@@ -58,7 +58,7 @@ export const RootStore = (): RootStore => {
     loading: loading.loading,
     toast,
     onSave: async (workspaceId: string) => {
-      workspaceForm.init(workspaceId);
+      // workspaceForm.update(workspaceId);
     },
   });
   const imageProcess = ImageProcess({
@@ -74,7 +74,7 @@ export const RootStore = (): RootStore => {
     loading: loading.loading,
     toast,
     imageForm,
-    onInit: (workspace) => {
+    onUpdate: (workspace) => {
       history.push(`/workspace/id/${workspace.id}`);
     },
     onSave: (workspace) => {

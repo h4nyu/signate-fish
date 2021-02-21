@@ -17,7 +17,7 @@ const Content = observer(() => {
     >
       <WorkspaceTable
         workspaces={workspaces.toList().toJS()}
-        onClick={store.workspaceForm.init}
+        onClick={store.workspaceForm.update}
         onDelete={store.workspaceForm.delete}
       />
     </div>

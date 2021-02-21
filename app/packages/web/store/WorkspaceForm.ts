@@ -22,7 +22,8 @@ export type State = {
 export type WorkspaceFrom = {
   state: State;
   imageForm: ImageForm;
-  init: (id?: string) => Promise<void>;
+  init: () => Promise<void>;
+  update: (id: string) => Promise<void>;
   setName: (value: string) => void;
   save: () => Promise<void>;
   delete: (id: string) => Promise<void>;
@@ -43,10 +44,21 @@ export const WorkspaceFrom = (args: {
   imageForm: ImageForm;
   onInit?: (workspace: Workspace) => void;
   onCreate?: (workspace: Workspace) => void;
+  onUpdate?: (workspace: Workspace) => void;
   onSave?: (workspace: Workspace) => void;
   onDelete?: (id: string) => void;
 }): WorkspaceFrom => {
-  const { api, loading, toast, onInit, onSave, onDelete, imageForm } = args;
+  const {
+    api,
+    loading,
+    toast,
+    onInit,
+    onSave,
+    onDelete,
+    onUpdate,
+    onCreate,
+    imageForm,
+  } = args;
   const state = observable(State());
 
   const init = async () => {
@@ -56,7 +68,19 @@ export const WorkspaceFrom = (args: {
     state.workspaces = List();
   };
 
-  const create = async (id: string) => {
+  const create = async () => {
+    // await loading(async () => {
+    //   const row = await api.workspace.find({ id });
+    //   if (row instanceof Error) {
+    //     return row;
+    //   }
+    //   state.id = row.id;
+    //   state.name = row.name;
+    //   onInit && onInit(row);
+    // });
+  };
+
+  const update = async (id: string) => {
     await loading(async () => {
       const row = await api.workspace.find({ id });
       if (row instanceof Error) {
@@ -65,7 +89,7 @@ export const WorkspaceFrom = (args: {
       state.id = row.id;
       state.name = row.name;
       await imageForm.init(row);
-      onInit && onInit(row);
+      onUpdate && onUpdate(row);
     });
   };
 
@@ -102,6 +126,7 @@ export const WorkspaceFrom = (args: {
     init,
     setName,
     save,
+    update,
     delete: _delete,
   };
 };

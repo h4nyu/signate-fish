@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { List } from "immutable";
-
-import { Image } from "@sivic/core/image";
+import { Images } from "@sivic/web/store";
 import DateView from "@sivic/web/components/DateView";
 import TableHeader from "@sivic/web/components/TableHeader";
 import DeleteBtn from "@sivic/web/components/DeleteBtn";
@@ -12,7 +11,7 @@ const columns = ["Name", "Tag", "Create", "Action"];
 const filterColumns = ["Name"];
 
 export const WorkspaceTable = (props: {
-  images: Image[];
+  images: Images;
   onClick?: (id: string) => void;
   onDelete?: (id: string) => void;
   onTagClick?: (id: string) => void;
