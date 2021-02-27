@@ -16,7 +16,7 @@ export const DetectRoutes = (args: {
   const { store, lock } = args;
   const srv = Service({ store, lock });
   return function (app, opts, done) {
-    app.post<{ Body: CreatePayload }>("/create", {}, async (req, reply) => {
+    app.post<{ Body: CreatePayload }>("/detect/box", {}, async (req, reply) => {
       const res = await srv.create(req.body);
       reply.send(res);
     });
